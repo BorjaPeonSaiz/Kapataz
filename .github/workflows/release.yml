@@ -1,0 +1,46 @@
+# Publishes a new version (tag vX.Y.Z + GitHub Release) on every push to main.
+# See docs/adr/0016-versionado-automatico.md
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          npx --yes
+          -p semantic-release@24.2.0
+          -p conventional-changelog-conventionalcommits@8.0.0
+          semantic-release
+
+      - name: Read published version
+        id: version
+        run: echo "version=$(git describe --tags --abbrev=0 --match 'v*' | sed 's/^v//')" >> "$GITHUB_OUTPUT"
+
+  # Fase 1: build and push apps/web and apps/agent images tagged with
+  # needs.release.outputs.version, passing APP_VERSION and APP_COMMIT as build args.

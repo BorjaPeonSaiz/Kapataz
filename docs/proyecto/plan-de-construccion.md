@@ -38,6 +38,8 @@ El MVP incluye registro y acceso, aislamiento de empresas, CRUD administrativo, 
 | CRUD de presupuestos y líneas | Sí | Conversión a factura y firma |
 | Edición de facturas y presupuestos solo hasta su envío; bloqueo al enviarse | Sí, con acción «Marcar como enviado» | Envío por email desde el SaaS, VeriFactu/factura electrónica |
 | Facturas rectificativas y nuevas versiones de presupuesto | Sí | Abonos parciales automatizados |
+| Cuota mensual por transferencia, factura de la cuota y modo sin IA por impago (sin cortar el acceso) | Sí | Domiciliación SEPA |
+| Avisos dentro de la aplicación; único email: recuperación de contraseña | Sí | — |
 | Alta y modificación manual de registros | Sí | Importación CSV |
 | Carga de ficheros PDF, imágenes, documentos ofimáticos, TXT y CSV | Sí, solo desde la sección «Subir archivos» del menú principal, que los guarda en Google Drive | Correo entrante, OneDrive/Dropbox |
 | Conexión del Google Drive propio de la empresa durante el alta (OAuth, permiso `drive.file`) | Sí, obligatoria para usar «Subir archivos» | Cambio de cuenta o carpeta de Drive desde ajustes con migración |
@@ -49,6 +51,7 @@ El MVP incluye registro y acceso, aislamiento de empresas, CRUD administrativo, 
 | RAG con citas sobre documentos propios del tenant | Sí, con búsqueda híbrida (texto + vector) y reranking | Reranker afinado con datos propios |
 | Chat administrativo con permisos y respuestas basadas en datos | Sí | Acciones de escritura confirmadas |
 | Administración interna de tenants, agente común y procesamiento | Sí | Analítica avanzada |
+| Panel de configuración de la plataforma para el `admin` (IA, cuota y cobro, límites, empresas, Drive, email, avisos y estado del sistema) | Sí | Configuración por plan de precios |
 | Logs estructurados (JSON) y trazas de LLM por ingesta y consulta | Sí | Paneles de coste y calidad por tenant |
 | Servidor MCP para clientes de IA externos (Claude, Cursor, Windsurf) | No (post-MVP) | Solo lectura primero; después escrituras con confirmación |
 
@@ -118,6 +121,37 @@ Las facturas y los presupuestos emitidos por la empresa se pueden modificar manu
 - **El agente tampoco puede modificarlos.** Si un usuario pide al agente cambiar una factura enviada, el agente explica que está bloqueada y ofrece preparar una rectificativa (o una nueva versión del presupuesto) para que el usuario la confirme.
 - **Documentos de proveedores.** Esta regla se aplica a lo que emite la empresa. Las facturas y presupuestos recibidos de proveedores no se envían: sus datos extraídos se pueden corregir hasta que el usuario los confirma en la revisión, y después quedan también bloqueados salvo el estado.
 
+### Notificaciones: un único email
+
+La aplicación **solo envía un email: el de recuperación de contraseña** ([ADR-0020](../adr/0020-modo-sin-ia-y-notificaciones.md)). Todo lo demás se avisa dentro de la aplicación, con un aviso persistente en la parte superior y un centro de avisos:
+
+- cuota pendiente o vencida, con el importe y la referencia de pago;
+- límites de documentos, consultas o gasto de IA al 80 % y al 100 %;
+- Google Drive desconectado;
+- documentos en revisión, en «Por clasificar» o fallidos;
+- factura de la cuota disponible para descargar.
+
+No hay email de verificación al registrarse: el formulario pide el email dos veces y el usuario puede cambiarlo en ajustes. Las alertas técnicas al `admin` las envían las herramientas de monitorización, no la aplicación.
+
+### Impago: la empresa sigue trabajando, sin IA
+
+Si una cuota no se paga en los N días siguientes al vencimiento (configurable, inicialmente 15), la empresa entra en **modo sin IA** ([ADR-0020](../adr/0020-modo-sin-ia-y-notificaciones.md)). **No se corta el acceso**: solo se desactiva lo que usa IA o genera gasto variable.
+
+| Sigue disponible | Se desactiva hasta registrar el pago |
+| --- | --- |
+| Inicio de sesión, ajustes, cuenta y factura de la cuota | Análisis de documentos (extracción, clasificación, embeddings e indexación) |
+| CRUD manual de clientes, proveedores, facturas y presupuestos, incluidos marcar como enviado, rectificativas y nuevas versiones | Chat con el agente y búsqueda semántica en documentos |
+| Listados, filtros y búsquedas normales | «Por clasificar»: Es factura, Es presupuesto y Es proveedor (reprocesan con IA) |
+| Ver y descargar los documentos ya procesados y sus datos | |
+| «Por clasificar»: Verificado / Almacenar y Eliminar | |
+| «Subir archivos»: el fichero se guarda en `Entrada` del Drive de la empresa y queda **pendiente de procesar**, sin copia en S3 ni análisis | |
+
+- Los botones de IA se muestran desactivados, con una explicación y la referencia de pago; no se ocultan.
+- Al registrar el pago, el `admin` reactiva la IA al momento y los documentos pendientes se procesan automáticamente, en orden de subida y dentro de los límites del mes.
+- Nunca se borran datos por impago.
+- El mismo modo se aplica, solo a la parte agotada, cuando la empresa llega a sus límites mensuales.
+- La restricción se comprueba en el servidor antes de encolar cualquier trabajo de IA, y los workers la vuelven a comprobar antes de llamar al modelo.
+
 ## Aislamiento entre empresas (requisito crítico)
 
 Cada empresa cliente del SaaS es un tenant y solo puede ver sus propios datos. Esto se aplica también cuando dos empresas comparten un mismo cliente o proveedor.
@@ -160,16 +194,16 @@ MySQL también podría ser la base relacional, pero no aporta una ventaja decisi
 
 ## Arquitectura
 
-La aplicación web usa Laravel para autenticación, permisos, CRUD, API, colas y dashboard. Un servicio Python/FastAPI procesa documentos y ejecuta el agente común. PostgreSQL con pgvector es la fuente de verdad y el índice vectorial inicial; Redis gestiona trabajos asíncronos. El almacenamiento de objetos conserva los originales. Un servicio de Drive sube los ficheros al Drive de cada empresa y los archiva una vez procesados.
+La aplicación web usa Laravel para autenticación, permisos, CRUD, API, colas y dashboard. Un servicio Python/FastAPI procesa documentos y ejecuta el agente común. Laravel es el único que escribe los datos de negocio, con sus servicios de dominio; Python extrae y devuelve los datos, y solo escribe sus propias tablas (fragmentos, embeddings y conversaciones del agente) ([ADR-0015](../adr/0015-python-extrae-laravel-persiste.md)). PostgreSQL con pgvector es la fuente de verdad y el índice vectorial inicial; Redis gestiona trabajos asíncronos. El almacenamiento de objetos conserva los originales. Un servicio de Drive sube los ficheros al Drive de cada empresa y los archiva una vez procesados.
 
 Flujo de carga y consulta:
 
 1. El usuario sube uno o varios ficheros desde la sección «Subir archivos» del menú principal (o los adjunta al crear una factura o presupuesto). Es la única vía de entrada de documentos.
 2. Laravel valida el tenant, el usuario, el tipo, el tamaño y el hash. Si el fichero ya se había subido (mismo hash), avisa al usuario en lugar de procesarlo de nuevo. Si es válido, guarda una copia en un bucket privado, crea un registro `documents` con estado `queued`, sube el fichero a la carpeta `Entrada` del Drive de la empresa, guarda su `drive_file_id` y encola la ingesta.
-3. El worker extrae texto y estructura (incluidas tablas y líneas), clasifica el documento y detecta entidades/campos.
-4. Si es factura o presupuesto, valida y normaliza los datos, detecta coincidencias, crea o relaciona cliente/proveedor según proceda y persiste factura/presupuesto y líneas dentro de una transacción.
-5. El worker fragmenta el texto, genera embeddings y guarda los fragmentos vinculados al tenant y al documento.
-6. El servicio de Drive mueve el fichero de `Entrada` a `Proveedores/<proveedor>`, `Facturas/<cliente>`, `Presupuestos/<cliente>`, `Revisión` o `Por clasificar`, creando la carpeta si no existe.
+3. Un job de Laravel orquesta el resto de pasos. Primero pide a FastAPI la extracción: Python lee la copia privada, extrae texto y estructura (incluidas tablas y líneas), clasifica el documento, detecta entidades y campos, y devuelve un resultado estructurado y validado, sin escribir datos de negocio.
+4. Laravel valida de nuevo el resultado y, con sus servicios de dominio y dentro de una transacción, normaliza los datos, detecta coincidencias, crea o relaciona cliente/proveedor según proceda y guarda factura/presupuesto, líneas y estado del documento.
+5. Laravel pide a FastAPI la indexación: Python fragmenta el texto, genera embeddings y guarda los fragmentos vinculados al tenant y al documento en sus propias tablas.
+6. Laravel pide a FastAPI el archivado: el servicio de Drive mueve el fichero de `Entrada` a `Proveedores/<proveedor>`, `Facturas/<cliente>`, `Presupuestos/<cliente>`, `Revisión` o `Por clasificar`, creando la carpeta si no existe.
 7. El dashboard muestra el estado, los registros creados/actualizados, la carpeta de destino y los problemas que requieren revisión.
 8. El agente responde consultando el servicio de datos para hechos estructurados y el retriever RAG para evidencia documental. El retriever hace búsqueda híbrida filtrada por tenant, reordena los candidatos con un reranker y envía al LLM solo los mejores fragmentos. Las respuestas incluyen citas cuando se basan en documentos.
 
@@ -196,7 +230,7 @@ El Drive lo configura el propio cliente al empezar a usar la aplicación, sin in
 - El token: se cifra con una clave por tenant gestionada en un KMS (cifrado de sobre). Solo el servicio `drive-sync` puede descifrarlo, en memoria y en el momento de usarlo. No aparece en el panel de administración interno, ni en logs, trazas, copias exportables o respuestas de la API.
 - Los usuarios con rol `admin` solo ven el estado de la conexión (activa, caducada o revocada) y los errores de archivado, no el token ni el contenido del Drive.
 
-**Revocación y caducidad.** El cliente puede desconectar el Drive desde ajustes (la plataforma revoca el token y lo borra) o directamente desde su cuenta de Google. Si el token deja de ser válido, la conexión pasa a `disconnected`, «Subir archivos» se desactiva para esa empresa, los archivados pendientes quedan en espera y el usuario de la empresa recibe un aviso para volver a conectarlo. Al reconectar, se completan los archivados pendientes.
+**Revocación y caducidad.** El cliente puede desconectar el Drive desde ajustes (la plataforma revoca el token y lo borra) o directamente desde su cuenta de Google. Si el token deja de ser válido, la conexión pasa a `disconnected`, «Subir archivos» se desactiva para esa empresa, los archivados pendientes quedan en espera y el usuario de la empresa ve un aviso en la aplicación para volver a conectarlo. Al reconectar, se completan los archivados pendientes.
 
 #### Estructura de carpetas
 
@@ -245,13 +279,15 @@ Un servidor MCP en el servicio FastAPI expone herramientas sobre los mismos serv
 | Cifrado de credenciales | KMS (cifrado de sobre con clave por tenant) | Tokens de Google cifrados que solo descifra `drive-sync` |
 | Tareas programadas | Laravel Scheduler (cron) | Detectar y volver a encolar documentos atascados |
 | OCR/extracción | PyMuPDF/pypdf, docx, TXT/CSV, extracción tabular y OCR cuando sea necesario | Lectura de PDF, imagen, documentos y texto plano |
-| LLM | Proveedor/modelo común configurado por el administrador de plataforma | Misma configuración para todos los tenants |
+| LLM | Claude Sonnet 5.5 (`claude-sonnet-5-5`), elección provisional a confirmar en la Fase 3; configurado centralmente por el `admin` | Misma configuración para todos los tenants ([estimación de costes](estimacion-de-costes.md)) |
 | Reranking | Cross-encoder local (p. ej. `bge-reranker`) o API (Cohere Rerank, Voyage) | Reordenar los candidatos de la búsqueda híbrida |
 | Observabilidad LLM | Opik o Langfuse autoalojado en la UE | Trazas, coste, evaluaciones y comparación de versiones |
 | Logs | Logs JSON (Monolog JSON en Laravel, structlog en Python) + Loki/Grafana o equivalente | Correlación por `trace_id` y filtrado por tenant |
 | MCP (post-MVP) | SDK oficial de MCP para Python sobre FastAPI + OAuth 2.1 | Acceso a los datos del tenant desde clientes de IA externos |
-| Pagos | Stripe + Laravel Cashier, si se monetiza con suscripción | Checkout y ciclo de suscripción |
+| Cobros | Transferencia bancaria con referencia única por empresa; pagos marcados por el `admin` | Cuota mensual, factura de la cuota, avisos en la aplicación y modo sin IA por impago ([ADR-0019](../adr/0019-cobro-por-transferencia.md), [ADR-0020](../adr/0020-modo-sin-ia-y-notificaciones.md)) |
+| Email | SMTP del correo del dominio (Hostinger) desde un buzón dedicado; cambiable a Amazon SES o Brevo solo con configuración | Únicamente el email de recuperación de contraseña ([ADR-0020](../adr/0020-modo-sin-ia-y-notificaciones.md)) |
 | Entorno | Docker Compose + GitHub Actions | Desarrollo, pruebas y despliegue |
+| Versionado | semantic-release + Conventional Commits | Versión nueva (`vX.Y.Z` y GitHub Release) en cada merge a `main`, inyectada en las imágenes y mostrada en el footer ([ADR-0016](../adr/0016-versionado-automatico.md)) |
 
 La configuración común del agente se guarda en ajustes de plataforma versionados y solo es editable por administradores internos. Las claves del proveedor se cifran y nunca se exponen a los tenants, al navegador ni a logs. La configuración admite cambiar el modelo centralmente sin crear agentes por cliente.
 
@@ -263,7 +299,7 @@ Todas las tablas de negocio llevan `tenant_id` y una política de Row Level Secu
 | --- | --- | --- |
 | `tenants` | id, name, tax_id, status, plan | Organización/espacio de trabajo |
 | `users` | id, tenant_id, name, email, password, role (admin/cliente), status | `cliente`: `tenant_id` obligatorio y único (un solo usuario por empresa); `admin`: sin `tenant_id`, solo accede al panel interno |
-| `subscriptions` | tenant_id, stripe ids, status, period dates | Opcional según modelo comercial |
+| `billing_periods` | id, tenant_id, period, amount, vat, due_date, status (pending/paid/overdue), payment_reference, paid_at, marked_paid_by, invoice_id | Cuota mensual cobrada por transferencia; el `admin` marca el pago ([ADR-0019](../adr/0019-cobro-por-transferencia.md)) |
 | `customers` | id, tenant_id, name, tax_id, email, phone, address, drive_invoices_folder_id, drive_quotes_folder_id | Clientes y receptores; carpetas en `Facturas/` y `Presupuestos/` |
 | `suppliers` | id, tenant_id, name, tax_id, email, phone, address, drive_folder_id | Proveedores y emisores; carpeta en `Proveedores/` |
 | `drive_connections` | id, tenant_id, connected_by, connected_at, google_account_email, granted_scopes, root_folder_id, inbox_folder_id, review_folder_id, unclassified_folder_id, other_docs_folder_id, encrypted_refresh_token (cifrado con clave KMS del tenant, nunca expuesto), status (active/disconnected/revoked) | Una por tenant; conexión y carpetas base |
@@ -274,6 +310,8 @@ Todas las tablas de negocio llevan `tenant_id` y una política de Row Level Secu
 | `quote_lines` | id, tenant_id, quote_id, description, quantity, unit_price, tax, discount, total | Detalle de presupuesto |
 | `document_chunks` | id, tenant_id, document_id, ordinal, text, page, metadata, embedding, text_search | Índice vectorial HNSW e índice GIN sobre `tsvector`; filtro tenant obligatorio |
 | `agent_settings` | version, prompt, provider, model, encrypted credentials, parameters, updated_by | Una configuración global común; solo admins de plataforma |
+| `platform_settings` | key, value (cifrado si es secreto), version, updated_by, reason, created_at | Configuración de la plataforma editable desde el panel del `admin`, versionada y auditada ([ADR-0022](../adr/0022-panel-de-configuracion.md)) |
+| `tenant_settings` | tenant_id, key, value, version, updated_by, reason | Valores personalizados por empresa (por ejemplo, límites) que sustituyen a los de la plataforma |
 | `conversations` / `messages` | tenant_id, user_id, content, citations, usage, trace_id, agent_version, timestamps | Historial según retención; enlace a la traza del LLM |
 | `audit_log` | tenant_id, user_id, action, target, channel (web/api/mcp), trace_id, metadata, created_at | Auditoría de cambios y actividad |
 | `oauth_clients` / `oauth_tokens` | id, tenant_id, user_id, client_name, scopes, expires_at, revoked_at | Post-MVP: autorización por usuario del servidor MCP |
@@ -286,6 +324,8 @@ Los importes usan `DECIMAL`/`NUMERIC` con precisión definida y códigos ISO de 
 
 Dashboard con navegación a clientes, proveedores, facturas, presupuestos, documentos, «Subir archivos» y «Por clasificar» (con contador de pendientes). Cada entidad tiene listado paginado con búsqueda, filtros, ordenación, ficha de detalle, creación, edición y archivado/borrado según permisos y obligaciones de auditoría. Los formularios muestran validaciones de negocio e importes calculados. Las facturas y presupuestos en borrador se editan con normalidad; al enviarlos, la ficha pasa a solo lectura, muestra la fecha y el usuario del envío y ofrece «Crear rectificativa» o «Nueva versión» en lugar de «Editar». Un registro manual y uno extraído por el agente usan los mismos servicios de dominio para mantener reglas coherentes.
 
+**Footer con la versión.** Todas las páginas, de la aplicación de las empresas y del panel de `admin`, muestran en el footer, en texto pequeño y discreto, la versión desplegada (`v1.4.2`). Fuera de producción se añaden el entorno y el commit (`v1.4.2 · staging · a1b2c3d`); en local se muestra `dev`. El valor viene de `APP_VERSION`, inyectado al construir la imagen ([ADR-0016](../adr/0016-versionado-automatico.md)).
+
 ### Subida y extracción asistida
 
 El menú principal tiene una sección **«Subir archivos»**: el usuario arrastra o selecciona uno o varios ficheros, que se suben a la carpeta `Entrada` del Drive de la empresa y se procesan en el momento. También puede adjuntar un fichero al crear una factura o presupuesto, que sigue el mismo camino. Es la única vía para que el agente procese un documento; la pantalla lo indica con un texto breve («Los ficheros que añadas directamente en Google Drive no se procesan»). Los ficheros de un tipo no admitido o demasiado grandes se rechazan antes de subirlos, con el motivo. El Drive se conecta en el asistente de alta («Conecta tu Google Drive»). Después, en ajustes, el usuario ve la cuenta conectada y el estado de la conexión, y puede reconectar o desconectar el Drive. Durante el procesamiento ve estados `queued`, `processing`, `needs_review`, `completed`, `unclassified` o `failed`; los fallidos muestran el error y un botón «Reintentar». La vista previa presenta campos detectados, líneas, cliente/proveedor coincidente o nuevo, confianza, carpeta de destino en Drive y enlace al original. Una vez procesado, se pueden corregir datos y consultar el registro enlazado al fichero.
@@ -295,6 +335,30 @@ En la primera versión, una extracción suficientemente fiable puede crear el cl
 ### Agente administrativo común
 
 El agente se ofrece como una única experiencia de chat dentro del SaaS. Los usuarios consultan en lenguaje natural sus propios datos y documentos: por ejemplo, facturas vencidas, total facturado en un periodo, presupuestos pendientes o contenido de un documento concreto. El agente usa servicios de lectura autorizados para datos contables y RAG filtrado para evidencia textual. Las acciones de escritura del agente requieren confirmación explícita y quedan registradas; en el MVP, la creación principal de registros ocurre mediante CRUD o ingesta documental. El agente no puede modificar facturas ni presupuestos ya enviados.
+
+### Panel de configuración de la plataforma (solo `admin`)
+
+Toda la configuración necesaria para que la aplicación funcione se hace desde un panel dentro del panel de administración, accesible solo para el `admin`, sin tocar el servidor ni desplegar ([ADR-0022](../adr/0022-panel-de-configuracion.md)).
+
+| Sección | Qué se configura |
+| --- | --- |
+| **Inteligencia artificial** | Clave de API de Anthropic (solo escritura, con «Probar conexión»); modelo (inicialmente Claude Sonnet 5.5) y nivel de esfuerzo por tarea (clasificación, extracción, chat); máximo de tokens por respuesta y de llamadas a herramientas por pregunta; versiones del prompt del agente con evaluación antes de activarlas ([ADR-0004](../adr/0004-agente-unico-comun.md)); proveedor y clave de embeddings y reranker; **límite de gasto global de IA al mes** |
+| **Cuota y cobro** | Precio mensual con IVA incluido (inicialmente 25 €) y tipo de IVA; día de vencimiento y días de margen antes del modo sin IA (inicialmente 15); IBAN y titular que se muestran al cliente; formato de la referencia de pago; datos fiscales de la plataforma y serie de numeración para las facturas de la cuota |
+| **Límites por defecto** | Documentos al mes (300), páginas por documento (3) y máximo por fichero (30); consultas al agente al mes (150); tope de gasto de IA por empresa (12 €); paquetes adicionales (por ejemplo, 100 documentos por 5 € + IVA); límites por minuto de subidas y consultas |
+| **Empresas** | Listado con estado, consumo del mes y cobro; alta, suspensión y reactivación; marcar pagos recibidos; activar o quitar el modo sin IA; **límites personalizados** para una empresa concreta; reasignación verificada del usuario ([ADR-0006](../adr/0006-roles-admin-cliente.md)) |
+| **Google Drive** | ID y secreto del cliente OAuth de Google (solo escritura); nombres por defecto de las carpetas; tipos de fichero admitidos y tamaño máximo |
+| **Email** | Servidor SMTP, puerto, usuario y contraseña (solo escritura), remitente, con «Enviar email de prueba». Solo se usa para recuperar la contraseña ([ADR-0020](../adr/0020-modo-sin-ia-y-notificaciones.md)) |
+| **Avisos y textos** | Aviso general para todos los clientes (por ejemplo, una parada programada); modo mantenimiento; versiones de la política de privacidad y de las condiciones de uso |
+| **Estado del sistema** (solo lectura) | Versión desplegada, estado de colas y workers, errores recientes, gasto de IA del mes (total y por empresa), última copia de seguridad y resultado de la última prueba de restauración |
+
+**Reglas del panel:**
+
+- Cada cambio queda **versionado y auditado** (quién, cuándo, motivo, valor anterior y nuevo, con los secretos enmascarados) y se puede deshacer.
+- Los **secretos** se guardan cifrados y nunca se vuelven a mostrar; solo los últimos 4 caracteres.
+- Los cambios críticos (claves, modelo y prompt, precio, datos bancarios) piden confirmar la contraseña y validan el valor antes de guardarlo.
+- Los cambios se aplican sin reiniciar: las aplicaciones leen la configuración con caché, que se invalida al guardar.
+- El acceso de `admin` exige **MFA obligatorio**.
+- **No se configuran desde el panel**, por seguridad: la conexión a la base de datos y a Redis, `APP_KEY`, la clave maestra del KMS y las copias de seguridad. Siguen en el servidor y el panel solo muestra su estado.
 
 ## Configuración, versiones y evaluación del agente común
 
@@ -337,7 +401,7 @@ Una versión que falle las pruebas críticas no se promueve. Los cambios del pro
 - Normalizar nombres, identificadores fiscales, fechas, moneda, impuestos, totales y líneas.
 - Verificar sumas: subtotal + impuestos − descuentos frente al total, con tolerancias explícitas por redondeo.
 - Resolver cliente/proveedor por identificador fiscal y coincidencias secundarias; registrar nuevas entidades ausentes y enlazar las existentes.
-- Persistir en transacción los datos normalizados, líneas, relaciones y estado del documento.
+- Devolver a Laravel el resultado estructurado; Laravel lo guarda en transacción con sus servicios de dominio (datos normalizados, líneas, relaciones y estado del documento). Python no escribe tablas de negocio ([ADR-0015](../adr/0015-python-extrae-laravel-persiste.md)).
 - Crear fragmentos y embeddings para RAG; indexar solo documentos que el tenant pueda consultar.
 - Si no es factura, presupuesto ni documentación de un proveedor, guardar el tipo sugerido y un resumen breve, marcarlo como `unclassified` y no crear registros administrativos.
 - Archivar el fichero en Drive en `Proveedores/<proveedor>`, `Facturas/<cliente>`, `Presupuestos/<cliente>`, `Revisión` o `Por clasificar`, después de confirmar la transacción. Si falla el movimiento, se reintenta sin repetir la extracción.
@@ -351,17 +415,19 @@ Una versión que falle las pruebas críticas no se promueve. Los cambios del pro
 | Aislamiento multi-tenant | `tenant_id` obligatorio tomado de la sesión; RLS en PostgreSQL; claves foráneas compuestas; clientes y proveedores compartidos duplicados por tenant; aislamiento en SQL, RAG, Drive, cachés y agente; pruebas de acceso cruzado que bloquean el despliegue |
 | Roles | Solo `admin` (panel interno de la plataforma, sin acceso a la aplicación de las empresas) y `cliente` (un único usuario por empresa, con acceso solo a su tenant); verificación del rol en cada endpoint y operación; acceso del `admin` a datos de una empresa solo por soporte, con motivo y auditado |
 | Agente común | Ajustes y credenciales solo accesibles al administrador interno; secretos cifrados y no enviados al cliente |
+| Panel de configuración | Solo `admin` con MFA obligatorio; secretos cifrados y de solo escritura; confirmación de contraseña y validación en cambios críticos; historial versionado con vuelta atrás; base de datos, KMS y copias de seguridad fuera del panel ([ADR-0022](../adr/0022-panel-de-configuracion.md)) |
 | Ficheros | Bucket privado, URLs firmadas de corta duración, límites de carga, validación MIME y análisis antimalware |
 | Google Drive | Cada empresa conecta su propio Drive por OAuth con el permiso mínimo `drive.file` (solo los ficheros que crea la aplicación); la plataforma nunca recibe usuarios ni contraseñas de Google ni puede ver el resto del Drive; refresh token cifrado con clave KMS por tenant, descifrado solo en `drive-sync` y nunca visible para administradores, logs ni API; sin carpetas compartidas entre empresas; desconexión y revocación desde ajustes; auditoría de cada subida, movimiento y eliminación |
 | Extracción IA | Validación de esquema, límites y consistencia; revisar baja confianza y duplicados; guardar procedencia |
 | RAG y prompt | Fragmentos y documentos son datos no confiables; no permiten cambiar políticas ni superar permisos |
 | Escrituras | Confirmación para acciones del agente; transacciones; registro de usuario, origen y cambios |
 | Documentos enviados | Bloqueo de facturas y presupuestos enviados en los servicios de dominio y mediante trigger en PostgreSQL; hash del contenido enviado; correcciones solo con rectificativa o nueva versión |
-| Autenticación | Verificación de email, contraseñas seguras, sesiones protegidas, limitación de intentos y MFA opcional |
+| Autenticación | Email introducido dos veces en el registro (sin email de verificación), recuperación de contraseña por email con enlace de un solo uso y caducidad corta, contraseñas seguras, sesiones protegidas, limitación de intentos y MFA opcional |
+| Modo sin IA | Estado de cobro y de límites comprobado en el servidor antes de encolar trabajos de IA y de nuevo en los workers; tests por cada función y canal |
 | RGPD | Hosting UE, minimización, exportación y borrado, plazos de retención y acuerdos con proveedores |
 | Observabilidad | Logs JSON y trazas de LLM sin secretos ni contenido completo de documentos; enmascarado de datos personales; Opik/Langfuse autoalojado en la UE con acceso solo para administradores internos; retención limitada de trazas |
 | MCP (post-MVP) | OAuth 2.1 por usuario, scopes por herramienta, tenant y rol aplicados en servidor, rate limits por tenant, revocación de tokens, solo lectura en la primera versión y auditoría con `channel = mcp` |
-| Copias de seguridad | Backups cifrados de PostgreSQL y ficheros; restauración probada |
+| Copias de seguridad | pgBackRest con copia local en el VPS y copia externa cifrada e inmutable en Backblaze B2 (plan gratuito, región UE), configurada como S3 genérico para cambiar a un proveedor de pago solo con configuración; restauración a cualquier minuto (pérdida máxima < 5 min); prueba de restauración automática semanal y alertas ([ADR-0021](../adr/0021-copias-de-seguridad.md)) |
 
 ## Infraestructura
 
@@ -376,12 +442,13 @@ Una versión que falle las pruebas críticas no se promueve. Los cambios del pro
 | `drive-sync` | Subida de ficheros al Drive de cada empresa, creación de carpetas, archivado y envío a la papelera |
 | `db` | PostgreSQL 16 con pgvector |
 | `redis` | Colas, caché y rate limits |
-| `object-storage` | Servicio S3 compatible, administrado o local en desarrollo |
+| `object-storage` | Servicio S3 compatible en el VPS para las copias privadas de documentos |
+| `backup` | pgBackRest: copias de PostgreSQL en el VPS (`repo1`) y en Backblaze B2 (`repo2`), y prueba de restauración semanal ([ADR-0021](../adr/0021-copias-de-seguridad.md)) |
 | `observability` | Opik o Langfuse (trazas de LLM y evaluaciones) y agregador de logs JSON |
 | `reranker` | Opcional: servicio de inferencia del cross-encoder si no se usa una API externa |
 | `mcp` | Post-MVP: endpoint MCP del servicio FastAPI publicado a través del proxy |
 
-Solo proxy expone puertos públicos. La app, runtime, base de datos, Redis y almacenamiento se comunican en red privada. Los secretos se inyectan desde entorno/gestor de secretos. Desplegar la misma imagen en staging y producción, ejecutar migraciones de forma controlada y supervisar salud de colas, almacenamiento e ingesta.
+Los servicios no guardan estado propio y se escalan replicándolos; qué se prepara desde la Fase 1 y qué se activa al alcanzar umbrales medidos está en [ADR-0018](../adr/0018-estrategia-de-escalado.md). Solo proxy expone puertos públicos. La app, runtime, base de datos, Redis y almacenamiento se comunican en red privada. Los secretos se inyectan desde entorno/gestor de secretos. Desplegar la misma imagen en staging y producción, ejecutar migraciones de forma controlada y supervisar salud de colas, almacenamiento e ingesta.
 
 ## Métricas
 
@@ -395,24 +462,27 @@ Solo proxy expone puertos públicos. La app, runtime, base de datos, Redis y alm
 - Coste: tokens y coste de LLM, embeddings y reranking por tenant y por versión del agente (desde las trazas).
 - MCP (post-MVP): tenants y usuarios conectados, llamadas por herramienta, errores de autorización y latencia.
 - Sistema: latencia p50/p95, CPU/memoria, tamaño de PostgreSQL/índice, cola y uso de almacenamiento.
-- Negocio: tenants activos, conversión, renovaciones y cancelaciones si se habilitan suscripciones.
+- Negocio: empresas activas, altas y bajas, cobros pendientes y vencidos, empresas en modo sin IA (por impago o por límites agotados), y coste de IA por empresa frente a la cuota ([estimación de costes](estimacion-de-costes.md)).
 
 ## Plan de implementación por fases
 
 **Fase 1 · Fundación y tenant (semanas 1-2)**
 
-1. Crear monorepo, Docker Compose, CI y entornos.
+1. Crear monorepo, Docker Compose, CI y entornos, con versionado automático en cada merge a `main` (semantic-release y comprobación del título de los PR), imágenes etiquetadas con la versión y `APP_VERSION`/`APP_COMMIT` inyectados en el build ([ADR-0016](../adr/0016-versionado-automatico.md)).
 2. Implementar registro, login, recuperación de contraseña, estructura de tenant y asistente de alta (con el paso «Conecta tu Google Drive», que se completa en la Fase 3).
-3. Crear migraciones base, los roles `admin` y `cliente` (con la restricción de un solo usuario por empresa) y aislamiento de datos con RLS y claves foráneas compuestas.
+3. Crear migraciones base, los roles `admin` y `cliente` (con la restricción de un solo usuario por empresa) y aislamiento de datos con RLS y claves foráneas compuestas, fijando la empresa con `SET LOCAL` en cada transacción ([ADR-0018](../adr/0018-estrategia-de-escalado.md)).
 4. Añadir tests de acceso cruzado desde el comienzo, con el escenario de un cliente compartido entre dos tenants.
 5. Configurar logs estructurados en JSON con `trace_id` propagado entre Laravel, FastAPI y workers.
+6. Configurar las copias de seguridad desde el primer despliegue: pgBackRest con `repo1` en el VPS y `repo2` en Backblaze B2, cifrado, bloqueo de objetos, prueba de restauración semanal y alertas ([ADR-0021](../adr/0021-copias-de-seguridad.md)).
 
 **Fase 2 · SaaS administrativo y CRUD (semanas 3-6)**
 
 1. Implementar CRUD de clientes y proveedores, la gestión de la cuenta del usuario de la empresa y el panel de `admin` para dar de alta, suspender y reactivar empresas.
-2. Implementar CRUD de facturas/presupuestos y líneas con validaciones de importes, estados, acción de envío, bloqueo tras el envío (servicio y trigger), facturas rectificativas y versiones de presupuesto.
-3. Añadir historial de cambios, búsquedas, filtros, permisos y archivado.
-4. Incorporar suscripciones Stripe si se decide monetizar mediante plan recurrente.
+2. Implementar el panel de configuración del `admin` con MFA, configuración versionada y auditada, secretos de solo escritura y las secciones de cuota y cobro, límites, empresas, email, avisos y estado del sistema; las secciones de IA y Google Drive se completan en las Fases 3 y 4 ([ADR-0022](../adr/0022-panel-de-configuracion.md)).
+3. Implementar CRUD de facturas/presupuestos y líneas con validaciones de importes, estados, acción de envío, bloqueo tras el envío (servicio y trigger), facturas rectificativas y versiones de presupuesto.
+4. Añadir historial de cambios, búsquedas, filtros, permisos y archivado.
+5. Implementar el cobro por transferencia: periodos de cobro mensuales, referencia de pago por empresa, factura de la cuota, marcado de pagos por el `admin`, avisos en la aplicación y modo sin IA por impago, con procesamiento automático de los documentos pendientes al registrar el pago ([ADR-0019](../adr/0019-cobro-por-transferencia.md), [ADR-0020](../adr/0020-modo-sin-ia-y-notificaciones.md)).
+6. Configurar el único email de la aplicación (recuperación de contraseña) por SMTP del dominio, con SPF, DKIM y DMARC, y el centro de avisos dentro de la aplicación.
 
 **Fase 3 · Ficheros e ingesta (semanas 7-10)**
 
@@ -441,8 +511,9 @@ Solo proxy expone puertos públicos. La app, runtime, base de datos, Redis y alm
 1. Tests E2E para CRUD, bloqueo de documentos enviados, «Subir archivos», extracción, archivado en Drive, «Por clasificar», reintentos, revisión, deduplicación y consultas del agente.
 2. Validar aislamiento entre tenants en API, SQL, objetos, Drive y RAG.
 3. Medir calidad de extracción y ajustar umbrales de revisión.
-4. Probar restauración de copias, exportación/borrado, accesibilidad y textos legales.
-5. Beta con clientes y corrección de fallos antes de abrir el registro. Antes de abrirlo, la pantalla de consentimiento OAuth de Google debe estar verificada.
+4. Simulacro completo de recuperación desde Backblaze B2, cronometrado ([ADR-0021](../adr/0021-copias-de-seguridad.md)), y pruebas de exportación/borrado, accesibilidad y textos legales.
+5. Pruebas de carga (ingesta, consultas al agente y listados) para validar y ajustar los umbrales de escalado del [ADR-0018](../adr/0018-estrategia-de-escalado.md).
+6. Beta con clientes y corrección de fallos antes de abrir el registro. Antes de abrirlo, la pantalla de consentimiento OAuth de Google debe estar verificada.
 
 **Fase 6 · Servidor MCP (post-MVP, semanas 17-19)**
 
@@ -480,6 +551,8 @@ Existe un único agente de IA común a todos los clientes, configurado por el ad
 
 Cada empresa conecta su propio Google Drive en el asistente de alta mediante OAuth de Google con el permiso drive.file (solo los ficheros que crea la aplicación); la plataforma nunca recibe contraseñas ni puede ver el resto del Drive, y el refresh token se guarda cifrado con KMS, sin que ningún administrador pueda verlo. En ese Drive se crea la estructura de carpetas (Entrada, Proveedores, Facturas, Presupuestos, Revisión, Por clasificar y Otros documentos). La única vía de entrada de documentos es la sección «Subir archivos» del menú principal: guarda una copia privada en S3, sube el fichero a Entrada y lanza la ingesta en el momento. No hay vigilancia del Drive: los ficheros añadidos directamente en Google Drive no se procesan. Después de procesarlo, el fichero se mueve a Proveedores/<proveedor> si lo emitió un proveedor, a Facturas/<cliente> o Presupuestos/<cliente> si lo emitió la empresa, a Revisión si es una factura o presupuesto ambiguo, o a Por clasificar si no es ninguna de esas cosas. La sección «Por clasificar» lista esos documentos con un desplegable por fila y un botón «Aplicar»: Es factura y Es presupuesto (el usuario elige el cliente, el agente reprocesa el documento con ese tipo forzado y se archiva en Facturas/<cliente> o Presupuestos/<cliente>), Es proveedor (el usuario elige el proveedor y se archiva en Proveedores/<proveedor>), Verificado / Almacenar (no crea registros y mueve el fichero a Otros documentos) y Eliminar (con confirmación: papelera de Drive y borrado de copia, fragmentos y embeddings, conservando la auditoría). Los fallos se reintentan automáticamente con espera exponencial, una tarea programada vuelve a encolar los documentos atascados y los que agotan los intentos quedan en failed con un botón «Reintentar». La ingesta es idempotente por hash y drive_file_id. Drive no es la fuente de verdad.
 
+Laravel es el único que escribe los datos de negocio, siempre con sus servicios de dominio. Un job de Laravel orquesta cada documento: pide a FastAPI la extracción (Python devuelve un resultado validado con Pydantic y no escribe tablas de negocio), lo guarda en transacción, pide la indexación y pide el archivado en Drive. Python solo escribe sus propias tablas (document_chunks, conversations y messages) y lee los datos de negocio con un rol de solo lectura sujeto a RLS; las escrituras del agente pasan por la API interna de Laravel.
+
 El agente responde usando servicios de consulta sobre los datos relacionales y RAG sobre los documentos del tenant. Las cifras y estados se obtienen de consultas estructuradas; los fragmentos vectoriales sirven para encontrar contenido y aportar citas. El agente nunca recibe SQL arbitrario ni puede cruzar datos de tenants.
 
 La recuperación documental es híbrida (pgvector + búsqueda textual de PostgreSQL) y reordena los candidatos con un reranker antes de llamar al LLM. Todos los servicios emiten logs JSON con trace_id y las llamadas al LLM se trazan en Opik o Langfuse autoalojado. Tras el MVP se añadirá un servidor MCP con OAuth por usuario sobre los mismos servicios de dominio.
@@ -493,11 +566,12 @@ Reglas obligatorias:
 4. El agente usa servicios permitidos, nunca SQL generado sin restricciones.
 5. Búsqueda RAG siempre filtrada por tenant y con citas al fichero fuente.
 6. Las acciones de escritura iniciadas por el agente requieren confirmación y auditoría.
-7. Cada endpoint lleva pruebas de permisos y validación; cada worker/job tiene tests de reintentos y fallos.
+7. Desarrolla con TDD, test primero: rojo, verde y refactorizar. Cada endpoint lleva pruebas de permisos y validación; cada worker/job tiene tests de reintentos y fallos. Commits y títulos de PR en Conventional Commits.
 8. Logs en JSON con trace_id y tenant_id; trazas de LLM sin secretos y con datos personales enmascarados.
 9. Cada tenant solo accede a su propia carpeta de Drive y solo con el permiso drive.file; las subidas y movimientos de ficheros se auditan. La plataforma nunca borra ficheros del cliente por su cuenta: solo los envía a la papelera de Drive cuando un usuario pulsa Eliminar en «Por clasificar» y lo confirma.
 10. Facturas y presupuestos son editables solo en borrador. Al enviarse quedan bloqueados (servicio de dominio + trigger en PostgreSQL) para cualquier canal, incluido el agente; solo cambia su estado. Las facturas enviadas se corrigen con una rectificativa y los presupuestos con una nueva versión.
-11. Solo existen dos roles: admin (equipo de la plataforma, solo panel interno, sin tenant) y cliente (exactamente un usuario por empresa, restricción única por tenant_id). No hay invitaciones ni miembros.
+11. Solo existen dos roles: admin (equipo de la plataforma, solo panel interno, sin tenant) y cliente (exactamente un usuario por empresa, restricción única por tenant_id). No hay invitaciones ni miembros. Toda la configuración de negocio y operación (IA, cuota, límites, Drive, email, avisos) se gestiona desde el panel del admin, versionada y auditada, con secretos cifrados de solo escritura; base de datos, KMS y copias de seguridad quedan fuera del panel.
+12. La aplicación solo envía el email de recuperación de contraseña; el resto de avisos va dentro de la aplicación. El impago no corta el acceso: activa el modo sin IA (sin análisis de documentos, chat ni reprocesado), comprobado en el servidor y en los workers, y al registrar el pago se procesan los documentos pendientes.
 
 Empieza por la Fase 1 del plan: estructura del repositorio, Docker Compose con healthchecks, CI, autenticación, tenant, logs JSON con trace_id y pruebas de aislamiento. Presenta el resultado antes de continuar.
 ```
