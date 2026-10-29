@@ -138,3 +138,4 @@ Cada merge a `main` publica automáticamente una versión nueva (etiqueta `vX.Y.
 | 2026-10-29 | ADR-0020: el impago solo desactiva la IA, sin cortar el acceso; la aplicación solo envía el email de recuperación de contraseña |
 | 2026-10-29 | ADR-0021: copias de seguridad con pgBackRest en el VPS y en Backblaze B2 gratuito, intercambiable por un proveedor de pago solo con configuración |
 | 2026-10-29 | ADR-0022: panel de configuración de la plataforma para el `admin`, versionado y auditado |
+| 2026-10-29 | Google Drive sale del panel de configuración del `admin`: cada empresa conecta el suyo; las credenciales OAuth de Google de la plataforma pasan a variables de entorno del servidor |

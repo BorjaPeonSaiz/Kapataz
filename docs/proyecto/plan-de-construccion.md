@@ -51,7 +51,7 @@ El MVP incluye registro y acceso, aislamiento de empresas, CRUD administrativo, 
 | RAG con citas sobre documentos propios del tenant | Sí, con búsqueda híbrida (texto + vector) y reranking | Reranker afinado con datos propios |
 | Chat administrativo con permisos y respuestas basadas en datos | Sí | Acciones de escritura confirmadas |
 | Administración interna de tenants, agente común y procesamiento | Sí | Analítica avanzada |
-| Panel de configuración de la plataforma para el `admin` (IA, cuota y cobro, límites, empresas, Drive, email, avisos y estado del sistema) | Sí | Configuración por plan de precios |
+| Panel de configuración de la plataforma para el `admin` (IA, cuota y cobro, límites, empresas, email, avisos y estado del sistema) | Sí | Configuración por plan de precios |
 | Logs estructurados (JSON) y trazas de LLM por ingesta y consulta | Sí | Paneles de coste y calidad por tenant |
 | Servidor MCP para clientes de IA externos (Claude, Cursor, Windsurf) | No (post-MVP) | Solo lectura primero; después escrituras con confirmación |
 
@@ -344,12 +344,13 @@ Toda la configuración necesaria para que la aplicación funcione se hace desde 
 | --- | --- |
 | **Inteligencia artificial** | Clave de API de Anthropic (solo escritura, con «Probar conexión»); modelo (inicialmente Claude Sonnet 5.5) y nivel de esfuerzo por tarea (clasificación, extracción, chat); máximo de tokens por respuesta y de llamadas a herramientas por pregunta; versiones del prompt del agente con evaluación antes de activarlas ([ADR-0004](../adr/0004-agente-unico-comun.md)); proveedor y clave de embeddings y reranker; **límite de gasto global de IA al mes** |
 | **Cuota y cobro** | Precio mensual con IVA incluido (inicialmente 25 €) y tipo de IVA; día de vencimiento y días de margen antes del modo sin IA (inicialmente 15); IBAN y titular que se muestran al cliente; formato de la referencia de pago; datos fiscales de la plataforma y serie de numeración para las facturas de la cuota |
-| **Límites por defecto** | Documentos al mes (300), páginas por documento (3) y máximo por fichero (30); consultas al agente al mes (150); tope de gasto de IA por empresa (12 €); paquetes adicionales (por ejemplo, 100 documentos por 5 € + IVA); límites por minuto de subidas y consultas |
+| **Límites por defecto** | Documentos al mes (300), páginas por documento (3) y máximo por fichero (30); consultas al agente al mes (150); tope de gasto de IA por empresa (12 €); paquetes adicionales (por ejemplo, 100 documentos por 5 € + IVA); límites por minuto de subidas y consultas; tipos de fichero admitidos y tamaño máximo por fichero en «Subir archivos» |
 | **Empresas** | Listado con estado, consumo del mes y cobro; alta, suspensión y reactivación; marcar pagos recibidos; activar o quitar el modo sin IA; **límites personalizados** para una empresa concreta; reasignación verificada del usuario ([ADR-0006](../adr/0006-roles-admin-cliente.md)) |
-| **Google Drive** | ID y secreto del cliente OAuth de Google (solo escritura); nombres por defecto de las carpetas; tipos de fichero admitidos y tamaño máximo |
 | **Email** | Servidor SMTP, puerto, usuario y contraseña (solo escritura), remitente, con «Enviar email de prueba». Solo se usa para recuperar la contraseña ([ADR-0020](../adr/0020-modo-sin-ia-y-notificaciones.md)) |
 | **Avisos y textos** | Aviso general para todos los clientes (por ejemplo, una parada programada); modo mantenimiento; versiones de la política de privacidad y de las condiciones de uso |
 | **Estado del sistema** (solo lectura) | Versión desplegada, estado de colas y workers, errores recientes, gasto de IA del mes (total y por empresa), última copia de seguridad y resultado de la última prueba de restauración |
+
+**Google Drive no está en el panel.** Cada empresa conecta y gestiona su propio Drive desde el asistente de alta y sus ajustes ([ADR-0007](../adr/0007-google-drive-por-empresa.md)); el `admin` solo ve el estado de la conexión de cada empresa en «Empresas». Las credenciales de la aplicación OAuth de Google de la plataforma (ID y secreto del cliente) son de servidor y se configuran en sus variables de entorno, igual que la base de datos y el KMS.
 
 **Reglas del panel:**
 
@@ -478,7 +479,7 @@ Los servicios no guardan estado propio y se escalan replicándolos; qué se prep
 **Fase 2 · SaaS administrativo y CRUD (semanas 3-6)**
 
 1. Implementar CRUD de clientes y proveedores, la gestión de la cuenta del usuario de la empresa y el panel de `admin` para dar de alta, suspender y reactivar empresas.
-2. Implementar el panel de configuración del `admin` con MFA, configuración versionada y auditada, secretos de solo escritura y las secciones de cuota y cobro, límites, empresas, email, avisos y estado del sistema; las secciones de IA y Google Drive se completan en las Fases 3 y 4 ([ADR-0022](../adr/0022-panel-de-configuracion.md)).
+2. Implementar el panel de configuración del `admin` con MFA, configuración versionada y auditada, secretos de solo escritura y las secciones de cuota y cobro, límites, empresas, email, avisos y estado del sistema; la sección de IA se completa en las Fases 3 y 4 ([ADR-0022](../adr/0022-panel-de-configuracion.md)).
 3. Implementar CRUD de facturas/presupuestos y líneas con validaciones de importes, estados, acción de envío, bloqueo tras el envío (servicio y trigger), facturas rectificativas y versiones de presupuesto.
 4. Añadir historial de cambios, búsquedas, filtros, permisos y archivado.
 5. Implementar el cobro por transferencia: periodos de cobro mensuales, referencia de pago por empresa, factura de la cuota, marcado de pagos por el `admin`, avisos en la aplicación y modo sin IA por impago, con procesamiento automático de los documentos pendientes al registrar el pago ([ADR-0019](../adr/0019-cobro-por-transferencia.md), [ADR-0020](../adr/0020-modo-sin-ia-y-notificaciones.md)).
@@ -570,7 +571,7 @@ Reglas obligatorias:
 8. Logs en JSON con trace_id y tenant_id; trazas de LLM sin secretos y con datos personales enmascarados.
 9. Cada tenant solo accede a su propia carpeta de Drive y solo con el permiso drive.file; las subidas y movimientos de ficheros se auditan. La plataforma nunca borra ficheros del cliente por su cuenta: solo los envía a la papelera de Drive cuando un usuario pulsa Eliminar en «Por clasificar» y lo confirma.
 10. Facturas y presupuestos son editables solo en borrador. Al enviarse quedan bloqueados (servicio de dominio + trigger en PostgreSQL) para cualquier canal, incluido el agente; solo cambia su estado. Las facturas enviadas se corrigen con una rectificativa y los presupuestos con una nueva versión.
-11. Solo existen dos roles: admin (equipo de la plataforma, solo panel interno, sin tenant) y cliente (exactamente un usuario por empresa, restricción única por tenant_id). No hay invitaciones ni miembros. Toda la configuración de negocio y operación (IA, cuota, límites, Drive, email, avisos) se gestiona desde el panel del admin, versionada y auditada, con secretos cifrados de solo escritura; base de datos, KMS y copias de seguridad quedan fuera del panel.
+11. Solo existen dos roles: admin (equipo de la plataforma, solo panel interno, sin tenant) y cliente (exactamente un usuario por empresa, restricción única por tenant_id). No hay invitaciones ni miembros. Toda la configuración de negocio y operación (IA, cuota, límites, email, avisos) se gestiona desde el panel del admin, versionada y auditada, con secretos cifrados de solo escritura; base de datos, KMS, credenciales OAuth de Google y copias de seguridad quedan fuera del panel. Google Drive no se configura en el panel: lo conecta cada empresa.
 12. La aplicación solo envía el email de recuperación de contraseña; el resto de avisos va dentro de la aplicación. El impago no corta el acceso: activa el modo sin IA (sin análisis de documentos, chat ni reprocesado), comprobado en el servidor y en los workers, y al registrar el pago se procesan los documentos pendientes.
 
 Empieza por la Fase 1 del plan: estructura del repositorio, Docker Compose con healthchecks, CI, autenticación, tenant, logs JSON con trace_id y pruebas de aislamiento. Presenta el resultado antes de continuar.

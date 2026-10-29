@@ -14,8 +14,9 @@ A la vez, hay valores que no pueden depender de la aplicación: los que se neces
 - La aplicación tiene un **panel de configuración** dentro del panel de administración, accesible solo para el rol `admin` ([ADR-0006](0006-roles-admin-cliente.md)).
 - La configuración se guarda en la base de datos (`platform_settings` y `tenant_settings`), **versionada**: cada cambio crea una versión con autor, fecha, motivo y valores anterior y nuevo, y se puede volver a una versión anterior.
 - Las aplicaciones leen la configuración con caché, que se invalida al guardar un cambio. No hace falta reiniciar ni desplegar.
-- **Secretos** (claves de API, contraseña SMTP, credenciales OAuth de Google): se guardan cifrados con el KMS, son **de solo escritura** (el panel muestra solo los últimos 4 caracteres y la fecha de cambio) y nunca aparecen en logs, trazas ni respuestas de la API.
-- Los cambios críticos (claves de API, modelo y prompt del agente, precio, datos bancarios) piden **confirmar la contraseña** y validan el valor antes de guardarlo (por ejemplo, «Probar conexión» con la API de Anthropic, el SMTP o Google).
+- **Google Drive no se configura en el panel.** Cada empresa conecta y gestiona su propio Drive ([ADR-0007](0007-google-drive-por-empresa.md)); el `admin` solo ve el estado de la conexión de cada empresa.
+- **Secretos** (claves de API, contraseña SMTP): se guardan cifrados con el KMS, son **de solo escritura** (el panel muestra solo los últimos 4 caracteres y la fecha de cambio) y nunca aparecen en logs, trazas ni respuestas de la API.
+- Los cambios críticos (claves de API, modelo y prompt del agente, precio, datos bancarios) piden **confirmar la contraseña** y validan el valor antes de guardarlo (por ejemplo, «Probar conexión» con la API de Anthropic o el SMTP).
 - El acceso de `admin` exige **MFA obligatorio**.
 - La configuración del agente sigue las reglas de [ADR-0004](0004-agente-unico-comun.md): una versión nueva del prompt o del modelo pasa la suite de evaluación antes de activarse.
 
@@ -27,6 +28,7 @@ Se configuran en variables de entorno o en el gestor de secretos del servidor, y
 | --- | --- |
 | Conexión a PostgreSQL y Redis, `APP_KEY`, clave maestra del KMS | Se necesitan para arrancar y para descifrar el resto de la configuración |
 | Copias de seguridad (destino, credenciales, contraseña de cifrado, retención) | Quien controlase el panel no debe poder desactivar ni redirigir las copias ([ADR-0021](0021-copias-de-seguridad.md)) |
+| ID y secreto del cliente OAuth de Google de la plataforma | Identifican a la aplicación ante Google, no a ninguna empresa; casi nunca cambian. El Drive de cada empresa lo conecta ella misma ([ADR-0007](0007-google-drive-por-empresa.md)) |
 | `APP_VERSION`, `APP_COMMIT`, entorno | Los fija el build ([ADR-0016](0016-versionado-automatico.md)) |
 
 ## Alternativas consideradas
