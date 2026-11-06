@@ -66,6 +66,7 @@ Estas comprobaciones corren durante la construcción, en cada bloque. La verific
 - Para integrar deben estar en verde el CI de GitHub, las comprobaciones de seguridad (`pip-audit`, `npm audit`, bandit, Semgrep, gitleaks y Trivy, sin hallazgos altos ni críticos) y la revisión de `revisor-codigo`.
 - Un check fallido o pendiente bloquea la integración. Una excepción exige justificación en el PR, con riesgo, mitigación y tu aprobación. No se exceptúan defectos críticos de seguridad ni invariantes fiscales.
 - El Bloque 0 solo aporta documentación: se comprueba en local y se integra con tu visto bueno. El Bloque 1 crea los workflows y la protección de `main`, y su propio PR ya debe pasarlos.
+- Desde la 1.0.0, cada cambio de la app lleva además versión, changelog y etiqueta (ADR-032). Este plan completo se repite antes de cada MAJOR; en una MINOR, solo las fases afectadas.
 
 ---
 
@@ -75,11 +76,10 @@ Este plan comprueba comportamientos que todavía no están decididos. Hay que ce
 
 | # | Decisión | Dónde aparece | Qué hace falta |
 |---|---|---|---|
-| 1 | **Consulta al asesor:** obligación actual como productor, apoderamiento de cada cliente, conservación tras una baja y papel de Anthropic y Stripe en el contrato de encargo | §1.4, RF-VF-07, RN-12, ADR-029 | Hacerla antes del lanzamiento. Puede cambiar el diseño |
-| 2 | **Qué ocurre tras los 90 días de solo lectura** | RN-12, RF-AC-06 | Lo fija la asesoría |
-| 3 | **Proveedor de Verifactu** | Bloque 12, ADR-012 | Elegirlo con precios y condiciones reales |
-| 4 | **WER sin umbral** | Bloque 9 | Se mide y se anota. No se declara aprobado ni suspenso mientras la especificación no fije un valor |
-| 5 | **El escenario «Extracción que no cuadra»** no indica el IVA: la diferencia de 90,00 € solo sale con el 21 % | §3.5 | Añadir el tipo de IVA al escenario |
+| 1 | **Consulta al asesor:** (a) obligación actual como productor; (b) apoderamiento de cada cliente; (c) qué ocurre con los datos tras los 90 días de solo lectura y qué hay que conservar tras una baja; (d) papel de Anthropic y Stripe en el contrato de encargo; (e) tratamiento de anticipos y fases en la factura final | §1.4, RF-VF-07, RN-12, RF-AC-06, ADR-029, ADR-033 | Hacerla antes del lanzamiento. Puede cambiar el diseño |
+| 2 | **Proveedor de Verifactu** | Bloque 12, ADR-012 | Elegirlo con precios y condiciones reales |
+| 3 | **WER sin umbral** | Bloque 9 | Se mide y se anota. No se declara aprobado ni suspenso mientras la especificación no fije un valor |
+| 4 | **El escenario «Extracción que no cuadra»** no indica el IVA: la diferencia de 90,00 € solo sale con el 21 % | §3.5 | Añadir el tipo de IVA al escenario |
 
 ---
 
@@ -109,7 +109,7 @@ La Fase 4 usa Claude real y cuesta dinero: estima el coste y apruébalo antes de
 
 ## Fase 0 — Preparación
 
-- [ ] **Congelar el código:** rama `release/x.y` o tag; árbol de trabajo limpio y lista de los PR y bloques incluidos.
+- [ ] **Congelar el código:** rama `release/1.0` con la candidata `1.0.0-rc.N`; árbol de trabajo limpio y lista de los PR y bloques incluidos. Cada corrección de la verificación genera una candidata nueva.
   - 🤖 hilo principal · Sonnet 5.5
 - [ ] **Decisiones cerradas:** la tabla «Antes de empezar» está resuelta y todo ID citado en este plan existe en la especificación o en el catálogo de ADR.
   - 🤖 `arquitecto-python` · Opus 5.5 + 👤
@@ -233,7 +233,7 @@ Todos los de este bloque: 🤖 `qa-testing` · Opus 5.5.
 
 **Dinero y fiscalidad**
 
-- [ ] **Redondeo:** propiedades con hypothesis; casos frontera (0,005 €, cantidades decimales, descuentos del 100 %); la suma de bases y cuotas cuadra con el total.
+- [ ] **Redondeo:** propiedades con hypothesis; casos frontera (0,005 €, cantidades decimales, descuentos del 100 %); la suma de bases y cuotas cuadra con el total, y la de las fases, con el presupuesto.
 - [ ] **Fiscalidad:** IVA 21/10/4 %, mezcla de tipos en una factura, inversión del sujeto pasivo con cuota cero y su mención, retención del 15 % y del 7 %.
 - [ ] **NIF, NIE y CIF:** formatos válidos e inválidos y dígito de control.
 - [ ] **Datos obligatorios:** falta un dato de RN-F-06 y la factura no se emite.
@@ -251,10 +251,12 @@ Todos los de este bloque: 🤖 `qa-testing` · Opus 5.5.
 
 **Presupuestos y cobros**
 
-- [ ] **Estados:** borrador → enviado → aceptado, rechazado o caducado; la caducidad se calcula con `Clock`.
+- [ ] **Estados:** borrador → enviado → aceptado, rechazado o caducado, y facturado parcialmente → facturado; la caducidad se calcula con `Clock`.
 - [ ] **Versiones:** modificar un enviado crea una versión nueva y conserva la anterior.
-- [ ] **Conversión:** un presupuesto aceptado genera un borrador de factura con sus líneas y mantiene el vínculo; uno no aceptado no se convierte.
-- [ ] **Segunda conversión:** se rechaza y enlaza la factura existente; se permite si el borrador se eliminó; una rectificativa no reabre el presupuesto (RN-F-11).
+- [ ] **Conversión:** un presupuesto aceptado genera un borrador de factura, completo o de una fase, y mantiene el vínculo; uno no aceptado no se convierte.
+- [ ] **Fases:** por porcentaje, importe y líneas, con varios tipos de IVA, retención e inversión del sujeto pasivo; cada fase lleva su número y la fase final factura lo pendiente al céntimo (RN-F-12).
+- [ ] **Límite de lo facturado:** una fase que supera lo pendiente se rechaza; dos borradores a la vez no pueden pasarse del total; eliminar un borrador libera su importe; una rectificativa ajusta lo facturado (RN-F-11).
+- [ ] **Nueva versión del presupuesto:** una ampliación sube lo pendiente; una versión por debajo de lo ya facturado se rechaza.
 - [ ] **Cobros:** pendiente, parcial y completo, con fecha y forma de pago; el estado de cobro no toca los datos fiscales.
 - [ ] **Cobro superior al pendiente:** se rechaza con el importe restante, también cuando lo propone el agente (RN-F-10).
 - [ ] **Exportación:** libro de facturas en CSV y Excel por periodo; los importes cuadran con los de la aplicación.
@@ -331,7 +333,7 @@ Todos los de este bloque: 🤖 `qa-testing` · Opus 5.5.
 
 - [ ] **Unitarias:** formateo de moneda y fechas, store del chat, parser de SSE, tarjeta de `PendingAction`.
   - 🤖 `arquitecto-vue` · Sonnet 5.5
-- [ ] **E2E** con Playwright contra la app servida con `FakeLlm`, en Chromium, WebKit y emulación de móvil: registrar y pagar, importar y revisar, preguntar, presupuesto por chat, emitir, rectificar, cobrar.
+- [ ] **E2E** con Playwright contra la app servida con `FakeLlm`, en Chromium, WebKit y emulación de móvil: registrar y pagar, importar y revisar, preguntar, presupuesto por chat, facturar por fases, emitir, rectificar, cobrar.
   - 🤖 `qa-testing` · Opus 5.5
 - [ ] **Micrófono simulado:** E2E con `--use-fake-device-for-media-stream` y `--use-file-for-fake-audio-capture`.
   - 🤖 `qa-testing` · Opus 5.5
@@ -648,7 +650,7 @@ Todos los de este bloque: 🤖 `seguridad-ia` · Opus 5.5.
   - 🤖 `plataforma-entrega` · Opus 5.5
 - [ ] **README y caso de estudio:** cifras sacadas de `docs/04-evaluacion-ia.md`, sin datos inventados.
   - 🤖 `documentacion-portafolio` · Sonnet 5.5
-- [ ] **Limitaciones documentadas:** qué funciones dependen de Claude, qué recibe Anthropic y que las facturas por fases o con anticipo se crean sin vincular al presupuesto.
+- [ ] **Limitaciones documentadas:** qué funciones dependen de Claude y qué recibe Anthropic.
   - 🤖 `documentacion-portafolio` · Sonnet 5.5
 - [ ] **`HANDOFF.md` al día** y coherente con el estado real de la release; Engram no contiene datos de clientes ni secretos.
   - 🤖 hilo principal · Sonnet 5.5
@@ -693,7 +695,9 @@ Todos los de este bloque: 🤖 `seguridad-ia` · Opus 5.5.
 - [ ] **Pasada final de seguridad y cumplimiento** sobre lo corregido.
   - 🤖 `seguridad-ia` · Opus 5.5
 - [ ] **Re-revisión** de cada hallazgo corregido por el mismo agente que lo detectó; cada corrección lleva su prueba de regresión.
-- [ ] **Release:** versión, changelog, artefactos e instrucciones de vuelta atrás comprobados.
+- [ ] **Publicar la 1.0.0:** `VERSION`, `CHANGELOG.md`, etiqueta `v1.0.0`, imagen, release en GitHub, declaración responsable e instrucciones de vuelta atrás comprobados.
+  - 🤖 `plataforma-entrega` · Opus 5.5
+- [ ] **Activar el control de versión en CI:** desde aquí, un PR que cambia la app sin subir la versión ni actualizar el changelog falla.
   - 🤖 `plataforma-entrega` · Opus 5.5
 
 ---
@@ -702,6 +706,7 @@ Todos los de este bloque: 🤖 `seguridad-ia` · Opus 5.5.
 
 - [ ] Decisiones de «Antes de empezar» cerradas.
 - [ ] Todos los PR de bloque integrados con CI, seguridad y revisión en verde.
+- [ ] La candidata verificada es exactamente la que se publica como 1.0.0.
 - [ ] `traceability.py --check` en verde: ningún requisito ni categoría OWASP sin prueba.
 - [ ] Calidad de backend, frontend y scripts en verde; build e imágenes correctos.
 - [ ] Umbrales: cobertura (90 / 80 / 70 %), mutación ≥ 80 % en `domain/billing`, suite unitaria < 10 s.

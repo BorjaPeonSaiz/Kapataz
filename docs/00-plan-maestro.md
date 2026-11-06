@@ -10,7 +10,7 @@
 > 1. Guárdalo como `docs/00-plan-maestro.md` en la raíz de un repo vacío.
 > 2. Pide al hilo principal: *«Ejecuta el Bloque 0 de `docs/00-plan-maestro.md`»*. Ese bloque genera `CLAUDE.md`, los agentes de `.claude/agents/`, la especificación, la arquitectura y todos los ADR a partir de las secciones 3, 4, 5 y 6 de este documento.
 > 3. Después, bloque a bloque: *«Ejecuta el Bloque N»*. El hilo principal orquesta, delega cada tarea en el agente indicado, marca las casillas y entrega el bloque en su propio PR (§7, «Flujo de entrega y calidad por bloque»).
-> 4. Al terminar el Bloque 12, ejecuta [`docs/plan-verificacion-kapataz.md`](./plan-verificacion-kapataz.md) (Parte II).
+> 4. Al terminar el Bloque 12, ejecuta [`docs/plan-verificacion-kapataz.md`](./plan-verificacion-kapataz.md) (Parte II). Al superarla se publica la 1.0.0 y empieza el versionado.
 
 ---
 
@@ -54,7 +54,7 @@ Un asistente disponible en el portátil y en el móvil, al que se le habla como 
 | Ingesta | Importar PDFs de facturas y presupuestos históricos (propios, de antes de usar la app), extracción estructurada con IA y revisión manual |
 | Consulta | Preguntas en lenguaje natural sobre facturación, clientes, conceptos y precios, con cifras calculadas por código y citando las fuentes |
 | Presupuestos | Crear, editar, versionar, generar PDF, cambiar estado (borrador, enviado, aceptado, rechazado) |
-| Facturas | Emitir facturas (directas o desde presupuesto aceptado), series y numeración correlativa, factura inmutable una vez emitida, rectificativas, estado de cobro, PDF |
+| Facturas | Emitir facturas (directas o desde presupuesto aceptado, de una vez o por fases), series y numeración correlativa, factura inmutable una vez emitida, rectificativas, estado de cobro, PDF |
 | Facturación legal | Facturas válidas con todos los datos obligatorios y sistema VERI*FACTU, activo desde la primera factura real |
 | Voz | Dictado de órdenes, transcrito en el servidor de Kapataz |
 | Acceso | Registro abierto con email y contraseña; uso desde el navegador y como PWA instalable en el móvil, sin instalar nada más |
@@ -158,10 +158,10 @@ Todas las cuentas y todas las rutas (chat, clasificación y extracción) usan `c
 | RF-PR-01 | El usuario puede crear un presupuesto por formulario o pidiéndoselo al agente. |
 | RF-PR-02 | Al crear por agente, el sistema propone líneas y precios a partir del histórico (precio habitual del concepto y presupuestos similares) e indica de dónde sale cada precio. |
 | RF-PR-03 | El agente **siempre** crea un borrador y lo muestra; nada se guarda como definitivo sin confirmación explícita del usuario. |
-| RF-PR-04 | Estados: borrador → enviado → aceptado / rechazado / caducado. Modificar un presupuesto enviado crea una nueva versión. |
+| RF-PR-04 | Estados: borrador → enviado → aceptado / rechazado / caducado, y desde aceptado → facturado parcialmente → facturado. Modificar un presupuesto enviado crea una nueva versión. |
 | RF-PR-05 | Numeración propia por año (`P-2026-0001`), distinta de la de facturas. |
 | RF-PR-06 | Generación de PDF con los datos del profesional, logotipo opcional, condiciones y validez. |
-| RF-PR-07 | Un presupuesto aceptado puede convertirse en factura (RF-FA-03). |
+| RF-PR-07 | Un presupuesto aceptado puede facturarse de una vez o por fases (RF-FA-03, RF-FA-10). |
 
 #### Facturas (RF-FA)
 
@@ -169,13 +169,15 @@ Todas las cuentas y todas las rutas (chat, clasificación y extracción) usan `c
 |---|---|
 | RF-FA-01 | El usuario puede emitir facturas por formulario o por agente, siempre pasando por un borrador revisable. |
 | RF-FA-02 | Una factura tiene serie y número correlativo **sin huecos** dentro de la serie y el año (`F-2026-0001`). El número se asigna en el momento de emitir, no al crear el borrador. |
-| RF-FA-03 | Un presupuesto aceptado se convierte en un borrador de factura con sus líneas, manteniendo el vínculo (RN-F-11). |
+| RF-FA-03 | Un presupuesto aceptado se convierte en un borrador de factura, completo o de una fase, manteniendo el vínculo (RN-F-11). |
 | RF-FA-04 | Una factura emitida **no se puede editar ni borrar**. Para corregirla se emite una factura rectificativa (serie `R`), por diferencias o por sustitución, que referencia a la original. |
 | RF-FA-05 | Se soportan los tipos de IVA general, reducido y superreducido, la inversión del sujeto pasivo (habitual en obra entre empresas) con su mención obligatoria, y la retención de IRPF opcional. |
 | RF-FA-06 | Estado de cobro independiente del estado fiscal: pendiente, cobrada parcialmente, cobrada, con fecha y forma de pago (RN-F-10). |
 | RF-FA-07 | Generación de PDF con los datos obligatorios de una factura completa. |
 | RF-FA-08 | Cada emisión, rectificación y cambio de estado de cobro queda en un registro de eventos con fecha, actor (usuario o agente con confirmación) y datos. |
 | RF-FA-09 | Exportación CSV y Excel del libro de facturas emitidas por periodo, útil para la gestoría. |
+| RF-FA-10 | Un presupuesto aceptado se puede facturar por fases (anticipo, certificación de obra, final), por porcentaje, por importe o por líneas y cantidades. |
+| RF-FA-11 | El presupuesto muestra lo facturado y lo pendiente, con enlace a cada factura. La fase final cita las facturas anteriores. |
 
 #### Voz (RF-VO)
 
@@ -279,7 +281,8 @@ Todas las cuentas y todas las rutas (chat, clasificación y extracción) usan `c
 | RN-F-08 | El histórico importado no se mezcla con la serie emitida (RF-IN-09). |
 | RN-F-09 | Las facturas de una cuenta real son válidas y no llevan ninguna marca. Solo las del espacio de demostración llevan la marca «Documento de demostración», que no se puede quitar. |
 | RN-F-10 | Un cobro no puede superar el importe pendiente de la factura: se rechaza indicando lo que queda por cobrar. |
-| RN-F-11 | Un presupuesto se convierte en factura una sola vez. Si el borrador se elimina, se puede volver a convertir. Una rectificativa no reabre el presupuesto. |
+| RN-F-11 | La suma de lo facturado de un presupuesto no puede superar el total de su versión vigente: se rechaza indicando lo que queda. Un borrador reserva su importe hasta que se elimina, y una rectificativa ajusta lo facturado. |
+| RN-F-12 | Cada fase es una factura completa, con su número, su IVA y su retención, y factura solo su parte. La fase final factura exactamente lo pendiente, para que la suma cuadre al céntimo con el presupuesto. |
 
 ### 3.3 Requisitos no funcionales
 
@@ -319,6 +322,7 @@ Todas las cuentas y todas las rutas (chat, clasificación y extracción) usan `c
 | Presupuesto | Oferta con validez, versionable | `Quote` |
 | Factura | Documento fiscal emitido por la app, inmutable | `Invoice` |
 | Rectificativa | Factura que corrige otra | `CorrectiveInvoice` |
+| Fase de facturación | Parte de un presupuesto que se factura por separado: anticipo, certificación o final | `BillingPhase` |
 | Serie | Secuencia de numeración (`F`, `R`, `P`) | `Series` |
 | Documento fuente | PDF importado del histórico | `SourceDocument` |
 | Extracción | Resultado estructurado de leer un documento fuente | `Extraction` |
@@ -430,11 +434,17 @@ Escenario: Cobro superior al pendiente
   Cuando registro un cobro de 200,00 €
   Entonces se rechaza con el aviso "Quedan 120,00 € por cobrar"
 
-Escenario: Presupuesto ya convertido
-  Dado un presupuesto convertido en la factura F-2026-0009
-  Cuando intento convertirlo otra vez
-  Entonces se rechaza
-  Y se me enlaza la factura F-2026-0009
+Escenario: Factura por fases
+  Dado un presupuesto aceptado de 10.000,00 € de base
+  Cuando facturo un anticipo del 30 %, una certificación del 40 % y la fase final
+  Entonces existen tres facturas con número propio y con su IVA
+  Y la suma de sus bases es exactamente 10.000,00 €
+  Y el presupuesto queda "facturado"
+
+Escenario: Fase superior a lo pendiente
+  Dado un presupuesto de 10.000,00 € con 7.000,00 € facturados
+  Cuando intento facturar una fase de 4.000,00 €
+  Entonces se rechaza con el aviso "Quedan 3.000,00 € por facturar"
 ```
 
 ---
@@ -492,6 +502,8 @@ kapataz/
 ├── CLAUDE.md
 ├── HANDOFF.md                  # estado y siguiente acción entre sesiones
 ├── README.md
+├── CHANGELOG.md                # desde la 1.0.0
+├── VERSION                     # fuente única del número de versión
 ├── LICENSE
 ├── .claude/
 │   └── agents/                 # 10 definiciones de agentes (sección 6)
@@ -525,7 +537,7 @@ kapataz/
     ├── 03-modelo-amenazas.md
     ├── 04-evaluacion-ia.md     # metodología, resultados por modelo y perfil
     ├── plan-verificacion-kapataz.md  # verificación pre-release detallada
-    ├── adr/                    # ADR-001 … ADR-031
+    ├── adr/                    # ADR-001 … ADR-033
     ├── operacion/              # despliegue, copias y runbooks
     ├── usuario/                # primeros-pasos.md, uso.md, que-hacer-si.md
     └── portafolio/             # caso-de-estudio.md, guion-demo.md, capturas/
@@ -542,7 +554,7 @@ kapataz/
 | `customers` | `tax_id` único por cuenta cuando existe |
 | `catalog_items` | Concepto, unidad, precio de referencia, origen |
 | `quotes`, `quote_versions`, `quote_lines` | Versionado al modificar un enviado |
-| `invoices`, `invoice_lines` | `status` (`draft`, `issued`), `series`, `number`, `issued_at`; trigger que impide `UPDATE`/`DELETE` de campos fiscales con `status='issued'` |
+| `invoices`, `invoice_lines` | `status` (`draft`, `issued`), `series`, `number`, `issued_at`, `quote_version_id`, `phase_type` (`full`, `advance`, `progress`, `final`); trigger que impide `UPDATE`/`DELETE` de campos fiscales con `status='issued'` |
 | `series_counters` | Contador por cuenta, serie y año, bloqueado con `SELECT … FOR UPDATE` en la misma transacción que la emisión |
 | `billing_records` | Contenido canónico JSON, `hash`, `prev_hash`, `submission_status` (`pending`, `accepted`, `rejected`) |
 | `payments` | Cobros asociados a facturas |
@@ -577,7 +589,7 @@ kapataz/
 | `pendientes_de_cobro()` | Lectura |
 | `buscar_trabajos_similares(descripcion)` | Lectura (RAG híbrido) |
 | `proponer_presupuesto(cliente, lineas[])` | Escritura → propuesta |
-| `proponer_factura(cliente, lineas[] \| presupuesto_id)` | Escritura → propuesta |
+| `proponer_factura(cliente, lineas[] \| presupuesto_id, fase?)` | Escritura → propuesta |
 | `proponer_cobro(factura_id, importe, fecha, forma)` | Escritura → propuesta |
 | `proponer_rectificativa(factura_id, motivo, lineas[])` | Escritura → propuesta |
 
@@ -620,6 +632,8 @@ kapataz/
 | 029 | Tratamiento de datos con Anthropic | Anthropic como subencargado aunque reciba datos seudonimizados; acuerdo de tratamiento, retención y región de inferencia revisados antes de usar datos reales | 0 |
 | 030 | Seudonimización antes de Claude | Diccionario de la cuenta, patrones y Presidio; `LlmPort` solo acepta `SanitizedPrompt`; fallo cerrado; riesgo residual medido con RNF-17 | **4** (Propuesto) |
 | 031 | Zona de superadministración | Rol que no se obtiene por registro, TOTP obligatorio, sin acceso a datos de negocio y con todos los cambios registrados | 0 |
+| 032 | Versionado semántico desde la 1.0.0 | Sin versiones durante la construcción; la 1.0.0 es la primera versión que supera la verificación, y desde ahí cada cambio de la app publicado lleva versión, changelog y declaración responsable | 0 |
+| 033 | Facturación por fases | Cada fase es una factura completa que factura solo su parte, y la fase final factura lo pendiente; sin importes negativos por anticipos. A confirmar con el asesor | **8** (Propuesto) |
 
 ---
 
@@ -809,6 +823,7 @@ Responsabilidades:
 - Despliegue con migraciones controladas, health checks reales y vuelta atrás probada.
 - Copias cifradas fuera del servidor con archivado de WAL y simulacros de restauración (RNF-15).
 - Observabilidad: logs JSON, métricas básicas, monitor externo de disponibilidad, alertas de errores y de gasto de IA. Cada alerta tiene su runbook en docs/operacion/.
+- Versionado desde la 1.0.0 (ADR-032): etiquetas, imágenes con su versión, releases en GitHub y control en CI de que cada cambio de la app sube la versión.
 
 Reglas:
 - Un despliegue fallido deja la versión anterior funcionando.
@@ -997,7 +1012,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - acceso a datos siempre con contexto de cuenta;
   - sin datos personales en logs.
   - 🤖 `arquitecto-python` · Opus 5.5
-- [ ] **Generar los ADR 001–031** de §5 con la plantilla del Anexo A. Los marcados como «Propuesto» quedan abiertos con las opciones a evaluar.
+- [ ] **Generar los ADR 001–033** de §5 con la plantilla del Anexo A. Los marcados como «Propuesto» quedan abiertos con las opciones a evaluar.
   - 🤖 `arquitecto-python` · Opus 5.5
 - [ ] **Generar `docs/03-modelo-amenazas.md`** inicial: activos, límites de confianza, STRIDE por componente y OWASP LLM Top 10 aplicado.
   - 🤖 `seguridad-ia` · Opus 5.5 (redacta el contenido; el hilo principal escribe el fichero porque el agente es de solo lectura)
@@ -1008,7 +1023,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 - [ ] **Tratamiento de datos con Anthropic (ADR-029):** contrastar acuerdo de tratamiento, retención y región de inferencia con las condiciones vigentes.
   - 🤖 `seguridad-ia` · Opus 5.5 + 👤 revisas y aceptas las condiciones
 
-**Entregables:** `CLAUDE.md`, `HANDOFF.md`, `.claude/agents/*`, `docs/01–04`, `docs/adr/ADR-001…031`.
+**Entregables:** `CLAUDE.md`, `HANDOFF.md`, `.claude/agents/*`, `docs/01–04`, `docs/adr/ADR-001…033`.
 **Criterio de terminado:** 👤 revisas especificación y ADR y das el visto bueno. Sin ese visto bueno no se empieza el Bloque 1.
 
 ---
@@ -1054,9 +1069,9 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `arquitecto-python` · Opus 5.5
 - [ ] **Entidades y agregados:** `Tenant`, `User`, `Customer`, `CatalogItem`, `Quote` (con versiones), `Invoice` (borrador → emitida), `CorrectiveInvoice`, `Payment`, `BillingRecord`.
   - 🤖 `arquitecto-python` · Opus 5.5
-- [ ] **Cálculo de importes** en el dominio: base por línea, descuentos, cuota por tipo de IVA, retención, inversión del sujeto pasivo, total (RN-01 a RN-03, RN-F-05).
+- [ ] **Cálculo de importes** en el dominio: base por línea, descuentos, cuota por tipo de IVA, retención, inversión del sujeto pasivo, total y reparto por fases (RN-01 a RN-03, RN-F-05, RN-F-12).
   - 🤖 `arquitecto-python` · Opus 5.5
-- [ ] **Pruebas de propiedades** con hypothesis sobre el cálculo: la suma de bases y cuotas cuadra con el total para cualquier combinación de líneas.
+- [ ] **Pruebas de propiedades** con hypothesis sobre el cálculo: la suma de bases y cuotas cuadra con el total para cualquier combinación de líneas, y la suma de las fases cuadra al céntimo con el presupuesto para cualquier reparto.
   - 🤖 `qa-testing` · Opus 5.5
 - [ ] **Puertos** de §4.3 definidos en el dominio y la aplicación, con `FakeX` en pruebas.
   - 🤖 `arquitecto-python` · Opus 5.5
@@ -1165,7 +1180,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `ingeniero-ia` · Opus 5.5
 - [ ] **Panel «cómo lo he calculado»:** herramientas usadas y parámetros (RF-CO-07). ∥
   - 🤖 `arquitecto-vue` · Sonnet 5.5
-- [ ] **Dataset de evaluación del agente:** 80–120 preguntas con herramienta esperada, parámetros y respuesta de referencia, incluyendo ambiguas, sin datos y maliciosas.
+- [ ] **Dataset de evaluación del agente:** 80–120 preguntas con herramienta esperada, parámetros y respuesta de referencia, incluyendo ambiguas, sin datos, maliciosas y de facturación por fases.
   - 🤖 `qa-testing` · Opus 5.5
 - [ ] **Evaluación de `claude-opus-5-5`** por ruta (precisión de herramienta, exactitud de parámetros, latencia y coste por pregunta) para fijar el `effort`, con el coste de la evaluación aprobado antes, y **cierre del ADR-005**.
   - 🤖 `ingeniero-ia` · Opus 5.5 → escalado a Fable 5.1 solo si se estanca bajo el umbral tras dos iteraciones
@@ -1203,7 +1218,9 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 
 ### Bloque 8 — Facturas
 
-- [ ] **Borradores de factura** directos y desde presupuesto aceptado (RF-FA-01, RF-FA-03, RN-F-11).
+- [ ] **Borradores de factura** directos y desde presupuesto aceptado (RF-FA-01, RF-FA-03).
+  - 🤖 `backend-fastapi` · Opus 5.5
+- [ ] **Facturación por fases:** por porcentaje, importe o líneas, control de lo facturado y lo pendiente, cálculo de la fase final y estados del presupuesto (RF-FA-10, RF-FA-11, RN-F-11, RN-F-12). **Cerrar ADR-033.**
   - 🤖 `backend-fastapi` · Opus 5.5
 - [ ] **Emisión** desde la API y la UI usando el caso de uso del Bloque 2; pantalla de confirmación diferenciada.
   - 🤖 `backend-fastapi` · Opus 5.5 + `arquitecto-vue` · Sonnet 5.5
@@ -1219,7 +1236,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `ingeniero-ia` · Opus 5.5
 - [ ] **Verificador de la cadena** de `BillingRecord` (`kapataz verify-billing-chain`).
   - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Pantallas:** listado con filtros, detalle, emisión, rectificación y cobro. ∥
+- [ ] **Pantallas:** listado con filtros, detalle, emisión, facturación por fases con lo pendiente siempre visible, rectificación y cobro. ∥
   - 🤖 `arquitecto-vue` · Sonnet 5.5 + `ui-ux` · Sonnet 5.5
 
 **Criterio de terminado:** escenarios de numeración concurrente e inmutabilidad en verde a través de la API; la cadena se verifica y detecta una alteración por SQL.
@@ -1267,7 +1284,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `plataforma-entrega` · Opus 5.5
 - [ ] **Prueba de carga** con k6 y la IA simulada (RNF-16).
   - 🤖 `qa-testing` · Opus 5.5
-- [ ] **Release en GitHub** con imágenes versionadas y SBOM. **Cerrar ADR-014.**
+- [ ] **Imágenes identificadas por commit** y con SBOM; la primera versión numerada será la 1.0.0 (ADR-032). **Cerrar ADR-014.**
   - 🤖 `plataforma-entrega` · Opus 5.5
 
 **Criterio de terminado:** producción en HTTPS; alta y pago reales con tarjeta y con PayPal; una cuenta nueva llega al primer uso en < 5 min; la PWA instalada funciona en un Android y un iPhone reales; restauración desde copia probada.
@@ -1318,9 +1335,29 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 
 ---
 
+### Versionado desde la 1.0.0
+
+Durante los Bloques 0 a 12 no se publican versiones: el código se identifica por commit. La **1.0.0 es la primera versión fiable**, la que supera toda la Parte II. Desde ese momento rige el versionado (ADR-032):
+
+- **Cada cambio que modifica la app** lleva versión propia al integrarse en `main`, con [versionado semántico](https://semver.org/lang/es/):
+
+| Parte | Cuándo sube | Ejemplo |
+|---|---|---|
+| PATCH | Corrección sin funciones nuevas | 1.0.0 → 1.0.1 |
+| MINOR | Función nueva compatible | 1.0.1 → 1.1.0 |
+| MAJOR | Cambio incompatible para los usuarios o para los datos | 1.1.0 → 2.0.0 |
+
+- **Cambios sin versión:** los que no alteran lo desplegado, como documentación o CI.
+- **Cada versión lleva:** número en `VERSION`, entrada en `CHANGELOG.md`, etiqueta `vX.Y.Z`, imagen con esa etiqueta, release en GitHub y su declaración responsable (RF-VF-06).
+- **El número es visible:** en la app, en `/api/health` y en el aviso de nueva versión de la PWA.
+- **CI lo exige:** un PR que cambia la app sin subir la versión ni actualizar el changelog falla.
+- **Verificación:** todo PR pasa el flujo de §7. La Parte II completa se repite antes de cada MAJOR; en una MINOR, solo las fases afectadas.
+
+---
+
 # PARTE II — VERIFICACIÓN PRE-RELEASE
 
-El plan ejecutable está en [`plan-verificacion-kapataz.md`](./plan-verificacion-kapataz.md): tareas con agente y modelo, tablas OWASP, criterios de salida y registro de hallazgos. Se ejecuta al terminar el Bloque 12, sobre una versión congelada.
+El plan ejecutable está en [`plan-verificacion-kapataz.md`](./plan-verificacion-kapataz.md): tareas con agente y modelo, tablas OWASP, criterios de salida y registro de hallazgos. Se ejecuta al terminar el Bloque 12, sobre una candidata congelada. Superarla da la versión 1.0.0.
 
 | Fases | Qué comprueba |
 |---|---|
@@ -1385,6 +1422,7 @@ Asistente con IA para autónomos de oficio, disponible como servicio web multius
 - Los agentes de solo lectura (seguridad-ia, revisor-codigo) no corrigen; registran hallazgos.
 - No se cambia una RN, RF o ADR aceptado sin propuesta explícita y aprobación de Borja.
 - Cada bloque va en su propia rama y su propio PR contra main; no se integra sin CI, comprobaciones de seguridad y revisión en verde (plan maestro, §7).
+- Antes de la 1.0.0 no se publican versiones. Desde la 1.0.0, cada cambio de la app lleva versión, entrada en CHANGELOG.md y etiqueta (ADR-032).
 
 ## Trabajo entre sesiones
 Este proyecto se trabaja en muchas sesiones a lo largo de días o semanas. `HANDOFF.md`, en la raíz, es la memoria de continuidad entre una sesión y la siguiente. Este archivo (`CLAUDE.md`) es conocimiento estable del proyecto y no cambia de una sesión a otra.
