@@ -4,15 +4,13 @@
 >
 > **Marca:** KodigoLab · **Nombre del producto:** Kapataz — *tu administrador digital para autónomos de oficio* · **Repo:** `kapataz` · **Paquete Python:** `kapataz`
 >
-> **Objetivo de esta versión:** proyecto de portafolio. Debe funcionar de verdad como servicio web multiusuario, usarse desde el navegador del portátil y como PWA en el móvil, y verse profesional por dentro y por fuera. No necesita estar listo para su venta, pero sí diseñado para poder llegar a ella (suscripción de pago y adaptación a Verifactu).
+> **Objetivo de esta versión:** proyecto de portafolio con cobro real. Debe funcionar de verdad como servicio web de pago, usarse desde el navegador del portátil y como PWA en el móvil, y verse profesional por dentro y por fuera. Las facturas son válidas y legales, y el módulo Verifactu se construye en el último bloque.
 >
 > **Cómo usar este documento en VS Code con Claude Code:**
 > 1. Guárdalo como `docs/00-plan-maestro.md` en la raíz de un repo vacío.
 > 2. Pide al hilo principal: *«Ejecuta el Bloque 0 de `docs/00-plan-maestro.md`»*. Ese bloque genera `CLAUDE.md`, los agentes de `.claude/agents/`, la especificación, la arquitectura y todos los ADR a partir de las secciones 3, 4, 5 y 6 de este documento.
 > 3. Después, bloque a bloque: *«Ejecuta el Bloque N»*. El hilo principal orquesta, delega cada tarea en el agente indicado, marca las casillas y entrega el bloque en su propio PR (§7, «Flujo de entrega y calidad por bloque»).
-> 4. Al terminar el Bloque 11, ejecuta la **Parte II — Verificación pre-release**, con el detalle ejecutable de `docs/plan-verificacion-kapataz.md`.
->
-> ⚠️ **Pendiente:** la Parte II y `docs/plan-verificacion-kapataz.md` aún describen la versión local anterior. Hay que adaptarlas a SaaS antes de usarlas.
+> 4. Al terminar el Bloque 12, ejecuta [`docs/plan-verificacion-kapataz.md`](./plan-verificacion-kapataz.md) (Parte II).
 
 ---
 
@@ -25,8 +23,8 @@
   4. Arquitectura y estructura del repo
   5. Catálogo de ADR
   6. Equipo de agentes
-  7. Plan de construcción por bloques (0–11)
-- **Parte II — Verificación pre-release** (fases 0–13, criterios de salida y registro de hallazgos)
+  7. Plan de construcción por bloques (0–12)
+- **Parte II — Verificación pre-release** (resumen y enlace al plan de verificación)
 - **Anexos:** plantillas de ADR, de `CLAUDE.md` y de prueba trazada
 
 ---
@@ -57,8 +55,12 @@ Un asistente disponible en el portátil y en el móvil, al que se le habla como 
 | Consulta | Preguntas en lenguaje natural sobre facturación, clientes, conceptos y precios, con cifras calculadas por código y citando las fuentes |
 | Presupuestos | Crear, editar, versionar, generar PDF, cambiar estado (borrador, enviado, aceptado, rechazado) |
 | Facturas | Emitir facturas (directas o desde presupuesto aceptado), series y numeración correlativa, factura inmutable una vez emitida, rectificativas, estado de cobro, PDF |
+| Facturación legal | Facturas válidas con todos los datos obligatorios y sistema VERI*FACTU, activo desde la primera factura real |
 | Voz | Dictado de órdenes, transcrito en el servidor de Kapataz |
-| Acceso | Cuentas con email y contraseña; uso desde el navegador y como PWA instalable en el móvil, sin instalar nada más |
+| Acceso | Registro abierto con email y contraseña; uso desde el navegador y como PWA instalable en el móvil, sin instalar nada más |
+| Suscripción | Cuota mensual con tarjeta o PayPal; la app se abre al confirmarse el pago |
+| Privacidad | Claude solo recibe texto seudonimizado: los datos de clientes y proveedores no salen de nuestros servidores |
+| Superadministración | Zona exclusiva del dueño de la plataforma: modelo de Claude, límites, costes y suscripciones |
 | Consumo de IA | Claude incluido en la cuota, con un límite de uso por cuenta |
 | Demo | Datos sintéticos de dos profesionales ficticios en cuentas de demostración |
 
@@ -66,14 +68,12 @@ Un asistente disponible en el portátil y en el móvil, al que se le habla como 
 
 | Área | Preparación en v1 |
 |---|---|
-| **Verifactu** (registro de facturación, huella encadenada, QR, remisión a la AEAT) | Puerto `RegistroFacturacionPort` con adaptador nulo; modelo de factura inmutable; numeración correlativa sin huecos; rectificativas en lugar de borrado; campos reservados para huella y estado de remisión (ADR-012) |
-| Suscripción y cobro de cuotas | Puerto `SuscripcionPort` con adaptador «demo» que siempre valida (ADR-016) |
 | Varios usuarios por cuenta (equipos, gestoría) | `tenant_id` y `user_id` separados en el modelo; v1 tiene un usuario por cuenta |
 | App nativa en tiendas | La PWA cubre el móvil; el frontend no depende de nada que impida empaquetarla después |
 | Trabajo sin conexión | La PWA abre y avisa, pero no permite ni encola escrituras (ADR-027) |
-| OCR de fotos de tiques | Puerto `OcrPort` sin implementación |
+| Fotos de tiques | `OcrPort` ya existe para los PDF escaneados; falta la captura y el ajuste a tiques |
 
-> ⚠️ **Aviso legal permanente en la app y en el README:** mientras Verifactu no esté implementado, las facturas generadas son de demostración. El PDF incluye la marca «Documento generado en modo demostración — no válido a efectos fiscales» hasta que se active un perfil fiscal conforme. Esto es una RN (RN-F-09), no un detalle cosmético.
+> ⚠️ **Condición legal de lanzamiento:** los autónomos deben usar un sistema adaptado desde el 1 de julio de 2027, pero los productores de software ya deben ofrecer sistemas conformes desde el 29 de julio de 2025. Por eso Verifactu se construye al final, pero ningún cliente real emite facturas hasta cerrar el Bloque 12, con la declaración responsable firmada y la validación de un asesor fiscal. Fechas a contrastar con el BOE.
 
 ---
 
@@ -89,20 +89,23 @@ Un asistente disponible en el portátil y en el móvil, al que se le habla como 
 | Multitenencia | `tenant_id` en toda tabla de negocio + **Row Level Security** | El aislamiento entre cuentas no depende solo del código (ADR-024) |
 | Búsqueda | **Híbrida**: búsqueda de texto de PostgreSQL + vectores con **pgvector**, fusión RRF | Precisión con nombres propios y conceptos técnicos (ADR-007) |
 | Embeddings | Modelo abierto multilingüe en nuestro servidor (**fastembed**, ONNX en CPU) | Anthropic no ofrece embeddings; evita otro proveedor que trate datos (ADR-007) |
-| Motor LLM | **API de Claude** con el SDK oficial `anthropic`; modelo por defecto `claude-opus-5-5` | Calidad en tool use y extracción; clave solo en el servidor, coste incluido en la cuota (ADR-005) |
+| Motor LLM | **API de Claude** con el SDK oficial `anthropic`; `claude-opus-5-5` para todas las cuentas | Calidad en tool use y extracción; clave solo en el servidor y coste incluido en la cuota. Solo el superadministrador cambia el modelo (ADR-005) |
 | Agente | **Bucle propio con tool use** de la Messages API, sin LangChain | Control total de la confirmación humana, menos dependencias (ADR-006) |
 | Dinero | `Decimal`, céntimos en BD, redondeo por línea según normativa | Nunca `float`; el LLM nunca calcula importes (ADR-009) |
-| PDF entrada | **pdfplumber** para comprobar y sacar texto; **Claude** lee el PDF para extraer los datos | También resuelve los PDF escaneados (ADR-010) |
+| PDF entrada | **pdfplumber** para texto y tablas; **Tesseract** en nuestro servidor para los escaneados | El PDF nunca sale hacia Claude (ADR-010) |
+| Privacidad ante Claude | Seudonimización en el servidor: diccionario de la cuenta, patrones y **Presidio** con spaCy `es_core_news_md` | Claude ve `[CLIENTE_1]`, no el nombre (ADR-030) |
 | PDF salida | **ReportLab** | Sin dependencias nativas (ADR-010) |
 | Voz | **faster-whisper** en nuestro servidor | Claude no transcribe audio; así el audio no pasa a otro proveedor (ADR-011) |
 | Frontend | **Vue 3** + **Vite** + **TypeScript** + **Tailwind CSS** + **Pinia** + **Vue Router** | Ruta de aprendizaje y escaparate fullstack (ADR-013) |
 | Móvil | **PWA** instalable (`vite-plugin-pwa`) | Un solo código para portátil y móvil, sin tiendas (ADR-027) |
 | Servido | FastAPI sirve el build de Vue detrás de un proxy TLS: **mismo origen** para app y API | Sin CORS y con cookies sencillas (ADR-013) |
-| Autenticación | Sesión en cookie `HttpOnly`, contraseña con **Argon2id**, TOTP opcional | Sin tokens en el navegador (ADR-025) |
+| Autenticación | Sesión en cookie `HttpOnly`, contraseña con **Argon2id**, TOTP opcional y obligatorio para el superadministrador | Sin tokens en el navegador (ADR-025) |
+| Pagos | **Stripe** Checkout y Billing: tarjeta y PayPal | Los datos de tarjeta nunca pasan por nuestro servidor (ADR-016) |
+| Verifactu | Modalidad **VERI*FACTU** con envío mediante un proveedor externo por API | Evita la firma de registros y la custodia de claves; se puede cambiar detrás de `RegistroFacturacionPort` (ADR-012) |
 | Tareas en segundo plano | Cola en PostgreSQL (**procrastinate**) y proceso worker | Ingesta, embeddings y transcripción sin añadir Redis (ADR-026) |
 | Ficheros | `FileStoragePort`: disco del servidor en v1, almacenamiento S3 compatible en la UE después | PDFs separados por cuenta |
 | Email | SMTP transaccional con proveedor en la UE | Verificación y recuperación de contraseña |
-| Despliegue | **Docker Compose** en un VPS de la UE con **Caddy** (TLS automático) | Sencillo de operar para un proyecto de portafolio (ADR-014) |
+| Despliegue | **Docker Compose** en un VPS de la UE con **Caddy** (TLS automático) | Sencillo de operar. Un hosting compartido de webs y WordPress no sirve: no ejecuta procesos Python permanentes, PostgreSQL ni Whisper (ADR-014) |
 | Logs | **structlog** JSON a la salida estándar, recogidos por Docker | Diagnóstico sin datos personales ni analítica de terceros (ADR-015) |
 | Calidad Python | ruff, mypy `--strict`, import-linter, bandit, pip-audit | Equivalente a Pint/PHPStan/Deptrac |
 | Pruebas Python | pytest, pytest-cov, hypothesis, mutmut, schemathesis, freezegun | Equivalente a Pest/Spectator |
@@ -110,14 +113,9 @@ Un asistente disponible en el portátil y en el móvil, al que se le habla como 
 | Infraestructura | Trivy (imágenes), ShellCheck (scripts), k6 (carga) | |
 | CI | GitHub Actions en `ubuntu-latest` con PostgreSQL real y **LLM falso determinista** | CI no llama a la API de Claude: sin clave, sin coste y reproducible (ADR-008) |
 
-### Modelos de Claude (ADR-005)
+### Modelo de Claude (ADR-005)
 
-| Uso | Modelo inicial |
-|---|---|
-| Agente de chat | `claude-opus-5-5` |
-| Clasificación y extracción de documentos | `claude-opus-5-5` |
-
-> Todas las rutas empiezan con `claude-opus-5-5`. El Bloque 6 mide calidad, latencia y coste por ruta contra el dataset de evaluación. Pasar una ruta a Sonnet 5.5 o Haiku 5.5 es una decisión tuya con esos datos delante, y el ADR-005 la registra. El nivel de `effort` de cada ruta se fija también en esa evaluación.
+Todas las cuentas y todas las rutas (chat, clasificación y extracción) usan `claude-opus-5-5`. Los clientes no tienen ningún ajuste de modelo. Solo el superadministrador puede cambiarlo, desde su zona privada, y el cambio afecta a toda la plataforma. El Bloque 6 fija el `effort` de cada ruta con datos.
 
 ---
 
@@ -171,10 +169,10 @@ Un asistente disponible en el portátil y en el móvil, al que se le habla como 
 |---|---|
 | RF-FA-01 | El usuario puede emitir facturas por formulario o por agente, siempre pasando por un borrador revisable. |
 | RF-FA-02 | Una factura tiene serie y número correlativo **sin huecos** dentro de la serie y el año (`F-2026-0001`). El número se asigna en el momento de emitir, no al crear el borrador. |
-| RF-FA-03 | Un presupuesto aceptado se convierte en un borrador de factura con sus líneas, manteniendo el vínculo. |
+| RF-FA-03 | Un presupuesto aceptado se convierte en un borrador de factura con sus líneas, manteniendo el vínculo (RN-F-11). |
 | RF-FA-04 | Una factura emitida **no se puede editar ni borrar**. Para corregirla se emite una factura rectificativa (serie `R`), por diferencias o por sustitución, que referencia a la original. |
 | RF-FA-05 | Se soportan los tipos de IVA general, reducido y superreducido, la inversión del sujeto pasivo (habitual en obra entre empresas) con su mención obligatoria, y la retención de IRPF opcional. |
-| RF-FA-06 | Estado de cobro independiente del estado fiscal: pendiente, cobrada parcialmente, cobrada, con fecha y forma de pago. |
+| RF-FA-06 | Estado de cobro independiente del estado fiscal: pendiente, cobrada parcialmente, cobrada, con fecha y forma de pago (RN-F-10). |
 | RF-FA-07 | Generación de PDF con los datos obligatorios de una factura completa. |
 | RF-FA-08 | Cada emisión, rectificación y cambio de estado de cobro queda en un registro de eventos con fecha, actor (usuario o agente con confirmación) y datos. |
 | RF-FA-09 | Exportación CSV y Excel del libro de facturas emitidas por periodo, útil para la gestoría. |
@@ -201,7 +199,7 @@ Un asistente disponible en el portátil y en el móvil, al que se le habla como 
 
 | ID | Requisito |
 |---|---|
-| RF-AC-01 | El alta es por invitación, con email y contraseña y con verificación del email. |
+| RF-AC-01 | El registro es abierto, con email y contraseña y con verificación del email. |
 | RF-AC-02 | El usuario puede tener sesión abierta en varios dispositivos, ver esas sesiones y cerrarlas. |
 | RF-AC-03 | El usuario puede recuperar la contraseña por email. |
 | RF-AC-04 | El usuario puede activar un segundo factor con TOTP. |
@@ -223,8 +221,38 @@ Un asistente disponible en el portátil y en el móvil, al que se le habla como 
 |---|---|
 | RF-UC-01 | Cada cuenta tiene un límite mensual de uso de IA incluido en su cuota y puede ver su consumo. |
 | RF-UC-02 | Al alcanzar el límite, la IA se pausa con un aviso; los formularios, listados y PDF siguen funcionando. |
-| RF-UC-03 | El operador ve el coste por cuenta y dispone de un tope global de gasto. |
 
+#### Verifactu (RF-VF)
+
+| ID | Requisito |
+|---|---|
+| RF-VF-01 | Cada alta, rectificación y anulación genera un registro de facturación con el formato y la huella oficiales. |
+| RF-VF-02 | Toda factura lleva el código QR exigido. |
+| RF-VF-03 | El sistema funciona solo en modalidad VERI*FACTU: cada registro se envía a la AEAT mediante el proveedor, y la factura lleva la mención correspondiente. |
+| RF-VF-04 | Un envío fallido se reintenta y queda visible; un registro rechazado se avisa con su motivo y la forma de corregirlo. |
+| RF-VF-05 | Los registros se pueden exportar a petición de la Administración. |
+| RF-VF-06 | Cada versión del sistema tiene su declaración responsable: visible en la app, entregada al cliente y conservada por el productor. |
+| RF-VF-07 | Antes de emitir su primera factura, el usuario otorga la autorización documentada para enviar sus registros. Hasta entonces puede usar el resto de la app. |
+
+#### Suscripción y pago (RF-PG)
+
+| ID | Requisito |
+|---|---|
+| RF-PG-01 | Tras registrarse, el usuario paga la cuota mensual con tarjeta o PayPal en la página de pago de la pasarela. |
+| RF-PG-02 | El acceso se abre cuando la pasarela confirma el pago. Después, el usuario configura sus datos y su cuenta (RF-CF-01). |
+| RF-PG-03 | El usuario puede ver sus recibos, cambiar el medio de pago y cancelar la suscripción desde su cuenta. |
+| RF-PG-04 | Si un cobro falla, se avisa y se reintenta durante 14 días con la app completa. Después, o al terminar el periodo pagado tras una baja, la cuenta pasa a solo lectura (RN-12). |
+
+#### Superadministración (RF-SA)
+
+| ID | Requisito |
+|---|---|
+| RF-SA-01 | Existe una zona a la que solo accede el superadministrador, con segundo factor obligatorio. Para un cliente esa zona no existe. |
+| RF-SA-02 | Solo el superadministrador cambia el modelo de Claude y su `effort` por ruta, para toda la plataforma. |
+| RF-SA-03 | El superadministrador ve el coste por cuenta y fija el límite mensual por cuenta, el tope global de gasto y los plazos de gracia y de solo lectura. |
+| RF-SA-04 | El superadministrador gestiona suscripciones y crea cuentas de cortesía sin pago, para demos y pruebas. |
+| RF-SA-05 | El superadministrador no puede leer los datos de negocio de las cuentas: solo ve metadatos y agregados. |
+| RF-SA-06 | Todo cambio hecho en esta zona queda registrado con fecha y valores anterior y nuevo. |
 ### 3.2 Reglas de negocio
 
 | ID | Regla |
@@ -235,23 +263,29 @@ Un asistente disponible en el portátil y en el móvil, al que se le habla como 
 | RN-04 | Ninguna operación de escritura (crear presupuesto, emitir factura, registrar cobro) se ejecuta desde el agente sin confirmación explícita del usuario en la interfaz. |
 | RN-05 | El contenido de un documento importado es **dato, nunca instrucción**: el texto de un PDF no puede alterar el comportamiento del agente. |
 | RN-06 | Un precio propuesto por el agente indica siempre su origen (catálogo, mediana del histórico o presupuesto similar concreto). Si no hay origen, la línea queda sin precio y marcada. |
+| RN-07 | El precio habitual de un concepto es la mediana sin atípicos (MAD) y se muestra con su número de muestras y su rango. Con menos de 3 muestras se avisa y no se propone de forma automática. |
+| RN-08 | Solo los documentos revisados y aprobados cuentan para consultas, precios y búsquedas. Excluir o borrar uno lo retira de todo en la misma transacción y recalcula lo que dependía de él. |
+| RN-09 | Ante una pregunta fiscal o legal, el agente informa en términos generales y remite a la gestoría. No da asesoramiento. |
 | RN-10 | Ninguna consulta, herramienta ni tarea en segundo plano accede a datos de otra cuenta. |
-| RN-11 | A Claude solo se envían los datos que cada petición necesita. El NIF queda fuera salvo que la tarea lo requiera. |
+| RN-11 | Antes de enviar nada a Claude, el servidor sustituye por seudónimos los nombres, NIF, direcciones y datos de contacto de clientes, proveedores y del propio profesional. A Claude nunca llega un PDF, una imagen ni un audio. Si la seudonimización falla, la petición no se envía. |
+| RN-12 | Sin suscripción activa, la cuenta queda 90 días en solo lectura: se puede consultar y exportar lo propio, pero no crear documentos ni usar la IA. Qué ocurre pasado ese plazo lo fija la asesoría. |
 | RN-F-01 | La numeración de facturas es correlativa por cuenta, serie y año, sin huecos ni duplicados, incluso con emisiones concurrentes. |
 | RN-F-02 | Una factura emitida es inmutable: ningún camino del código permite `UPDATE` ni `DELETE` sobre sus datos fiscales. |
 | RN-F-03 | Una rectificativa referencia siempre a la factura rectificada e indica el motivo. |
 | RN-F-04 | La fecha de expedición no puede ser anterior a la de la última factura emitida de la misma serie. |
 | RN-F-05 | Una factura con inversión del sujeto pasivo lleva cuota de IVA cero y la mención legal correspondiente. |
 | RN-F-06 | Los datos obligatorios (emisor, destinatario con NIF cuando proceda, número, fecha, descripción, base, tipo, cuota, total) son requisito para emitir; si falta alguno, no se emite. |
-| RN-F-07 | Cada emisión genera un registro de evento con el contenido canónico de la factura y una huella SHA-256 encadenada con la anterior de la misma cuenta (preparación para Verifactu). |
+| RN-F-07 | Cada emisión genera un registro de facturación con el contenido canónico de la factura y una huella SHA-256 encadenada con la anterior de la misma cuenta. El Bloque 12 lo ajusta al formato oficial. |
 | RN-F-08 | El histórico importado no se mezcla con la serie emitida (RF-IN-09). |
-| RN-F-09 | Mientras no esté activo un perfil fiscal conforme a Verifactu, todo PDF de factura lleva la marca de modo demostración. |
+| RN-F-09 | Las facturas de una cuenta real son válidas y no llevan ninguna marca. Solo las del espacio de demostración llevan la marca «Documento de demostración», que no se puede quitar. |
+| RN-F-10 | Un cobro no puede superar el importe pendiente de la factura: se rechaza indicando lo que queda por cobrar. |
+| RN-F-11 | Un presupuesto se convierte en factura una sola vez. Si el borrador se elimina, se puede volver a convertir. Una rectificativa no reabre el presupuesto. |
 
 ### 3.3 Requisitos no funcionales
 
 | ID | Requisito |
 |---|---|
-| RNF-01 | **Privacidad:** los datos se guardan en servidores de la UE. Solo salen a Anthropic, como subencargado del tratamiento, los datos que cada petición necesita, y el usuario lo sabe antes de usar la IA. |
+| RNF-01 | **Privacidad:** los datos se guardan en servidores de la UE. Los nombres, NIF, direcciones y datos de contacto de clientes y proveedores no salen de ellos. Anthropic recibe solo texto seudonimizado, y el usuario lo sabe antes de usar la IA. |
 | RNF-02 | Del alta al primer uso en < 5 min, sin instalar nada. |
 | RNF-03 | Disponibilidad objetivo del 99,5 % mensual. |
 | RNF-04 | Consulta con una herramienta: primera respuesta visible (streaming) < 3 s y completa < 15 s, también con 4G en el móvil. |
@@ -267,6 +301,7 @@ Un asistente disponible en el portátil y en el móvil, al que se le habla como 
 | RNF-14 | Audio de 30 s transcrito en < 15 s en el servidor de referencia. |
 | RNF-15 | Copias de seguridad cifradas, fuera del servidor y en la UE, con RPO ≤ 15 min y RTO ≤ 4 h. |
 | RNF-16 | 100 cuentas activas a la vez en el servidor de referencia sin incumplir RNF-04, con la IA simulada. |
+| RNF-17 | En el dataset de evaluación, lo enviado a Claude contiene 0 NIF, emails, teléfonos, IBAN o nombres de clientes registrados, y se detecta ≥ 98 % de los nombres no registrados. |
 
 ### 3.4 Glosario (lenguaje ubicuo)
 
@@ -274,6 +309,9 @@ Un asistente disponible en el portátil y en el móvil, al que se le habla como 
 |---|---|---|
 | Cuenta | Espacio aislado de datos de un profesional | `Tenant` |
 | Usuario | Persona que inicia sesión en una cuenta | `User` |
+| Superadministrador | Dueño de la plataforma; gestiona modelo, límites y suscripciones | `PlatformAdmin` |
+| Suscripción | Cuota mensual que da acceso a la app | `Subscription` |
+| Seudónimo | Etiqueta que sustituye a un dato personal ante Claude (`[CLIENTE_1]`) | `Alias` |
 | Profesional | El autónomo usuario de la app | `Professional` |
 | Cliente | Destinatario de presupuestos y facturas | `Customer` |
 | Concepto | Trabajo o material facturable genérico («punto de luz») | `CatalogItem` |
@@ -286,7 +324,7 @@ Un asistente disponible en el portátil y en el móvil, al que se le habla como 
 | Extracción | Resultado estructurado de leer un documento fuente | `Extraction` |
 | Borrador | Documento aún editable, sin número definitivo | estado `draft` |
 | Emisión | Paso de borrador a factura numerada e inmutable | `issue()` |
-| Registro de facturación | Evento encadenado de cada emisión (base de Verifactu) | `BillingRecord` |
+| Registro de facturación | Registro encadenado de cada emisión, según Verifactu | `BillingRecord` |
 | Herramienta | Función que el agente puede invocar | `Tool` |
 
 > El código usa nombres en inglés para las clases y en español para los textos de usuario. El glosario es la fuente única de ambos.
@@ -362,6 +400,41 @@ Escenario: Claude no responde
   Cuando abro el listado de facturas y emito un borrador
   Entonces todo funciona con normalidad
   Y el chat explica que el asistente no está disponible
+
+Escenario: Claude no ve los datos del cliente
+  Dado el cliente "Marta López García" con NIF 12345678Z
+  Cuando pregunto "¿cuánto le facturé a Marta López este año?"
+  Entonces lo enviado a Claude no contiene ni su nombre ni su NIF
+  Y la respuesta que veo muestra "Marta López García"
+
+Escenario: Acceso tras pagar la cuota
+  Dado que me he registrado y he verificado mi email
+  Cuando entro sin haber pagado
+  Entonces solo veo la pantalla de pago
+  Y al confirmarse el pago llego al asistente de primer arranque
+
+Escenario: Suscripción terminada
+  Dado que mi suscripción ha terminado
+  Cuando entro en mi cuenta
+  Entonces puedo consultar y exportar mis facturas
+  Y no puedo crear documentos ni usar el asistente
+
+Escenario: Zona de superadministración
+  Dado que soy un cliente con sesión iniciada
+  Cuando intento abrir la zona de superadministración
+  Entonces recibo 404
+  Y no existe ningún ajuste de modelo en mi cuenta
+
+Escenario: Cobro superior al pendiente
+  Dado una factura de 500,00 € con 380,00 € ya cobrados
+  Cuando registro un cobro de 200,00 €
+  Entonces se rechaza con el aviso "Quedan 120,00 € por cobrar"
+
+Escenario: Presupuesto ya convertido
+  Dado un presupuesto convertido en la factura F-2026-0009
+  Cuando intento convertirlo otra vez
+  Entonces se rechaza
+  Y se me enlaza la factura F-2026-0009
 ```
 
 ---
@@ -378,7 +451,7 @@ api/  ──►  application/  ──►  domain/
 
 - **`domain/`**: entidades, objetos de valor, reglas RN, puertos (interfaces). Python puro: no importa FastAPI, SQLAlchemy, el SDK de Anthropic ni nada de `infrastructure`. Reloj inyectado (`Clock`), nunca `datetime.now()`.
 - **`application/`**: casos de uso (un caso de uso = una transacción), orquestador del agente, DTO. Depende solo de `domain`.
-- **`infrastructure/`**: PostgreSQL/SQLAlchemy, API de Claude, embeddings, Whisper, pdfplumber, ReportLab, ficheros, email, cola de tareas y adaptadores nulos de Verifactu y suscripción.
+- **`infrastructure/`**: PostgreSQL/SQLAlchemy, API de Claude, seudonimización, embeddings, Whisper, pdfplumber, Tesseract, ReportLab, ficheros, email, pagos, cola de tareas y módulo Verifactu.
 - **`api/`**: routers FastAPI, autenticación y contexto de cuenta, esquemas de entrada/salida, errores RFC 9457 (`application/problem+json`), SSE para streaming del chat.
 - **import-linter** hace cumplir estas fronteras en CI.
 
@@ -392,20 +465,22 @@ api/  ──►  application/  ──►  domain/
 | `documents` | `SourceDocument`, `Extraction`, estados de revisión |
 | `assistant` | Definición de herramientas, políticas de confirmación, transcripción |
 | `settings` | Perfil del profesional, perfil fiscal |
-| `accounts` | `Tenant`, `User`, sesiones, límites de consumo de IA |
+| `accounts` | `Tenant`, `User`, `PlatformAdmin`, `Subscription`, sesiones, límites de consumo de IA |
 
 ### 4.3 Puertos principales
 
 | Puerto | Adaptador v1 | Adaptador futuro |
 |---|---|---|
-| `LlmPort` (chat con herramientas, salida estructurada) | `ClaudeLlm`, `FakeLlm` (pruebas) | Otro proveedor |
+| `LlmPort` (chat con herramientas, salida estructurada; solo acepta `SanitizedPrompt`) | `ClaudeLlm`, `FakeLlm` (pruebas) | Otro proveedor |
+| `PseudonymizerPort` | `PresidioPseudonymizer`, `FakePseudonymizer` | |
 | `EmbeddingPort` | `LocalEmbeddings` (fastembed), `FakeEmbeddings` | |
 | `TranscriptionPort` | `FasterWhisper` | |
-| `PdfTextPort` | `PdfPlumberReader` | `OcrPort` |
+| `PdfTextPort` | `PdfPlumberReader` | |
+| `OcrPort` | `TesseractOcr` | Fotos de tiques |
 | `PdfRenderPort` | `ReportLabRenderer` | |
 | `SearchPort` | `HybridPostgresSearch` (texto + pgvector + RRF) | |
-| `RegistroFacturacionPort` | `NullRegistroFacturacion` (registra local, no remite) | `VerifactuAeat` |
-| `SuscripcionPort` | `DemoSuscripcion` | Pasarela de pago |
+| `RegistroFacturacionPort` | `NullRegistroFacturacion` hasta el Bloque 12; después `VerifactuProveedor` | `VerifactuAeat` (envío directo como colaborador social) |
+| `SuscripcionPort` | `StripeSuscripcion`, `FakeSuscripcion` | Otra pasarela |
 | `FileStoragePort` | `LocalFileStorage` | Almacenamiento S3 compatible en la UE |
 | `EmailPort` | `SmtpEmail`, `FakeEmail` | |
 | `Clock` | `SystemClock`, `FrozenClock` | |
@@ -415,6 +490,7 @@ api/  ──►  application/  ──►  domain/
 ```
 kapataz/
 ├── CLAUDE.md
+├── HANDOFF.md                  # estado y siguiente acción entre sesiones
 ├── README.md
 ├── LICENSE
 ├── .claude/
@@ -427,7 +503,7 @@ kapataz/
 │   ├── src/kapataz/
 │   │   ├── domain/{accounts,billing,customers,catalog,documents,assistant,settings}/
 │   │   ├── application/{use_cases,agent,dto}/
-│   │   ├── infrastructure/{persistence,llm,embeddings,speech,pdf,search,storage,email,jobs,fiscal,subscription,logging}/
+│   │   ├── infrastructure/{persistence,llm,privacy,embeddings,speech,pdf,search,storage,email,jobs,fiscal,payments,logging}/
 │   │   ├── api/{routers,schemas,errors.py,sse.py}
 │   │   ├── bootstrap.py        # composición de dependencias
 │   │   └── main.py
@@ -435,7 +511,7 @@ kapataz/
 │   └── tools/                  # traceability.py, seed_demo.py, gen_synthetic.py
 ├── frontend/
 │   ├── package.json
-│   ├── src/{app,features/{account,chat,quotes,invoices,documents,customers,settings},components,composables,stores,i18n,styles}
+│   ├── src/{app,features/{account,admin,chat,quotes,invoices,documents,customers,settings},components,composables,stores,i18n,styles}
 │   └── tests/{unit,e2e}
 ├── deploy/                     # Dockerfile, compose.yaml, Caddyfile, scripts de copia y restauración
 ├── samples/                    # PDFs sintéticos versionados para demo y pruebas
@@ -449,7 +525,7 @@ kapataz/
     ├── 03-modelo-amenazas.md
     ├── 04-evaluacion-ia.md     # metodología, resultados por modelo y perfil
     ├── plan-verificacion-kapataz.md  # verificación pre-release detallada
-    ├── adr/                    # ADR-001 … ADR-029
+    ├── adr/                    # ADR-001 … ADR-031
     ├── operacion/              # despliegue, copias y runbooks
     ├── usuario/                # primeros-pasos.md, uso.md, que-hacer-si.md
     └── portafolio/             # caso-de-estudio.md, guion-demo.md, capturas/
@@ -460,13 +536,15 @@ kapataz/
 | Tabla | Notas |
 |---|---|
 | `tenants`, `users`, `sessions` | Cuentas, usuarios y sesiones abiertas |
+| `subscriptions`, `payment_events` | Estado de la suscripción y eventos de la pasarela, sin repetir ninguno |
+| `platform_settings` | Modelo y `effort` por ruta, límites, tope global y plazos de gracia y de solo lectura. Solo escribe el superadministrador |
 | `professional` | Una fila por cuenta. Datos fiscales y logotipo |
 | `customers` | `tax_id` único por cuenta cuando existe |
 | `catalog_items` | Concepto, unidad, precio de referencia, origen |
 | `quotes`, `quote_versions`, `quote_lines` | Versionado al modificar un enviado |
 | `invoices`, `invoice_lines` | `status` (`draft`, `issued`), `series`, `number`, `issued_at`; trigger que impide `UPDATE`/`DELETE` de campos fiscales con `status='issued'` |
 | `series_counters` | Contador por cuenta, serie y año, bloqueado con `SELECT … FOR UPDATE` en la misma transacción que la emisión |
-| `billing_records` | Contenido canónico JSON, `hash`, `prev_hash`, `submission_status` (`not_applicable` en v1) |
+| `billing_records` | Contenido canónico JSON, `hash`, `prev_hash`, `submission_status` (`pending`, `accepted`, `rejected`) |
 | `payments` | Cobros asociados a facturas |
 | `source_documents`, `extractions`, `extraction_fields` | Hash del fichero, estado, confianza por campo |
 | `historical_invoices`, `historical_lines` | Histórico importado ya revisado, separado de `invoices` |
@@ -480,11 +558,11 @@ kapataz/
 ### 4.6 Flujo del agente
 
 1. Llega el mensaje (texto o transcripción) y se comprueba el límite de uso de la cuenta.
-2. El orquestador construye el contexto: prompt de sistema versionado, herramientas disponibles, últimos turnos y, si procede, fragmentos recuperados **delimitados como datos**.
+2. El orquestador construye el contexto: prompt de sistema versionado, herramientas disponibles, últimos turnos y, si procede, fragmentos recuperados **delimitados como datos**. Todo pasa por la seudonimización (RN-11): Claude ve `[CLIENTE_1]`, y la tabla de equivalencias se queda en el servidor.
 3. Claude responde con texto o con llamadas a herramientas. El sistema y las herramientas forman un prefijo estable para aprovechar el prompt caching.
 4. Cada herramienta valida sus parámetros con Pydantic. Las de **lectura** se ejecutan; las de **escritura** solo producen una **propuesta** (`PendingAction`) que la interfaz muestra con botón Confirmar/Descartar.
 5. Los resultados de herramientas vuelven al modelo; máximo N iteraciones (configurable, por defecto 6).
-6. La respuesta se emite por SSE; las cifras se renderizan desde el resultado de la herramienta, no desde el texto del modelo (RN-02).
+6. La respuesta se emite por SSE. El servidor restituye los datos reales antes de enviarla, y las cifras se renderizan desde el resultado de la herramienta, no desde el texto del modelo (RN-02).
 
 **Herramientas v1**
 
@@ -515,18 +593,18 @@ kapataz/
 | 002 | Python + FastAPI como backend | Frente a Laravel: ecosistema de IA y SDK oficial de Anthropic | 0 |
 | 003 | uv como gestor de entorno y dependencias | Lockfile reproducible en desarrollo, CI e imágenes | 0 |
 | 004 | PostgreSQL como base de datos | Concurrencia real, RLS, bloqueo de fila para la numeración y copias con WAL | 0 |
-| 005 | Claude como LLM y selección de modelo por evaluación | API de Claude con clave de KodigoLab; `claude-opus-5-5` por defecto; cualquier modelo más barato por ruta se justifica con `evals/` | **6** (Propuesto) |
+| 005 | Claude como LLM | API de Claude con clave de KodigoLab; `claude-opus-5-5` para todas las cuentas; solo el superadministrador lo cambia; `effort` por ruta fijado con `evals/` | **6** (Propuesto) |
 | 006 | Bucle de agente propio sin frameworks | Tool use de la Messages API, validación Pydantic, máximo de iteraciones | 0 |
 | 007 | Búsqueda híbrida con PostgreSQL y pgvector | Texto y vectores fusionados con RRF; embeddings con un modelo abierto en nuestro servidor | 5 |
 | 008 | LLM falso determinista en CI; evaluaciones con Claude real fuera de CI | Pruebas reproducibles y sin clave en CI; `pytest -m llm` solo manual y con presupuesto aprobado | 0 |
 | 009 | Representación del dinero | `Decimal` en dominio, céntimos `INTEGER` en BD, ROUND_HALF_UP por línea; el LLM nunca calcula | 0 |
-| 010 | Lectura y generación de PDF | pdfplumber comprueba y saca texto; Claude lee el PDF para extraer los datos; ReportLab genera | 0 |
+| 010 | Lectura y generación de PDF | pdfplumber y Tesseract leen en nuestro servidor; el PDF nunca sale hacia Claude; ReportLab genera | 0 |
 | 011 | Voz con faster-whisper en nuestro servidor | Claude no transcribe audio. El audio no pasa a terceros y se borra al terminar; concurrencia limitada en el worker | 0 |
-| 012 | Facturación preparada para Verifactu | Inmutabilidad, numeración sin huecos, rectificativas, `BillingRecord` encadenado, puerto `RegistroFacturacionPort` con adaptador nulo, marca de demostración | 0 |
+| 012 | Facturación conforme a Verifactu | Inmutabilidad, numeración sin huecos, rectificativas y `BillingRecord` encadenado desde el Bloque 2; solo modalidad VERI*FACTU, con envío mediante proveedor externo y autorización documentada de cada cliente; el proveedor concreto se elige en el Bloque 12 | **12** (Propuesto) |
 | 013 | Vue 3 servido por FastAPI detrás de un proxy TLS | Build estático en `backend/src/kapataz/static`; mismo origen para app y API | 0 |
-| 014 | Despliegue con Docker Compose en un VPS de la UE | Caddy con TLS automático, imágenes versionadas y vuelta atrás probada | 10 |
+| 014 | Despliegue con Docker Compose en un VPS de la UE | Caddy con TLS automático, imágenes versionadas y vuelta atrás probada; hosting compartido descartado | 10 |
 | 015 | Logs estructurados sin datos personales | structlog JSON; nunca contenido de documentos ni NIF en logs; sin analítica de terceros | 0 |
-| 016 | Suscripción como puerto con adaptador demo | `SuscripcionPort`; una suscripción caducada nunca bloquea consultar ni exportar datos propios | 0 |
+| 016 | Suscripción con Stripe | Checkout y Billing con tarjeta y PayPal, webhooks firmados y sin repetición, `SuscripcionPort`; 14 días de gracia y 90 días de solo lectura, configurables por el superadministrador | 10 |
 | 017 | Separación entre histórico importado y facturas emitidas | Tablas distintas; consultas agregan ambas con origen marcado | 2 |
 | 018 | Confirmación humana obligatoria para escrituras del agente | `PendingAction` firmada con caducidad; la UI es la única que confirma | 6 |
 | 019 | Defensa ante inyección de instrucciones | Contenido de documentos delimitado como datos, herramientas de escritura solo como propuesta, lista blanca de herramientas por turno | 6 |
@@ -535,11 +613,13 @@ kapataz/
 | 022 | Cadena de suministro | Lockfiles con hashes, acciones de GitHub fijadas por SHA, imágenes fijadas por digest y SBOM en cada release | 1 |
 | 023 | Precios de referencia robustos | Mediana y MAD, muestras mínimas y exclusión de atípicos | **7** (Propuesto) |
 | 024 | Multitenencia con Row Level Security | Una BD compartida, `tenant_id` y políticas RLS; rol de aplicación sin `BYPASSRLS` | 0 |
-| 025 | Autenticación propia con sesiones en cookie | Argon2id, cookie `HttpOnly`, `Secure` y `SameSite`, sesiones revocables, TOTP opcional, alta por invitación | 0 |
+| 025 | Autenticación propia con sesiones en cookie | Argon2id, cookie `HttpOnly`, `Secure` y `SameSite`, sesiones revocables y TOTP opcional | 0 |
 | 026 | Cola de tareas en PostgreSQL | procrastinate y un proceso worker; cada tarea lleva su `tenant_id` | 4 |
 | 027 | PWA como única app móvil | Instalable, con pantalla sin conexión y sin escrituras offline | 0 |
 | 028 | Límites de consumo de IA | Contabilidad por petición, límite mensual por cuenta y tope global de gasto | **6** (Propuesto) |
-| 029 | Tratamiento de datos con Anthropic | Anthropic como subencargado; acuerdo de tratamiento, retención, región de inferencia y minimización revisados antes de usar datos reales | 0 |
+| 029 | Tratamiento de datos con Anthropic | Anthropic como subencargado aunque reciba datos seudonimizados; acuerdo de tratamiento, retención y región de inferencia revisados antes de usar datos reales | 0 |
+| 030 | Seudonimización antes de Claude | Diccionario de la cuenta, patrones y Presidio; `LlmPort` solo acepta `SanitizedPrompt`; fallo cerrado; riesgo residual medido con RNF-17 | **4** (Propuesto) |
+| 031 | Zona de superadministración | Rol que no se obtiene por registro, TOTP obligatorio, sin acceso a datos de negocio y con todos los cambios registrados | 0 |
 
 ---
 
@@ -574,10 +654,11 @@ kapataz/
 ### 6.3 Reglas de flujo
 
 1. El hilo principal orquesta, delega y marca casillas. No escribe código de dominio por sí mismo.
-2. Los agentes de solo lectura **no corrigen**: cada hallazgo va al registro de la Parte II, lo corrige el agente dueño y el detector vuelve a revisar.
+2. Los agentes de solo lectura **no corrigen**: cada hallazgo va al registro del plan de verificación, lo corrige el agente dueño y el detector vuelve a revisar.
 3. Ningún agente cambia una RN, un RF o un ADR aceptado sin que `arquitecto-python` lo proponga y tú lo apruebes.
 4. Frontend y backend pueden avanzar **en paralelo** una vez fijado el contrato OpenAPI del bloque.
 5. Todo cambio lleva su prueba con marcador de requisito.
+6. Solo el hilo principal actualiza `HANDOFF.md`. Los agentes le devuelven lo que hay que anotar.
 
 ### 6.4 Definiciones de agentes
 
@@ -602,7 +683,7 @@ Responsabilidades:
 - Hacer cumplir RN-01 a RN-06 y RN-F-01 a RN-F-09 dentro del dominio, no en la API.
 - Escribir y mantener los ADR con la plantilla del Anexo A. Ninguna decisión estructural sin ADR.
 - Mantener el glosario y el lenguaje ubicuo: Invoice, Quote, LineItem, Customer, BillingRecord.
-- Diseñar los puertos pensando en Verifactu (ADR-012) aunque su adaptador sea nulo.
+- Diseñar los puertos pensando en Verifactu (ADR-012), que se completa en el Bloque 12.
 
 Reglas:
 - Dinero siempre Decimal; nunca float. Cualquier float monetario es un error bloqueante.
@@ -632,6 +713,8 @@ Responsabilidades:
 - Numeración de facturas sin huecos con bloqueo de fila del contador por cuenta, serie y año, en la misma transacción que la emisión (RN-F-01).
 - Endpoints en api/routers con esquemas Pydantic propios de la API (no exponer entidades del dominio). Errores RFC 9457 con tipos estables (p. ej. /problemas/factura-emitida-inmutable).
 - Streaming del chat por SSE y tareas en segundo plano con la cola de PostgreSQL (ADR-026).
+- Pagos (ADR-016): Stripe Checkout y Billing, webhooks con firma verificada y sin efectos repetidos. El estado de la suscripción solo cambia por webhook, nunca por lo que diga el navegador.
+- Zona de superadministración (ADR-031): rol aparte, TOTP obligatorio, sin acceso a datos de negocio y con registro de cambios.
 - Logs con structlog en JSON: request_id, run_id, tenant_id, use_case, duración. Nunca NIF, nombres de clientes ni contenido de documentos.
 - Mantener el contrato OpenAPI exportado en docs/api/openapi.json sincronizado con la implementación.
 
@@ -658,13 +741,13 @@ Responsabilidades:
 - Bucle del agente propio en application/agent (ADR-006) sobre la Messages API: prompt de sistema versionado en ficheros, máximo de iteraciones, streaming, validación Pydantic de cada llamada y reintento acotado ante entrada inválida.
 - Herramientas de lectura que devuelven datos estructurados; herramientas de escritura que solo devuelven PendingAction (RN-04, ADR-018).
 - Defensa ante inyección (RN-05, ADR-019): contenido recuperado delimitado y marcado como datos, nunca concatenado al prompt de sistema; lista blanca de herramientas por turno.
-- Minimización (RN-11): a Claude solo llegan los campos que cada petición necesita.
-- Pipeline de ingesta: clasificación, extracción a esquema con salida estructurada, validación aritmética por código, confianza por campo.
+- Seudonimización (RN-11, ADR-030): todo lo que va a Claude pasa por PseudonymizerPort, LlmPort solo acepta SanitizedPrompt y el servidor restituye los datos reales al responder. Si falla, no se envía nada.
+- Pipeline de ingesta: texto con pdfplumber o Tesseract en nuestro servidor, seudonimización, clasificación y extracción a esquema con salida estructurada, validación aritmética por código, confianza por campo.
 - Búsqueda híbrida con PostgreSQL y pgvector, y embeddings con un modelo abierto en nuestro servidor (ADR-007).
 - Transcripción con faster-whisper y prompt inicial con vocabulario de oficio.
 - Contabilidad de tokens y coste por petición y por cuenta; prompt caching con un prefijo estable (ADR-028).
 - Datasets en evals/ y harness pytest con marcador llm. Informes en docs/04-evaluacion-ia.md con modelo, effort, métricas, coste y fecha.
-- Selección de modelo por ruta cerrando el ADR-005 con datos.
+- Fijar el effort por ruta y cerrar el ADR-005 con datos.
 
 Reglas:
 - El modelo nunca calcula importes (RN-02). Si una respuesta del modelo contiene cifras que no vienen de una herramienta, es un fallo.
@@ -673,6 +756,7 @@ Reglas:
 - Antes de usar un modelo o un parámetro de la API, compruébalo en la documentación oficial vigente. claude-opus-5-5 no admite temperature ni forzar una herramienta con tool_choice: usa auto, strict: true en las herramientas y un effort explícito.
 - Comprueba stop_reason antes de leer la respuesta y gestiona refusal, max_tokens y los errores 429 y 5xx. Que Claude no responda nunca rompe lo que no usa IA (RNF-08).
 - La clave de la API solo existe en el servidor.
+- El modelo se lee de platform_settings: nunca se fija en el código ni lo elige un cliente.
 - Cada ejecución de evaluaciones cuesta dinero: estima el coste y pide aprobación antes.
 ```
 
@@ -694,6 +778,8 @@ Responsabilidades:
 - Pruebas de propiedades para cálculo de importes y redondeo.
 - Pruebas de concurrencia de numeración con hilos y procesos.
 - Pruebas de aislamiento: cada endpoint, herramienta y tarea se prueba desde otra cuenta.
+- Pruebas de fuga: se captura lo que llega a LlmPort y se comprueba que no contiene datos personales (RNF-17).
+- Pagos con FakeSuscripcion y webhooks simulados; en staging, con el modo de pruebas de la pasarela.
 - Prueba de carga con k6 con la IA simulada (RNF-16).
 - Mutación con mutmut sobre domain/billing.
 - Relojes congelados con FrozenClock; ninguna prueba depende de la fecha real.
@@ -744,7 +830,7 @@ model: sonnet
 Eres el arquitecto frontend de Kapataz.
 
 Responsabilidades:
-- SPA en frontend/ organizada por funcionalidades (features/account, chat, quotes, invoices, documents, customers, settings) con Composition API y <script setup lang="ts">, pensada primero para el móvil.
+- SPA en frontend/ organizada por funcionalidades (features/account, admin, chat, quotes, invoices, documents, customers, settings) con Composition API y <script setup lang="ts">, pensada primero para el móvil.
 - Cliente de API tipado generado desde docs/api/openapi.json (openapi-typescript); nada de tipos escritos a mano que dupliquen el contrato.
 - Chat con streaming SSE, render de tarjetas de resultado (tablas de importes, enlaces a documentos) y de PendingAction con Confirmar/Descartar.
 - Grabación de audio con MediaRecorder y envío al endpoint de transcripción, con los formatos de Chrome, Edge y Safari.
@@ -797,9 +883,9 @@ model: sonnet
 Eres el responsable de que Kapataz se entienda en dos minutos, tanto por un reclutador técnico como por un autónomo.
 
 Responsabilidades:
-- README: qué es, captura o GIF, enlace a la demo, cómo levantar el entorno de desarrollo, arquitectura en un diagrama Mermaid, decisiones destacadas con enlace a sus ADR, aviso legal de facturación en modo demostración.
+- README: qué es, captura o GIF, enlace a la demo, cómo levantar el entorno de desarrollo, arquitectura en un diagrama Mermaid y decisiones destacadas con enlace a sus ADR.
 - docs/usuario: primeros pasos, instalar la PWA, uso, qué hacer si… (no llega el email, el micrófono no funciona, una extracción sale mal, se agota el límite de IA).
-- docs/portafolio/caso-de-estudio.md: problema, decisiones y por qué, resultados de evaluación con cifras reales de docs/04-evaluacion-ia.md, lo que haría distinto, siguiente paso (Verifactu, suscripción).
+- docs/portafolio/caso-de-estudio.md: problema, decisiones y por qué, resultados de evaluación con cifras reales de docs/04-evaluacion-ia.md, lo que haría distinto y siguiente paso.
 - docs/portafolio/guion-demo.md: demo de 3 minutos paso a paso.
 
 Reglas:
@@ -820,10 +906,10 @@ model: opus
 Eres el auditor de seguridad y cumplimiento de Kapataz. No modificas código: detectas, justificas y propones la corrección al agente dueño.
 
 Ámbitos:
-- STRIDE sobre un servicio en internet: autenticación y sesiones, aislamiento entre cuentas (RLS, IDOR), CSRF, subida de ficheros (tipo, tamaño, PDFs maliciosos), rutas de fichero, dependencias, imágenes y secretos del servidor.
+- STRIDE sobre un servicio en internet: autenticación y sesiones, aislamiento entre cuentas (RLS, IDOR), zona de superadministración, pagos y webhooks, CSRF, subida de ficheros (tipo, tamaño, PDFs maliciosos), rutas de fichero, dependencias, imágenes y secretos del servidor.
 - OWASP Top 10 LLM: inyección directa e indirecta (PDFs), manejo inseguro de salidas, agencia excesiva (herramientas de escritura sin confirmación), divulgación de datos en prompts y logs, fuga de datos entre cuentas, consumo ilimitado (bucles del agente y coste de la API).
-- RGPD: el autónomo como responsable, KodigoLab como encargado y Anthropic como subencargado; contrato de encargo, minimización de lo que se envía a Claude, transferencias internacionales, logs sin datos personales, borrado y exportación, aviso sobre el uso de IA.
-- Facturación: inmutabilidad real (trigger, no solo código), numeración sin huecos, rectificativas, integridad de la cadena de BillingRecord, marca de modo demostración (RN-F-09), qué faltaría exactamente para Verifactu.
+- RGPD: el autónomo como responsable, KodigoLab como encargado y Anthropic, Stripe y el proveedor de Verifactu como subencargados; contrato de encargo, seudonimización real de lo que se envía a Claude, transferencias internacionales, logs sin datos personales, borrado y exportación, aviso sobre el uso de IA.
+- Facturación: inmutabilidad real (trigger, no solo código), numeración sin huecos, rectificativas, integridad de la cadena de BillingRecord y conformidad con el reglamento de sistemas de facturación y Verifactu.
 
 Formato de hallazgo: ID, severidad (🔴 CRÍTICO, 🟠 ALTO, 🟡 MEDIO, ⚪ BAJO), ubicación, descripción, escenario de explotación, corrección propuesta, agente dueño.
 
@@ -861,7 +947,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 ### Flujo de entrega y calidad por bloque
 
 - Cada bloque se implementa en su rama (`bloque-NN-nombre`, creada desde `main`) y se entrega en su **propio pull request (PR)**; no se agrupan varios bloques en un mismo PR. El PR debe incluir el código, la documentación y las pruebas correspondientes al bloque.
-- Antes de solicitar revisión, se ejecutan y superan todas las pruebas y comprobaciones aplicables: las definidas en el bloque, su criterio de terminado y la Definición de Terminado de `docs/02-arquitectura.md`. Lo que no corre en CI (evaluaciones con `pytest -m llm`, pruebas en móviles reales) se ejecuta aparte y su resultado se anota en la descripción del PR.
+- Antes de solicitar revisión, se ejecutan y superan todas las pruebas y comprobaciones aplicables: las definidas en el bloque, su criterio de terminado y la Definición de Terminado de `docs/02-arquitectura.md`. Lo que no corre en CI (evaluaciones con `pytest -m llm`, pruebas en móviles reales) se ejecuta aparte y su resultado se anota en la descripción del PR. El PR deja `HANDOFF.md` al día.
 - Antes de integrar el PR, deben estar en verde el CI de GitHub y las comprobaciones de seguridad (`pip-audit`, `npm audit`, bandit, Semgrep, gitleaks y Trivy, sin hallazgos altos ni críticos), además de la revisión de `revisor-codigo`. No se integra un PR con comprobaciones fallidas o pendientes; cualquier excepción justificada debe quedar documentada y aprobada explícitamente.
 - El Bloque 0 solo aporta documentación y todavía no hay CI: sus comprobaciones se hacen en local y se integra con tu visto bueno. El Bloque 1 crea los workflows y la protección de `main`, y su propio PR ya debe pasarlos; desde ahí son obligatorios en todos los PR.
 - Estas comprobaciones por PR no sustituyen a la Parte II, que repite la auditoría completa antes de la release.
@@ -882,6 +968,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 | 9 | Voz | 6 |
 | 10 | Frontend completo, PWA y producción | 7, 8, 9 |
 | 11 | Pulido y documentación de portafolio | 10 |
+| 12 | Módulo Verifactu | 8, 11 |
 
 > Los bloques 4 y 9 pueden solaparse con otros si hay capacidad, porque tocan adaptadores distintos.
 
@@ -892,6 +979,10 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 **Objetivo:** que el repo contenga todo el conocimiento del proyecto antes de la primera línea de código.
 
 - [ ] **Crear `CLAUDE.md`** a partir del Anexo B.
+  - 🤖 hilo principal · Opus 5.5
+- [ ] **Crear `HANDOFF.md`** en la raíz con las secciones «Estado y objetivo actual», «Siguiente acción», «Pendiente» y «Trampas del entorno».
+  - 🤖 hilo principal · Opus 5.5
+- [ ] **Comprobar Engram:** `mem_current_project` detecta el proyecto `kapataz`, y `.engram/` queda fuera del repositorio.
   - 🤖 hilo principal · Opus 5.5
 - [ ] **Crear los 10 agentes** en `.claude/agents/` con el contenido exacto de §6.4.
   - 🤖 hilo principal · Opus 5.5
@@ -906,7 +997,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - acceso a datos siempre con contexto de cuenta;
   - sin datos personales en logs.
   - 🤖 `arquitecto-python` · Opus 5.5
-- [ ] **Generar los ADR 001–029** de §5 con la plantilla del Anexo A. Los marcados como «Propuesto» quedan abiertos con las opciones a evaluar.
+- [ ] **Generar los ADR 001–031** de §5 con la plantilla del Anexo A. Los marcados como «Propuesto» quedan abiertos con las opciones a evaluar.
   - 🤖 `arquitecto-python` · Opus 5.5
 - [ ] **Generar `docs/03-modelo-amenazas.md`** inicial: activos, límites de confianza, STRIDE por componente y OWASP LLM Top 10 aplicado.
   - 🤖 `seguridad-ia` · Opus 5.5 (redacta el contenido; el hilo principal escribe el fichero porque el agente es de solo lectura)
@@ -917,7 +1008,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 - [ ] **Tratamiento de datos con Anthropic (ADR-029):** contrastar acuerdo de tratamiento, retención y región de inferencia con las condiciones vigentes.
   - 🤖 `seguridad-ia` · Opus 5.5 + 👤 revisas y aceptas las condiciones
 
-**Entregables:** `CLAUDE.md`, `.claude/agents/*`, `docs/01–04`, `docs/adr/ADR-001…029`.
+**Entregables:** `CLAUDE.md`, `HANDOFF.md`, `.claude/agents/*`, `docs/01–04`, `docs/adr/ADR-001…031`.
 **Criterio de terminado:** 👤 revisas especificación y ADR y das el visto bueno. Sin ese visto bueno no se empieza el Bloque 1.
 
 ---
@@ -928,7 +1019,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 
 - [ ] **Backend mínimo:** `pyproject.toml` con uv, estructura de capas, `bootstrap.py`, `/api/health` (comprueba BD y API de Claude por separado), `/api/chat` con `FakeLlm` y SSE.
   - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Cuentas mínimas:** `tenants`, `users`, alta por invitación, inicio y cierre de sesión (RF-AC-01, ADR-025).
+- [ ] **Cuentas mínimas:** `tenants`, `users`, registro con verificación de email, inicio y cierre de sesión (RF-AC-01, ADR-025), con `FakeSuscripcion` hasta el Bloque 10.
   - 🤖 `backend-fastapi` · Opus 5.5
 - [ ] **Configuración de calidad:** ruff, mypy `--strict`, contrato de import-linter con las cuatro capas, bandit, pip-audit, pytest con marcadores `req`, `llm`, `slow`.
   - 🤖 `arquitecto-python` · Opus 5.5
@@ -1016,11 +1107,13 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 
 ### Bloque 4 — Ingesta de documentos
 
-- [ ] **Comprobación de PDF** con pdfplumber: texto, tablas y número de páginas; rechazo de PDFs cifrados o enormes con motivo claro. Los escaneados los lee Claude.
+- [ ] **Lectura de PDF** en nuestro servidor con pdfplumber, y con Tesseract para los escaneados; rechazo de PDFs cifrados o enormes con motivo claro.
+  - 🤖 `ingeniero-ia` · Opus 5.5
+- [ ] **Seudonimización** (RN-11, ADR-030): diccionario de la cuenta, patrones (NIF, IBAN, email, teléfono), Presidio para nombres y direcciones no registrados, y restitución de los datos reales.
   - 🤖 `ingeniero-ia` · Opus 5.5
 - [ ] **Clasificación** del documento (RF-IN-02) con salida estructurada.
   - 🤖 `ingeniero-ia` · Opus 5.5
-- [ ] **Extracción** enviando el PDF a Claude, con salida a esquema Pydantic y confianza por campo (RF-IN-03, RF-IN-04).
+- [ ] **Extracción:** Claude recibe el texto seudonimizado y devuelve un esquema Pydantic con confianza por campo; el servidor restituye los datos reales (RF-IN-03, RF-IN-04).
   - 🤖 `ingeniero-ia` · Opus 5.5
 - [ ] **Validación aritmética por código** y motivos de revisión legibles (RF-IN-05).
   - 🤖 `ingeniero-ia` · Opus 5.5
@@ -1032,10 +1125,10 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `backend-fastapi` · Opus 5.5
 - [ ] **Pantalla de revisión** con PDF a la izquierda (pdf.js) y campos a la derecha, apilados en el móvil, con los campos dudosos resaltados. ∥
   - 🤖 `arquitecto-vue` · Sonnet 5.5 + `ui-ux` · Sonnet 5.5
-- [ ] **Evaluación de extracción** con Claude real, informe en `docs/04-evaluacion-ia.md`, incluido el coste por documento.
+- [ ] **Evaluación de extracción** con Claude real, informe en `docs/04-evaluacion-ia.md`: precisión sobre texto seudonimizado (RNF-06), fugas (RNF-17) y coste por documento. **Cerrar ADR-030.**
   - 🤖 `ingeniero-ia` · Opus 5.5
 
-**Criterio de terminado:** precisión en campos críticos medida y anotada; las facturas con errores sembrados quedan en revisión con el motivo correcto.
+**Criterio de terminado:** RNF-06 y RNF-17 medidos; las facturas con errores sembrados quedan en revisión con el motivo correcto.
 
 ---
 
@@ -1074,8 +1167,10 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `arquitecto-vue` · Sonnet 5.5
 - [ ] **Dataset de evaluación del agente:** 80–120 preguntas con herramienta esperada, parámetros y respuesta de referencia, incluyendo ambiguas, sin datos y maliciosas.
   - 🤖 `qa-testing` · Opus 5.5
-- [ ] **Evaluación de modelos de Claude por ruta** (precisión de herramienta, exactitud de parámetros, latencia y coste por pregunta), con el coste de la evaluación aprobado antes, y **cierre del ADR-005**.
+- [ ] **Evaluación de `claude-opus-5-5`** por ruta (precisión de herramienta, exactitud de parámetros, latencia y coste por pregunta) para fijar el `effort`, con el coste de la evaluación aprobado antes, y **cierre del ADR-005**.
   - 🤖 `ingeniero-ia` · Opus 5.5 → escalado a Fable 5.1 solo si se estanca bajo el umbral tras dos iteraciones
+- [ ] **Seudonimización en el chat:** mensajes, resultados de herramientas y fragmentos recuperados; los nombres reales se restituyen también durante el streaming.
+  - 🤖 `ingeniero-ia` · Opus 5.5
 - [ ] **Contabilidad y límites de uso:** tokens y coste por petición, límite mensual por cuenta, tope global y aviso en la interfaz (RF-UC, ADR-028).
   - 🤖 `ingeniero-ia` · Opus 5.5 + `arquitecto-vue` · Sonnet 5.5
 - [ ] **Fallo de la API de Claude:** con errores, límites de tasa o caídas, el chat lo explica y el resto de la app sigue funcionando (RNF-08).
@@ -1083,7 +1178,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 - [ ] **Revisión de seguridad intermedia** del agente.
   - 🤖 `seguridad-ia` · Opus 5.5 → corrige: `ingeniero-ia`
 
-**Criterio de terminado:** RNF-04 y RNF-07 cumplidos; coste medio por consulta medido; escenario de inyección en verde; ADR-005, 018, 019 y 028 cerrados.
+**Criterio de terminado:** RNF-04, RNF-07 y RNF-17 cumplidos; coste medio por consulta medido; escenario de inyección en verde; ADR-005, 018, 019 y 028 cerrados.
 
 ---
 
@@ -1108,15 +1203,15 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 
 ### Bloque 8 — Facturas
 
-- [ ] **Borradores de factura** directos y desde presupuesto aceptado (RF-FA-01, RF-FA-03).
+- [ ] **Borradores de factura** directos y desde presupuesto aceptado (RF-FA-01, RF-FA-03, RN-F-11).
   - 🤖 `backend-fastapi` · Opus 5.5
 - [ ] **Emisión** desde la API y la UI usando el caso de uso del Bloque 2; pantalla de confirmación diferenciada.
   - 🤖 `backend-fastapi` · Opus 5.5 + `arquitecto-vue` · Sonnet 5.5
 - [ ] **Rectificativas** por diferencias y por sustitución (RF-FA-04, RN-F-03).
   - 🤖 `arquitecto-python` · Opus 5.5 (modelo) + `backend-fastapi` · Opus 5.5
-- [ ] **Cobros** y estado de cobro (RF-FA-06).
+- [ ] **Cobros** y estado de cobro (RF-FA-06, RN-F-10).
   - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **PDF de factura** con datos obligatorios y marca de demostración (RF-FA-07, RN-F-09).
+- [ ] **PDF de factura** con todos los datos obligatorios; la marca solo aparece en el espacio de demostración (RF-FA-07, RN-F-09).
   - 🤖 `backend-fastapi` · Opus 5.5 + `ui-ux` · Sonnet 5.5
 - [ ] **Exportación** del libro de facturas a CSV y Excel (RF-FA-09).
   - 🤖 `backend-fastapi` · Opus 5.5
@@ -1124,8 +1219,6 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `ingeniero-ia` · Opus 5.5
 - [ ] **Verificador de la cadena** de `BillingRecord` (`kapataz verify-billing-chain`).
   - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Documento de brecha Verifactu** en `docs/adr/ADR-012` (anexo): qué tiene ya el modelo y qué faltaría (formato del registro, huella según especificación oficial, QR, remisión, declaración responsable del productor). Verificar contra la normativa vigente en ese momento.
-  - 🤖 `arquitecto-python` · Opus 5.5 + `seguridad-ia` · Opus 5.5
 - [ ] **Pantallas:** listado con filtros, detalle, emisión, rectificación y cobro. ∥
   - 🤖 `arquitecto-vue` · Sonnet 5.5 + `ui-ux` · Sonnet 5.5
 
@@ -1162,8 +1255,10 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `backend-fastapi` · Opus 5.5 + `arquitecto-vue` · Sonnet 5.5
 - [ ] **PWA completa:** instalación en Android e iOS, pantalla sin conexión y aviso de nueva versión (RF-MO).
   - 🤖 `arquitecto-vue` · Sonnet 5.5
-- [ ] **Vista de operador:** coste por cuenta y tope global de gasto (RF-UC-03).
-  - 🤖 `backend-fastapi` · Opus 5.5
+- [ ] **Registro y pago con Stripe:** Checkout con tarjeta y PayPal, webhooks firmados, recibos, cancelación, 14 días de gracia y paso a solo lectura (RF-PG, RN-12). **Cerrar ADR-016.**
+  - 🤖 `backend-fastapi` · Opus 5.5 + `arquitecto-vue` · Sonnet 5.5
+- [ ] **Zona de superadministración:** modelo y `effort`, límites, costes, suscripciones y cuentas de cortesía (RF-SA, ADR-031).
+  - 🤖 `backend-fastapi` · Opus 5.5 + `arquitecto-vue` · Sonnet 5.5
 - [ ] **Producción:** entorno separado de staging, TLS, cabeceras de seguridad, límites de peticiones y secretos fuera del repo.
   - 🤖 `plataforma-entrega` · Opus 5.5
 - [ ] **Copias de seguridad:** cifradas y fuera del servidor, con archivado de WAL y simulacro de restauración (RNF-15).
@@ -1175,7 +1270,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 - [ ] **Release en GitHub** con imágenes versionadas y SBOM. **Cerrar ADR-014.**
   - 🤖 `plataforma-entrega` · Opus 5.5
 
-**Criterio de terminado:** producción en HTTPS; una cuenta nueva llega al primer uso en < 5 min; la PWA instalada funciona en un Android y un iPhone reales; restauración desde copia probada.
+**Criterio de terminado:** producción en HTTPS; alta y pago reales con tarjeta y con PayPal; una cuenta nueva llega al primer uso en < 5 min; la PWA instalada funciona en un Android y un iPhone reales; restauración desde copia probada.
 
 ---
 
@@ -1191,463 +1286,52 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `documentacion-portafolio` · Sonnet 5.5
 - [ ] 👤 **Grabación de la demo** siguiendo el guion.
 
-**Criterio de terminado:** pasa a la Parte II.
+**Criterio de terminado:** pasa al Bloque 12.
+
+---
+
+### Bloque 12 — Módulo Verifactu
+
+**Objetivo:** que el sistema de facturación cumpla el reglamento en modalidad VERI*FACTU. Puede dejarse para el final porque el Bloque 2 ya aporta la base: inmutabilidad, numeración sin huecos y cadena de registros.
+
+- [ ] **Contrastar la normativa vigente:** Real Decreto 1007/2023, Orden HAC/1177/2024 y especificaciones técnicas de la AEAT.
+  - 🤖 `arquitecto-python` · Opus 5.5 + `seguridad-ia` · Opus 5.5
+- [ ] **Registros de alta y de anulación** con el formato y la huella oficiales (RF-VF-01, RN-F-07).
+  - 🤖 `backend-fastapi` · Opus 5.5
+- [ ] **QR en la factura** (RF-VF-02).
+  - 🤖 `backend-fastapi` · Opus 5.5 + `ui-ux` · Sonnet 5.5
+- [ ] **Elegir el proveedor de envío:** comparar precio, autorización que exige a cada cliente, datos que recibe y dónde los trata, frente a la alternativa de colaborador social.
+  - 🤖 `arquitecto-python` · Opus 5.5 + 👤 decides
+- [ ] **Envío a la AEAT** con `VerifactuProveedor`, reintentos y gestión de rechazos, probado en el entorno de pruebas (RF-VF-03, RF-VF-04).
+  - 🤖 `backend-fastapi` · Opus 5.5
+- [ ] **Autorización de cada cliente:** paso documentado antes de la primera factura, sin bloquear el resto de la app. Aceptar unas condiciones de uso no sirve como apoderamiento (RF-VF-07).
+  - 🤖 `backend-fastapi` · Opus 5.5 + `arquitecto-vue` · Sonnet 5.5
+- [ ] **Exportación de registros** para la Administración (RF-VF-05).
+  - 🤖 `backend-fastapi` · Opus 5.5
+- [ ] **Declaración responsable** por versión (RF-VF-06): generada en cada release, visible en la app y conservada en el repositorio.
+  - 🤖 `arquitecto-python` · Opus 5.5 (redacta) + 👤 firmas como productor
+- [ ] 👤 **Validación fiscal** de las facturas y del módulo con un asesor.
+- [ ] **Cerrar ADR-012.**
+  - 🤖 `arquitecto-python` · Opus 5.5
+
+**Criterio de terminado:** registros, huella y QR verificados; envío aceptado en el entorno de pruebas de la AEAT; autorización de clientes resuelta; declaración responsable firmada y validación del asesor hecha. Hasta este punto ningún cliente real emite facturas.
 
 ---
 
 # PARTE II — VERIFICACIÓN PRE-RELEASE
 
-> ⚠️ **Pendiente de adaptar:** esta Parte II aún describe la versión local anterior (Ollama, SQLite, instalación en Windows). La Parte I ya describe el servicio web. No la ejecutes hasta adaptarla.
-
-> **Stack:** Python 3.12 · FastAPI · SQLAlchemy 2 · SQLite (WAL, FTS5, sqlite-vec) · Ollama · faster-whisper · Vue 3 + Vite + TS + Tailwind · PowerShell.
->
-> **Herramientas:** ruff, mypy, import-linter, bandit, pip-audit, pytest, hypothesis, mutmut, schemathesis, vue-tsc, ESLint, Vitest, Playwright, axe-core, PSScriptAnalyzer, Pester, gitleaks, Semgrep.
->
-> **Observabilidad (local):** structlog JSON, `/api/health`, `agent_runs`, `doctor.ps1 -Bundle`.
->
-> **Cómo leer cada tarea:** `🤖 agente · Modelo`. Si la detecta un agente de solo lectura: `→ corrige: agente`.
->
-> **Severidades:**
-> - `revisor-codigo`: 🔴 BLOQUEANTE · 🟠 IMPORTANTE · 🟡 MENOR
-> - `seguridad-ia`: 🔴 CRÍTICO · 🟠 ALTO · 🟡 MEDIO · ⚪ BAJO
-
-## Orden recomendado
-
-| Paso | Fases | Agentes principales |
-|---|---|---|
-| 1 | 0 · Preparación | plataforma, qa-testing, backend |
-| 2 | 2 · Calidad de código | backend, arquitecto, arquitecto-vue, ui-ux |
-| 3 | 3 · Pruebas | qa-testing, arquitecto-vue |
-| 4 | 4 · Calidad de la IA | ingeniero-ia, qa-testing |
-| 5 | 7 · Seguridad (automatizado) | plataforma |
-| 6 | 1 · Funcionalidad vs. especificación | arquitecto, backend, ingeniero-ia, arquitecto-vue, qa-testing |
-| 7 | 5 · Control de errores | backend, arquitecto-vue, plataforma, qa-testing |
-| 8 | 7 · Seguridad (STRIDE, LLM, RGPD, facturación) | seguridad-ia |
-| 9 | 6 · Observabilidad y diagnóstico | backend, plataforma |
-| 10 | 8 · Rendimiento | qa-testing, ingeniero-ia, arquitecto-vue |
-| 11 | 9 · Datos y base de datos | backend, plataforma |
-| 12 | 10 · Instalación y entrega | plataforma, 👤 |
-| 13 | 11 · Documentación | documentacion-portafolio, arquitecto |
-| 14 | 12 · Accesibilidad y UX | ui-ux, arquitecto-vue, qa-testing, 👤 |
-| 15 | 13 · Revisión final | revisor-codigo, seguridad-ia |
-
----
-
-## Fase 0 — Preparación
-
-- [ ] **Congelar el código:** rama `release/x.y` o tag.
-  - 🤖 hilo principal · Sonnet 5.5
-- [ ] **Entorno limpio** con datos de demo que incluyan los casos límite: clientes ambiguos, inversión del sujeto pasivo, retenciones, rectificativas, PDFs con errores sembrados y PDF trampa.
-  - 🤖 `qa-testing` · Opus 5.5
-- [ ] **Matriz de trazabilidad** con `python tools/traceability.py --check` cruzada con los RF, RN y RNF de `docs/01-especificacion.md`.
-  - 🤖 `qa-testing` · Opus 5.5
-- [ ] **Inventario de endpoints:** cruzar las rutas de FastAPI con `docs/api/openapi.json`. Una ruta sin contrato o un contrato sin ruta es un hallazgo.
-  - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Instalación limpia** en Windows Sandbox siguiendo **solo** `docs/usuario/instalacion.md`, terminando con `doctor.ps1` en verde.
-  - 🤖 `plataforma-entrega` · Opus 5.5
-
----
-
-## Fase 1 — Funcionalidad vs. especificación
-
-- [ ] **Reglas de negocio:** cada RN está implementada en el dominio; RN-01 a RN-03 y RN-F-01 a RN-F-07 las protegen agregados u objetos de valor, no la API. Detectar reglas que vivan en el código y no estén en la especificación.
-  - 🤖 `arquitecto-python` · Opus 5.5
-- [ ] **ADR:** ninguna implementación contradice un ADR vigente y no queda ninguno en «Propuesto».
-  - 🤖 `arquitecto-python` · Opus 5.5
-- [ ] **Backend:** RF-IN, RF-PR, RF-FA, RF-CF cubiertos sin *scope creep* sin documentar.
-  - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Agente:** RF-CO completos; las respuestas con cifras citan fuentes; ninguna escritura sin `PendingAction`.
-  - 🤖 `ingeniero-ia` · Opus 5.5
-- [ ] **Voz:** RF-VO cubiertos; con la opción externa desactivada no sale audio del equipo.
-  - 🤖 `ingeniero-ia` · Opus 5.5
-- [ ] **Frontend:** cada RF con interfaz tiene su pantalla; borrador y emitida se distinguen sin leer; la emisión pide confirmación diferenciada.
-  - 🤖 `arquitecto-vue` · Sonnet 5.5
-- [ ] **Instalación:** RF-IS completos.
-  - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **Escenarios Gherkin** de §3.5 automatizados y en verde.
-  - 🤖 `qa-testing` · Opus 5.5
-
----
-
-## Fase 2 — Calidad de código
-
-### Automatizado
-
-- [ ] **Backend:** `ruff check`, `ruff format --check`, `mypy --strict`, `lint-imports` en verde; cada `# type: ignore` y `# noqa` lleva justificación.
-  - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **CI:** las etapas de lint y unitarias tardan menos de 10 minutos en total en `windows-latest`.
-  - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **PowerShell:** PSScriptAnalyzer sin avisos en `scripts/windows/`.
-  - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **Frontend:** `npm run type-check && npm run lint && npm run test:unit && npm run build` en verde.
-  - 🤖 `arquitecto-vue` · Sonnet 5.5
-
-### Revisión de arquitectura
-
-- [ ] **Pureza del dominio:** `domain/` no importa FastAPI, SQLAlchemy, Ollama, pdfplumber, ReportLab ni nada de `infrastructure`.
-  - 🤖 `arquitecto-python` · Opus 5.5
-- [ ] **Reloj inyectado:** ninguna llamada a `datetime.now()`, `date.today()` ni `time.time()` en `domain/` ni en `application/`.
-  - 🤖 `arquitecto-python` · Opus 5.5
-- [ ] **Dinero:** ningún `float` en rutas de importes (búsqueda de `float(`, literales con decimales en cálculos, columnas `REAL`).
-  - 🤖 `arquitecto-python` · Opus 5.5
-- [ ] **Objetos de valor:** inmutables (`frozen=True`) y sin estados imposibles.
-  - 🤖 `arquitecto-python` · Opus 5.5
-- [ ] **Adaptadores:** cada puerto tiene su adaptador real y su `Fake`, y el `Fake` cumple el mismo contrato (pruebas compartidas).
-  - 🤖 `arquitecto-python` · Opus 5.5
-
-### Revisión de lo que no ven las herramientas
-
-- [ ] **Duplicación:** un segundo cálculo de importes, un segundo formateador de moneda o fechas, una segunda validación de NIF, recálculo de totales en el frontend.
-  - 🤖 `revisor-codigo` · Opus 5.5 → corrige: el agente dueño
-- [ ] **Estilo:**
-  - lenguaje ubicuo del glosario;
-  - nombres del dominio, no del patrón;
-  - comentarios que explican el porqué;
-  - abstracciones que no ganan nada.
-  - 🤖 `revisor-codigo` · Opus 5.5
-- [ ] **Prompts como código:** versionados en ficheros, sin cadenas largas incrustadas, con su prueba de regresión.
-  - 🤖 `revisor-codigo` · Opus 5.5 → corrige: `ingeniero-ia`
-- [ ] **Sistema visual:** ningún hexadecimal suelto; todos los colores salen de tokens.
-  - 🤖 `ui-ux` · Sonnet 5.5
-
----
-
-## Fase 3 — Pruebas
-
-### Umbrales
-
-- [ ] **Cobertura y tiempos:**
-  - `domain/` ≥ 90 %;
-  - backend total ≥ 80 %;
-  - frontend ≥ 70 %;
-  - suite unitaria del backend < 10 s.
-  - 🤖 `qa-testing` · Opus 5.5
-- [ ] **Mutación** con mutmut sobre `domain/billing`: puntuación ≥ 80 %.
-  - 🤖 `qa-testing` · Opus 5.5
-- [ ] **Trazabilidad:** todas las pruebas con marcador y `traceability.py --check` bloquea la CI.
-  - 🤖 `qa-testing` · Opus 5.5
-- [ ] **Relojes:** `FrozenClock` en todas las pruebas que dependen del tiempo.
-  - 🤖 `qa-testing` · Opus 5.5
-- [ ] **Contrato:** schemathesis contra `openapi.json` sin fallos.
-  - 🤖 `qa-testing` · Opus 5.5
-- [ ] **Cero pruebas intermitentes** (10 ejecuciones seguidas de la suite completa). Si alguna se resiste, se escala a Fable 5.1.
-  - 🤖 `qa-testing` · Opus 5.5
-
-### Escenarios obligatorios
-
-Todos los de este bloque: 🤖 `qa-testing` · Opus 5.5.
-
-- [ ] **Redondeo:** propiedades con hypothesis; casos frontera (0,005 €, cantidades decimales, descuentos del 100 %).
-- [ ] **Fiscalidad:** IVA 21/10/4 %, mezcla de tipos en una factura, inversión del sujeto pasivo con su mención, retención del 15 % y del 7 %.
-- [ ] **Numeración concurrente:** 20 emisiones en paralelo con procesos distintos; sin huecos ni duplicados.
-- [ ] **Cambio de año:** la primera factura del año reinicia la numeración; una emisión el 31/12 a las 23:59:59 y otra el 01/01 a las 00:00:00.
-- [ ] **Fecha anterior:** se rechaza emitir con fecha anterior a la última de la serie.
-- [ ] **Inmutabilidad por SQL directo:** `UPDATE` y `DELETE` sobre una factura emitida fallan por trigger.
-- [ ] **Cadena de registros:** se altera un `billing_record` por SQL y `verify-billing-chain` lo detecta.
-- [ ] **Rectificativa:** por diferencias y por sustitución, con referencia y motivo.
-- [ ] **Ingesta:** PDF duplicado, cifrado, sin texto, de 200 páginas, con total incorrecto.
-- [ ] **Agente:** cliente ambiguo, pregunta sin datos, periodo implícito, PDF trampa, bucle infinito de herramientas cortado por el límite.
-- [ ] **PendingAction:** caducada, alterada (firma inválida) y confirmada dos veces (idempotencia).
-- [ ] **Sin red:** la app funciona con la red desactivada (Playwright con `offline`).
-- [ ] **Voz:** grabación vacía, ruido, audio de 2 minutos.
-
-### Pruebas de frontend
-
-- [ ] **Unitarias:** formateo de moneda y fechas, store del chat, parser de SSE, tarjeta de `PendingAction`.
-  - 🤖 `arquitecto-vue` · Sonnet 5.5
-- [ ] **E2E** con Playwright contra la app servida con `FakeLlm`: importar y revisar, preguntar, presupuesto por chat, emitir, rectificar, cobrar.
-  - 🤖 `qa-testing` · Opus 5.5
-
----
-
-## Fase 4 — Calidad de la IA
-
-> Se ejecuta en local con Ollama (`pytest -m llm`) en el perfil `estandar` y se repite en `ligero`. Resultados en `docs/04-evaluacion-ia.md` con fecha, modelo y versión del prompt.
-
-- [ ] **Extracción:** precisión en campos críticos ≥ 95 % (RNF-06); ningún documento con errores sembrados aprobado sin revisión.
-  - 🤖 `ingeniero-ia` · Opus 5.5
-- [ ] **Selección de herramienta** ≥ 90 % y exactitud de parámetros ≥ 90 % (RNF-07).
-  - 🤖 `ingeniero-ia` · Opus 5.5
-- [ ] **Fidelidad numérica:** 0 respuestas con cifras que no procedan de una herramienta (RN-02). Una sola es bloqueante.
-  - 🤖 `qa-testing` · Opus 5.5
-- [ ] **Alucinación de fuentes:** 0 enlaces a documentos inexistentes o que no contienen el dato.
-  - 🤖 `qa-testing` · Opus 5.5
-- [ ] **Recuperación:** recall@5 ≥ 0,85.
-  - 🤖 `ingeniero-ia` · Opus 5.5
-- [ ] **Voz:** WER anotado por perfil sobre las grabaciones de oficio.
-  - 🤖 `ingeniero-ia` · Opus 5.5
-- [ ] **Robustez a inyección:** batería de 20 PDFs y mensajes maliciosos (instrucciones directas, ocultas en tablas, en otro idioma, en metadatos); ninguna herramienta de escritura invocada fuera de propuesta y ninguna fuga del prompt de sistema.
-  - 🤖 `qa-testing` · Opus 5.5
-- [ ] **Regresión de prompts:** cambiar un prompt sin volver a pasar la evaluación hace fallar el check (huella del prompt registrada en el informe).
-  - 🤖 `ingeniero-ia` · Opus 5.5
-- [ ] **Estabilidad:** tres ejecuciones de la evaluación con temperatura 0; la variación de métricas < 2 puntos.
-  - 🤖 `ingeniero-ia` · Opus 5.5 → escalado a Fable 5.1 si no se alcanza tras dos iteraciones
-
----
-
-## Fase 5 — Control de errores
-
-- [ ] **Formato de error:** `application/problem+json` coherente en toda la API, con tipos estables documentados.
-  - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Errores del dominio** traducidos a mensajes de usuario útiles (factura inmutable → ofrece rectificativa; fecha anterior → indica la última fecha válida).
-  - 🤖 `backend-fastapi` · Opus 5.5 + `ui-ux` · Sonnet 5.5
-- [ ] **Transacciones:** un caso de uso es una transacción; una emisión que falla a medias no consume número ni deja `BillingRecord` huérfano.
-  - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Ollama caído o modelo ausente:** la app arranca, las pantallas sin IA funcionan y el chat explica qué pasa y cómo arreglarlo.
-  - 🤖 `ingeniero-ia` · Opus 5.5 + `arquitecto-vue` · Sonnet 5.5
-- [ ] **Respuesta inválida del modelo:** JSON roto, herramienta inexistente o parámetros inválidos se reintentan de forma acotada y, si persisten, se informa sin colgar el chat.
-  - 🤖 `ingeniero-ia` · Opus 5.5
-- [ ] **Ingesta:** un PDF que falla no bloquea la cola; el motivo se ve en la UI.
-  - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **SSE:** reconexión del frontend y estado consistente si se corta a mitad de respuesta.
-  - 🤖 `arquitecto-vue` · Sonnet 5.5
-- [ ] **Estados** de vacío, carga y error en todas las vistas, diciendo qué ha pasado y qué hacer.
-  - 🤖 `ui-ux` · Sonnet 5.5 (diseño) + `arquitecto-vue` · Sonnet 5.5 (implementación)
-- [ ] **Scripts:** mensajes que dicen qué hacer; un fallo a medias deja el sistema recuperable.
-  - 🤖 `plataforma-entrega` · Opus 5.5
-
-### Pruebas de caos
-
-- [ ] **Caídas:**
-  - Ollama parado a mitad de una respuesta;
-  - Ollama sin memoria al cargar el modelo;
-  - disco lleno durante la ingesta;
-  - fichero de BD bloqueado por otro proceso (antivirus o copia de seguridad);
-  - cierre del navegador con una `PendingAction` abierta.
-  - 🤖 `plataforma-entrega` · Opus 5.5 (provoca) + `qa-testing` · Opus 5.5 (verifica)
-
----
-
-## Fase 6 — Observabilidad y diagnóstico (local)
-
-- [ ] **Logs:** JSON con `request_id`, `run_id`, `use_case`, duración y resultado; **nunca** NIF, nombres de clientes, importes asociados a personas ni texto de documentos.
-  - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Rotación** de logs con límite de tamaño y días.
-  - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Trazas del agente** en `agent_runs`: herramientas, parámetros sin datos personales, iteraciones, latencia por paso y modelo usado; purga configurable.
-  - 🤖 `ingeniero-ia` · Opus 5.5
-- [ ] **Health check real:** BD con escritura de prueba, Ollama con modelo cargable, Whisper disponible, espacio en disco.
-  - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **`doctor.ps1`:** cubre versión de Windows, RAM, disco, puerto, Ollama, modelos, sqlite-vec, permisos de carpetas, conectividad a `127.0.0.1` y versión de la app; cada fallo con su acción.
-  - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **Paquete de diagnóstico** (`-Bundle`): anonimizado por defecto, sin BD ni PDFs, suficiente para resolver sin pedir una segunda ronda de información. Probado con tres fallos provocados.
-  - 🤖 `plataforma-entrega` · Opus 5.5
-
----
-
-## Fase 7 — Seguridad y cumplimiento
-
-### Automatizado
-
-- [ ] **Dependencias:** `pip-audit` y `npm audit` sin vulnerabilidades altas ni críticas.
-  - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **SAST:** bandit y Semgrep (reglas de Python, FastAPI y TypeScript) sin hallazgos altos.
-  - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **Secretos:** gitleaks sobre todo el historial; los PDFs de `samples/` son sintéticos.
-  - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **Licencias de dependencias** compatibles con distribución comercial bajo licencia anual (sin GPL incompatible en lo que se distribuye).
-  - 🤖 `plataforma-entrega` · Opus 5.5
-
-### Revisión STRIDE
-
-Todos los de este bloque: 🤖 `seguridad-ia` · Opus 5.5 → corrige: el agente dueño.
-
-- [ ] **Suplantación:** al no haber autenticación, el límite es la red: el servidor solo escucha en `127.0.0.1`; si se activa el acceso desde la red local, exige PIN y se avisa.
-- [ ] **Ataques desde el navegador contra localhost:** comprobación de cabecera `Host` (anti DNS rebinding), `Origin` en peticiones que escriben, sin CORS abierto, token CSRF o cabecera personalizada en mutaciones.
-- [ ] **Manipulación:** triggers de inmutabilidad, cadena de `BillingRecord` sobre JSON canónico, `PendingAction` firmada con HMAC y clave local.
-- [ ] **Repudio:** `audit_events` registra emisiones, rectificaciones, cobros y qué propuestas del agente confirmó el usuario.
-- [ ] **Divulgación:** logs y bundle sin datos personales; errores sin trazas internas; prompts sin datos de otros clientes de más.
-- [ ] **Denegación:** límite de tamaño y páginas en la ingesta, límite de iteraciones del agente, timeout de llamadas a Ollama, cola de ingesta acotada.
-- [ ] **Elevación:** subida de ficheros sin ejecución, nombres de fichero saneados, sin rutas controladas por el usuario fuera de las carpetas de la app.
-- [ ] **Configuración:** cabeceras de seguridad, CSP sin `unsafe-inline` en el build, `Permissions-Policy: microphone=(self)`, sin documentación de la API expuesta en modo release salvo que se active.
-
-### OWASP Top 10 (aplicaciones web, edición 2025)
-
-> Cada categoría tiene una prueba automatizada en `backend/tests/security/` (o en Pester / Playwright cuando corresponde) con el marcador `@pytest.mark.owasp("A0X")`, además del marcador de requisito. `traceability.py --check` falla si alguna categoría se queda sin prueba (ADR-021).
->
-> En el Bloque 0, `seguridad-ia` contrasta los nombres y el contenido de las categorías con la edición vigente en owasp.org y ajusta esta tabla si ha cambiado.
-
-Revisa: 🤖 `seguridad-ia` · Opus 5.5 → corrige: el agente dueño. Automatiza: 🤖 `qa-testing` · Opus 5.5.
-
-| ✓ | Categoría | Riesgo concreto en Kapataz | Mitigación | Ref. | Prueba automatizada |
-|---|---|---|---|---|---|
-| [ ] | **A01 · Control de acceso roto** (incluye SSRF) | Una web maliciosa abierta en el navegador ataca `localhost` (DNS rebinding, CSRF); descarga de documentos manipulando rutas; la app hace peticiones a URLs que no debe | Escucha solo en `127.0.0.1`; middleware que valida `Host` contra una lista blanca y `Origin` en toda petición que escribe; cabecera personalizada obligatoria en mutaciones; documentos servidos por ID, nunca por ruta; la URL de Ollama solo admite `localhost`; en modo red local, PIN obligatorio | RNF-12, ADR-019 | `test_a01_host_ajeno_rechazado`, `test_a01_origin_ajeno_en_post_403`, `test_a01_path_traversal_404`, `test_a01_ollama_url_externa_rechazada` |
-| [ ] | **A02 · Configuración de seguridad incorrecta** | Documentación de la API, modo depuración o CORS abierto en la versión entregada; base de datos legible por otros usuarios del equipo | CSP sin `unsafe-inline`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy: microphone=(self)`, `/docs` desactivado en release, sin CORS; carpeta de datos con ACL solo para el usuario | ADR-013 | `test_a02_cabeceras_seguridad`, `test_a02_docs_desactivado_en_release`, ZAP baseline contra la app local, Pester `ACL de la carpeta de datos` |
-| [ ] | **A03 · Fallos en la cadena de suministro de software** | Dependencia comprometida; instalador de Ollama o uv alterado; acciones de CI secuestradas | `uv.lock` con hashes y `npm ci`; `pip-audit` y `npm audit`; SBOM CycloneDX en cada release; acciones de GitHub fijadas por SHA; `install.ps1` verifica la suma SHA-256 de todo lo que descarga y aborta si no coincide | ADR-022 | Job de CI `sbom-y-auditoria`; Pester `install aborta si la suma no coincide` |
-| [ ] | **A04 · Fallos criptográficos** | Firma de `PendingAction` falsificable; clave guardada en claro junto al código; comparación de firmas vulnerable a tiempo | Clave HMAC de 256 bits generada con `secrets` en el primer arranque, guardada en `%LOCALAPPDATA%` con ACL de usuario; `hmac.compare_digest`; SHA-256 para la cadena de registros; copias de seguridad cifradas opcionalmente con contraseña (AES-GCM, `cryptography`); ninguna criptografía casera | ADR-018 | `test_a04_firma_alterada_rechazada`, `test_a04_clave_no_en_repo`, regla Semgrep `comparacion-de-firma-con-==` |
-| [ ] | **A05 · Inyección** | SQL construido con cadenas; sintaxis de `MATCH` de FTS5 inyectada desde el chat; **fórmulas en la exportación CSV/Excel** (`=HYPERLINK(...)` en el nombre de un cliente); **marcado de ReportLab** inyectado en conceptos (`<link>`, `<img>`); XSS en Vue; inyección en los scripts de PowerShell | Consultas parametrizadas, sin `text()` con f-strings; los términos de FTS5 se escapan como frases; celdas que empiezan por `= + - @ \t \r` se prefijan con `'`; todo texto de usuario se escapa antes de pasar a `Paragraph`; prohibido `v-html`; los scripts no usan `Invoke-Expression` | RF-FA-09, RF-PR-06 | `test_a05_fts_sintaxis_maliciosa`, `test_a05_csv_formula_neutralizada`, `test_a05_reportlab_marcado_escapado`, regla ESLint `vue/no-v-html`, regla Semgrep `sqlalchemy-text-fstring`, PSScriptAnalyzer `AvoidUsingInvokeExpression` |
-| [ ] | **A06 · Diseño inseguro** | El agente puede emitir facturas por su cuenta; una factura se puede editar después de emitida | Modelo de amenazas antes del código (Bloque 0); `PendingAction` con confirmación humana; inmutabilidad en dominio **y** en BD; rectificativas | ADR-012, ADR-018, RN-04, RN-F-02 | Escenarios Gherkin «factura emitida inmutable» e «inyección en un PDF» |
-| [ ] | **A07 · Fallos de autenticación** | No aplica en modo local (sin cuentas). Aplica al modo red local opcional: PIN adivinable por fuerza bruta, sesión robable | PIN de 6 dígitos mínimo, bloqueo creciente tras fallos, cookie de sesión `HttpOnly` + `SameSite=Strict`, caducidad por inactividad; el modo red local está desactivado por defecto | RNF-12 | `test_a07_pin_bloqueo_creciente`, `test_a07_cookie_flags`, `test_a07_red_local_desactivada_por_defecto` |
-| [ ] | **A08 · Fallos de integridad de software y datos** | Cadena de facturación alterada; copia de seguridad manipulada antes de restaurar; actualización sustituida; deserialización insegura | `verify-billing-chain` al arrancar; manifiesto con huellas en cada `.kapataz-backup` y rechazo si no cuadra; `install.ps1 -Update` verifica la suma de la release; prohibidos `pickle`, `yaml.load` y `eval` | RN-F-07, RF-CF-03, ADR-014 | `test_a08_cadena_alterada_detectada`, `test_a08_backup_manipulado_rechazado`, Pester `update rechaza release alterada`, regla Semgrep `no-pickle` |
-| [ ] | **A09 · Fallos de registro y alertas** | Una alteración de la cadena pasa desapercibida; los logs filtran NIF o nombres | `audit_events` para toda operación fiscal y confirmación del agente; aviso visible en la interfaz si la verificación de la cadena falla; `doctor.ps1` lo reporta; filtro de structlog que enmascara NIF, emails y teléfonos | ADR-015 | `test_a09_aviso_si_cadena_rota`, `test_a09_logs_sin_datos_personales` (recorre los logs de la suite E2E buscando patrones de NIF, email y teléfono) |
-| [ ] | **A10 · Manejo incorrecto de condiciones excepcionales** | Una excepción al verificar una firma deja pasar la acción; un error a mitad de emisión consume número; trazas internas en la respuesta | Fallo cerrado: cualquier excepción en una verificación equivale a rechazo; transacción por caso de uso con reversión; `problem+json` sin trazas; schemathesis con datos aleatorios | ADR-009, RN-F-01 | `test_a10_verificacion_falla_cerrada`, `test_a10_emision_fallida_no_consume_numero`, schemathesis sin respuestas 500 |
-
-### OWASP Top 10 para aplicaciones LLM (edición 2025)
-
-Revisa: 🤖 `seguridad-ia` · Opus 5.5 → corrige: `ingeniero-ia`. Automatiza: 🤖 `qa-testing` · Opus 5.5. Las pruebas que necesitan modelo real llevan además el marcador `llm` y se ejecutan en la Fase 4.
-
-| ✓ | Categoría | Riesgo concreto en Kapataz | Mitigación | Ref. | Prueba automatizada |
-|---|---|---|---|---|---|
-| [ ] | **LLM01 · Inyección de instrucciones** | Un PDF importado o un concepto escrito por un cliente contiene órdenes para el agente | Contenido recuperado delimitado y marcado como datos; nunca concatenado al prompt de sistema; herramientas de escritura solo como propuesta; lista blanca de herramientas por turno | RN-05, ADR-019 | Batería de 20 casos en `evals/security/` (`pytest -m llm`); `test_llm01_contenido_recuperado_delimitado` (sin modelo, comprueba el prompt construido) |
-| [ ] | **LLM02 · Divulgación de información sensible** | El agente vuelca NIF, direcciones o importes de otros clientes que no venían a cuento; las trazas guardan contenido de documentos | Herramientas que devuelven solo los campos necesarios para la pregunta; NIF fuera del contexto salvo que la pregunta lo requiera; `agent_runs` guarda parámetros sin datos personales | ADR-015, RGPD | `test_llm02_herramientas_minimizan_campos`, `test_llm02_agent_runs_sin_datos_personales` |
-| [ ] | **LLM03 · Cadena de suministro** | Modelo descargado de un origen no oficial o sustituido; **licencia del modelo incompatible con la venta bajo licencia anual** | Solo la biblioteca oficial de Ollama; nombre, etiqueta y digest fijados en la configuración de cada perfil; `doctor.ps1` verifica el digest; licencia de cada modelo candidato revisada y anotada en el ADR-005 antes de elegirlo | ADR-005, ADR-022 | `test_llm03_digest_modelo_coincide`; casilla de licencia en el informe de evaluación |
-| [ ] | **LLM04 · Envenenamiento de datos y modelos** | Una factura importada con un precio absurdo (o un error de extracción) contamina el «precio habitual» y los presupuestos futuros; un PDF diseñado para aparecer en todas las búsquedas | Solo cuentan documentos **revisados y aprobados**; los precios de referencia excluyen atípicos (mediana y MAD); muestras mínimas para dar un precio; el usuario puede excluir un documento y se recalcula todo; límite de fragmentos por documento en los resultados | RN-07, RN-08, ADR-023 | `test_llm04_atipico_no_altera_mediana`, `test_llm04_documento_en_revision_no_cuenta`, `test_llm04_excluir_documento_recalcula` |
-| [ ] | **LLM05 · Manejo inadecuado de la salida** | El texto del modelo se interpreta como HTML; parámetros de herramienta no validados llegan a SQL; enlaces inventados | Salida renderizada como texto (o Markdown saneado con DOMPurify si se activa); parámetros validados con Pydantic antes de ejecutar; enlaces solo a IDs que devolvió una herramienta; cifras renderizadas desde el resultado de la herramienta | RN-02, RF-CO-03 | `test_llm05_parametros_invalidos_rechazados`, `test_llm05_enlace_inexistente_descartado`, Vitest `chat no renderiza HTML del modelo` |
-| [ ] | **LLM06 · Agencia excesiva** | El agente emite, rectifica o registra cobros sin que el usuario lo vea | Ninguna herramienta de escritura ejecuta: todas devuelven `PendingAction` firmada; ninguna herramienta borra; límite de iteraciones; la confirmación solo llega desde la interfaz | RN-04, ADR-018 | `test_llm06_ninguna_herramienta_escribe_directamente` (recorre el registro de herramientas), `test_llm06_pending_action_caducada` |
-| [ ] | **LLM07 · Fuga del prompt de sistema** | Alguien obtiene el prompt de sistema | El prompt no contiene secretos, claves ni datos del usuario, así que su fuga tiene impacto bajo; se documenta como riesgo aceptado | ADR-019 | `test_llm07_prompt_sin_secretos` (busca claves, rutas y datos personales en los prompts versionados) |
-| [ ] | **LLM08 · Debilidades de vectores y embeddings** | Fragmentos de un documento excluido o en revisión siguen apareciendo en búsquedas; cambio de modelo de embeddings con dimensiones distintas mezcla vectores incompatibles; filtros de búsqueda aplicados por el modelo en lugar de por SQL | Al excluir o borrar un documento se purgan sus fragmentos de FTS5 y de sqlite-vec en la misma transacción; solo se indexan documentos aprobados; el modelo de embeddings y su dimensión se guardan con el índice y un cambio obliga a reindexar; los filtros (cliente, fechas, tipo) se aplican en SQL | RN-08, ADR-007 | `test_llm08_documento_excluido_no_aparece`, `test_llm08_cambio_modelo_exige_reindexado`, `test_llm08_filtros_en_sql` |
-| [ ] | **LLM09 · Desinformación** | El agente presenta como «precio habitual» una mediana de dos facturas; da por cierta una afirmación fiscal o legal | Cada precio va con número de muestras y rango; con menos de 3 muestras se avisa y no se propone automáticamente; cifras siempre desde herramientas con fuentes; ante preguntas fiscales o legales el agente informa en términos generales y remite a la gestoría | RN-02, RN-06, RN-07, RN-09 | `test_llm09_precio_incluye_muestras_y_rango`, `test_llm09_pocas_muestras_avisa`; evaluación `pregunta fiscal remite a gestoría` (`-m llm`) |
-| [ ] | **LLM10 · Consumo ilimitado** | Un bucle de herramientas, un PDF de miles de páginas o muchas peticiones simultáneas dejan el equipo sin memoria | Límite de iteraciones, tokens de salida y tiempo por turno; límites de tamaño y páginas en la ingesta; cola única hacia Ollama; Whisper con duración máxima de audio | ADR-006 | `test_llm10_bucle_cortado_por_limite`, `test_llm10_pdf_excesivo_rechazado`, `test_llm10_audio_excesivo_rechazado` |
-
-### RGPD
-
-Todos los de este bloque: 🤖 `seguridad-ia` · Opus 5.5.
-
-- [ ] **Minimización:** cada campo personal es necesario para presupuestar o facturar.
-- [ ] **Datos de terceros:** los clientes del profesional se tratan solo en su equipo; nada sale salvo la opción de voz externa, con aviso explícito.
-- [ ] **Derechos:** exportar y borrar los datos de un cliente concreto, respetando la conservación obligatoria de facturas emitidas.
-- [ ] **Conservación:** las facturas emitidas no se purgan; la purga de trazas del agente y logs es configurable.
-- [ ] **Sin comunicaciones a terceros:** ni fuentes desde CDN, ni telemetría, ni comprobaciones de versión sin consentimiento.
-
-### Facturación y preparación para Verifactu
-
-- [ ] **Inmutabilidad real**, numeración sin huecos y rectificativas verificadas en código y en BD.
-  - 🤖 `seguridad-ia` · Opus 5.5
-- [ ] **Marca de demostración** presente en todo PDF de factura mientras no haya perfil fiscal conforme (RN-F-09), y sin forma de quitarla por configuración en esta versión.
-  - 🤖 `seguridad-ia` · Opus 5.5 (verifica) + `backend-fastapi` · Opus 5.5 (prueba)
-- [ ] **Documento de brecha Verifactu** actualizado y contrastado con la normativa vigente.
-  - 🤖 `seguridad-ia` · Opus 5.5 + `arquitecto-python` · Opus 5.5
-- [ ] **Licencia caducada** (ADR-016): no impide consultar ni exportar los datos propios.
-  - verifica: 🤖 `seguridad-ia` · Opus 5.5
-  - prueba: 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] 👤 **Validación fiscal** con una gestoría o asesor antes de usar las facturas en real. Fuera del alcance de los agentes.
-
----
-
-## Fase 8 — Rendimiento
-
-> Equipo de referencia del perfil `estandar`: 16 GB de RAM, CPU de 6 núcleos reciente, sin GPU. Anota el equipo real en el informe.
-
-- [ ] **Latencia del chat:** primera respuesta visible < 3 s y completa < 15 s en consultas de una herramienta (RNF-04); p50 y p95 sobre el dataset del agente.
-  - 🤖 `ingeniero-ia` · Opus 5.5
-- [ ] **Ingesta:** < 30 s por PDF de una página (RNF-05); importación de la demo completa medida.
-  - 🤖 `ingeniero-ia` · Opus 5.5
-- [ ] **Arranque** del servidor < 5 s (RNF-03); memoria en reposo medida con y sin modelos cargados.
-  - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **SQLite:** `EXPLAIN QUERY PLAN` sobre las consultas de las herramientas; ninguna sin índice; prueba con 10 años de datos sintéticos (≈ 5.000 facturas).
-  - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Frontend:** JS inicial ≤ 200 KB gzip, LCP ≤ 2 s en local, listados de facturas virtualizados a partir de 500 filas.
-  - 🤖 `arquitecto-vue` · Sonnet 5.5
-- [ ] **Perfil `ligero`:** la app sigue siendo usable en 8 GB (sin swap continuo); si no, se documenta el límite real.
-  - 🤖 `qa-testing` · Opus 5.5
-- [ ] **Resistencia:** 4 h de uso simulado (consultas, ingestas y transcripciones alternas) sin fuga de memoria en el proceso Python.
-  - 🤖 `qa-testing` · Opus 5.5
-
----
-
-## Fase 9 — Datos y base de datos
-
-- [ ] **Migraciones:** todas con `downgrade()` probado; ejecución sobre una BD de la versión anterior con datos.
-  - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Invariantes en el esquema:** triggers de inmutabilidad, unicidad de serie + año + número, claves foráneas activadas (`PRAGMA foreign_keys=ON`) y comprobadas.
-  - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Integridad:** `PRAGMA integrity_check` en `doctor.ps1`.
-  - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **Copias de seguridad:** fichero `.kapataz-backup` con la API de backup de SQLite (no copia de fichero en caliente), PDFs propios y manifiesto con huellas; restauración verificada.
-  - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Simulacro de restauración** en Windows Sandbox limpio a partir de un backup: las facturas, la cadena de registros y la numeración siguen intactas.
-  - 🤖 `plataforma-entrega` · Opus 5.5
-
----
-
-## Fase 10 — Instalación y entrega
-
-- [ ] **CI por etapas**, falla si algo falla, en `windows-latest`.
-  - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **`install.ps1`:**
-  - idempotente (dos ejecuciones seguidas);
-  - comprueba requisitos antes de tocar nada;
-  - funciona en Windows PowerShell 5.1 y en PowerShell 7;
-  - funciona con un nombre de usuario con espacios y tildes;
-  - códigos de salida documentados.
-  - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **Actualización** (`-Update`): copia previa verificada como paso bloqueante, salto entre versiones no consecutivas y vuelta atrás automática.
-  - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **Desinstalación** limpia que respeta la elección de conservar datos.
-  - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **Antivirus:** la instalación y el arranque no disparan Windows Defender (y, si se usa PyInstaller, el ejecutable tampoco).
-  - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] 👤 **Prueba en un Windows real que no sea tu equipo de desarrollo**, idealmente de alguien no técnico siguiendo solo la guía.
-
----
-
-## Fase 11 — Documentación
-
-- [ ] **Documentación de usuario:** instalación, uso, copia de seguridad, «qué hacer si…» para cada fallo previsible, con comandos copiables y probados.
-  - 🤖 `documentacion-portafolio` · Sonnet 5.5
-- [ ] **README y caso de estudio:** cifras sacadas de `docs/04-evaluacion-ia.md`, sin datos inventados; aviso legal de facturación en modo demostración.
-  - 🤖 `documentacion-portafolio` · Sonnet 5.5
-- [ ] **ADR al día:** ninguna decisión estructural sin ADR y ninguno en «Propuesto».
-  - 🤖 `arquitecto-python` · Opus 5.5
-- [ ] **Contrato:** `openapi.json` coincide exactamente con la implementación.
-  - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Modelo de amenazas** actualizado con lo encontrado en la Fase 7.
-  - 🤖 `seguridad-ia` · Opus 5.5
-
----
-
-## Fase 12 — Accesibilidad y UX
-
-- [ ] **Contraste** medido en todas las parejas de tokens, con prueba automatizada.
-  - 🤖 `ui-ux` · Sonnet 5.5
-- [ ] **axe:** `@axe-core/playwright` sin violaciones críticas ni graves en todas las vistas.
-  - 🤖 `qa-testing` · Opus 5.5
-- [ ] **Teclado:** flujo completo (preguntar, revisar extracción, crear presupuesto, emitir) sin ratón; foco visible.
-  - 🤖 `arquitecto-vue` · Sonnet 5.5
-- [ ] **Móvil:** vistas principales usables a 360 px; objetivos táctiles ≥ 44 px; botón de micrófono alcanzable con el pulgar.
-  - 🤖 `arquitecto-vue` · Sonnet 5.5 + `ui-ux` · Sonnet 5.5
-- [ ] **Lectores de pantalla:** regiones vivas en el chat y en el progreso de ingesta; tablas de importes con encabezados asociados.
-  - 🤖 `arquitecto-vue` · Sonnet 5.5
-- [ ] **i18n:** ningún literal en componentes; fechas e importes en formato español.
-  - 🤖 `arquitecto-vue` · Sonnet 5.5
-- [ ] **Coherencia visual** entre pantallas y PDFs; `prefers-reduced-motion` respetado; modo oscuro completo.
-  - 🤖 `ui-ux` · Sonnet 5.5
-- [ ] 👤 **Prueba con un usuario de oficio real:** que cree un presupuesto por voz y lo convierta en factura sin ayuda; anota dónde duda.
-
----
-
-## Fase 13 — Revisión final
-
-- [ ] **Revisión del diff completo** de la release contra la Definición de Terminado.
-  - 🤖 `revisor-codigo` · Opus 5.5 → corrige: el agente dueño
-- [ ] **Pasada final de seguridad y cumplimiento** sobre lo corregido.
-  - 🤖 `seguridad-ia` · Opus 5.5
-- [ ] **Re-revisión** de cada hallazgo corregido por el mismo agente que lo detectó.
-
----
-
-## ✅ Criterios de salida
-
-- [ ] `traceability.py --check` en verde: ningún requisito sin prueba.
-- [ ] Calidad de backend, frontend y PowerShell en verde; build correcto.
-- [ ] Umbrales: cobertura (90 / 80 / 70 %), mutación ≥ 80 % en `domain/billing`, suite unitaria < 10 s.
-- [ ] Métricas de IA cumplidas en perfil `estandar`: extracción ≥ 95 %, herramienta ≥ 90 %, recall@5 ≥ 0,85, **0 cifras no procedentes de herramientas**, 0 escrituras sin confirmación en la batería de inyección.
-- [ ] **0 hallazgos 🔴 CRÍTICO ni 🟠 ALTO** de `seguridad-ia`.
-- [ ] **0 hallazgos 🔴 BLOQUEANTE** de `revisor-codigo`.
-- [ ] Numeración concurrente, inmutabilidad y cadena de registros verificadas.
-- [ ] Backup restaurado y actualización con vuelta atrás probados.
-- [ ] Instalación limpia en Windows Sandbox en < 15 min y `doctor.ps1` en verde.
-- [ ] 👤 Prueba en Windows real de terceros superada.
-- [ ] 👤 Prueba con usuario de oficio realizada y hallazgos registrados.
-- [ ] 👤 Antes de cualquier uso fiscal real: Verifactu implementado y validación de gestoría (fuera del alcance de esta release).
-
----
-
-## Registro de hallazgos
-
-| # | Fase | Descripción | Severidad | Detecta | Corrige | Estado |
-|---|------|-------------|-----------|---------|---------|--------|
-| 1 |  |  |  | `agente` | `agente` | Abierto / Corregido / Re-revisado |
+El plan ejecutable está en [`plan-verificacion-kapataz.md`](./plan-verificacion-kapataz.md): tareas con agente y modelo, tablas OWASP, criterios de salida y registro de hallazgos. Se ejecuta al terminar el Bloque 12, sobre una versión congelada.
+
+| Fases | Qué comprueba |
+|---|---|
+| 0–1 | Preparación, trazabilidad y funcionalidad frente a la especificación |
+| 2–3 | Calidad de código y pruebas, con sus umbrales |
+| 4 | Calidad de la IA, coste y fugas de datos hacia Claude |
+| 5–6 | Control de errores, observabilidad y alertas |
+| 7 | Seguridad y cumplimiento: STRIDE, OWASP, aislamiento, pagos, RGPD y facturación |
+| 8–9 | Rendimiento, datos y copias de seguridad |
+| 10–12 | Despliegue, documentación, accesibilidad y móvil |
+| 13 | Revisión final y criterios de salida |
 
 ---
 
@@ -1702,6 +1386,27 @@ Asistente con IA para autónomos de oficio, disponible como servicio web multius
 - No se cambia una RN, RF o ADR aceptado sin propuesta explícita y aprobación de Borja.
 - Cada bloque va en su propia rama y su propio PR contra main; no se integra sin CI, comprobaciones de seguridad y revisión en verde (plan maestro, §7).
 
+## Trabajo entre sesiones
+Este proyecto se trabaja en muchas sesiones a lo largo de días o semanas. `HANDOFF.md`, en la raíz, es la memoria de continuidad entre una sesión y la siguiente. Este archivo (`CLAUDE.md`) es conocimiento estable del proyecto y no cambia de una sesión a otra.
+
+- Al empezar una sesión nueva, lee primero este archivo y `HANDOFF.md`. Con los dos basta para saber el estado y el objetivo actual.
+- No recorras el repositorio por costumbre. Antes de tocar código, identifica los ficheros exactos que afecta la tarea de `HANDOFF.md` → «Objetivo actual» / «Siguiente acción».
+- Consulta `docs/` solo cuando la tarea concreta lo requiera, no de forma preventiva.
+- Si aparece trabajo fuera del objetivo actual, anótalo en `HANDOFF.md` → «Pendiente» en vez de empezarlo sobre la marcha.
+- Actualiza `HANDOFF.md` al terminar una tarea significativa, no en cada mensaje: estado, completado, pendiente, archivos tocados y siguiente acción. Sé conciso: sin código, sin volcados de log y sin historial de la conversación.
+- Cuando Borja indique que va a terminar la sesión, revisa el trabajo hecho, deja `HANDOFF.md` completo y responde con un resumen breve: qué se hizo, qué queda, ficheros tocados, problemas conocidos y siguiente acción.
+- Usa `/compact` si la sesión se alarga y `/clear` para empezar limpio cuando `HANDOFF.md` esté al día. Evita `/resume`: si `HANDOFF.md` está bien escrito, no hace falta.
+
+### Engram: memoria de búsqueda, no sustituto de HANDOFF.md
+Además de `HANDOFF.md` hay una memoria persistente local, Engram (plugin de Claude Code y servidor MCP `engram`, con herramientas `mem_*`). Se reparten el trabajo así:
+
+- **`HANDOFF.md` manda.** Es la fuente de verdad del estado y de la siguiente acción: está versionado, se revisa en PR y viaja con el repositorio. Si Engram y `HANDOFF.md` se contradicen, vale `HANDOFF.md`, y corregir Engram forma parte de la tarea.
+- **Engram guarda el detalle que `HANDOFF.md` no debe cargar:** el porqué de una decisión, el diagnóstico completo de una trampa, lo que corrigió una revisión o una preferencia de Borja.
+- **Al empezar**, llama a `mem_context` o `mem_search` solo cuando `HANDOFF.md` remita a un razonamiento que no recoge, o antes de repetir un trabajo que puede haberse hecho ya.
+- **Durante la sesión**, usa `mem_save` tras cada decisión, trampa descubierta, corrección de revisión o preferencia confirmada, con un `topic_key` estable (`bloque-4/seudonimizacion`, `entorno/docker`) para que el tema evolucione en vez de duplicarse. No copies en Engram lo que ya está en `HANDOFF.md`, en `docs/` o en git.
+- **Al cerrar una tarea o la sesión**, primero `HANDOFF.md`, después `mem_session_summary` y `mem_session_end`. El resumen de Engram es la red de seguridad si la sesión se corta; no sustituye a `HANDOFF.md`.
+- **Tras una compactación**, persiste el resumen inyectado con `mem_session_summary` antes de seguir.
+- **Las mismas reglas de privacidad que en los logs:** en Engram nunca van datos de clientes o proveedores, NIF ni secretos, como la clave de la API de Claude o las de Stripe. La memoria es local a la máquina y no se versiona: no se usa `engram sync` ni existe `.engram/` en el repositorio.
 ## Reglas innegociables
 - Dinero en Decimal; nunca float. El LLM nunca calcula importes.
 - domain/ no importa infraestructura ni frameworks; el tiempo entra por Clock.
@@ -1711,6 +1416,8 @@ Asistente con IA para autónomos de oficio, disponible como servicio web multius
 - Nada de datos personales en logs.
 - Toda consulta corre en el contexto de una cuenta; ningún dato cruza entre cuentas.
 - La clave de la API de Claude solo existe en el servidor.
+- A Claude solo llega texto seudonimizado; nunca un PDF, una imagen ni un audio.
+- El modelo de Claude solo lo cambia el superadministrador.
 - Toda prueba lleva su marcador de requisito.
 
 ## Comandos
