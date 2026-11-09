@@ -76,7 +76,7 @@ Este plan comprueba comportamientos que todavía no están decididos. Hay que ce
 
 | # | Decisión | Dónde aparece | Qué hace falta |
 |---|---|---|---|
-| 1 | **Consulta al asesor:** (a) obligación actual como productor; (b) apoderamiento de cada cliente; (c) qué ocurre con los datos tras los 90 días de solo lectura y qué hay que conservar tras una baja; (d) papel de Anthropic y Stripe en el contrato de encargo; (e) tratamiento de anticipos y fases en la factura final | §1.4, RF-VF-07, RN-12, RF-AC-06, ADR-029, ADR-033 | Hacerla antes del lanzamiento. Puede cambiar el diseño |
+| 1 | **Consultas pendientes tras hablar con el asesor,** que confirmó la forma de la factura final: (a) comprobar en el BOE el aplazamiento y si afecta a los productores; (b) con el proveedor o la AEAT, a favor de quién se otorga la autorización de cada cliente y cuánto se conserva; (c) con un abogado y un especialista en protección de datos, qué ocurre tras los 90 días de solo lectura, qué conservar tras una baja y el contrato con el cliente; (d) con los mismos, el papel de Anthropic y Stripe; (e) con el asesor, trabajos adicionales en la fase final, facturado superior al servicio prestado y reparto del IVA de un anticipo con varios tipos | §1.4, RF-VF-07, RN-12, RF-AC-06, ADR-029, ADR-033 | Cerrarlas antes del lanzamiento. Pueden cambiar el diseño |
 | 2 | **Proveedor de Verifactu** | Bloque 12, ADR-012 | Elegirlo con precios y condiciones reales |
 | 3 | **WER sin umbral** | Bloque 9 | Se mide y se anota. No se declara aprobado ni suspenso mientras la especificación no fije un valor |
 | 4 | **El escenario «Extracción que no cuadra»** no indica el IVA: la diferencia de 90,00 € solo sale con el 21 % | §3.5 | Añadir el tipo de IVA al escenario |
@@ -233,7 +233,7 @@ Todos los de este bloque: 🤖 `qa-testing` · Opus 5.5.
 
 **Dinero y fiscalidad**
 
-- [ ] **Redondeo:** propiedades con hypothesis; casos frontera (0,005 €, cantidades decimales, descuentos del 100 %); la suma de bases y cuotas cuadra con el total, y la de las fases, con el presupuesto.
+- [ ] **Redondeo:** propiedades con hypothesis; casos frontera (0,005 €, cantidades decimales, descuentos del 100 %); la suma de bases y cuotas cuadra con el total, y, sin trabajos adicionales, la de las fases cuadra con el presupuesto.
 - [ ] **Fiscalidad:** IVA 21/10/4 %, mezcla de tipos en una factura, inversión del sujeto pasivo con cuota cero y su mención, retención del 15 % y del 7 %.
 - [ ] **NIF, NIE y CIF:** formatos válidos e inválidos y dígito de control.
 - [ ] **Datos obligatorios:** falta un dato de RN-F-06 y la factura no se emite.
@@ -254,9 +254,10 @@ Todos los de este bloque: 🤖 `qa-testing` · Opus 5.5.
 - [ ] **Estados:** borrador → enviado → aceptado, rechazado o caducado, y facturado parcialmente → facturado; la caducidad se calcula con `Clock`.
 - [ ] **Versiones:** modificar un enviado crea una versión nueva y conserva la anterior.
 - [ ] **Conversión:** un presupuesto aceptado genera un borrador de factura, completo o de una fase, y mantiene el vínculo; uno no aceptado no se convierte.
-- [ ] **Fases:** por porcentaje, importe y líneas, con varios tipos de IVA, retención e inversión del sujeto pasivo; cada fase lleva su número y la fase final factura lo pendiente al céntimo (RN-F-12).
-- [ ] **Límite de lo facturado:** una fase que supera lo pendiente se rechaza; dos borradores a la vez no pueden pasarse del total; eliminar un borrador libera su importe; una rectificativa ajusta lo facturado (RN-F-11).
-- [ ] **Nueva versión del presupuesto:** una ampliación sube lo pendiente; una versión por debajo de lo ya facturado se rechaza.
+- [ ] **Fases:** por porcentaje, importe y líneas, con varios tipos de IVA, retención e inversión del sujeto pasivo; cada fase lleva su número; la fase final muestra el total del servicio, resta las bases anteriores citando cada factura y aplica el IVA al resultado (RN-F-12).
+- [ ] **Aviso al superar lo pendiente:** una factura que supera lo pendiente muestra la diferencia y solo se emite con confirmación, también cuando la propone el agente; dos borradores a la vez cuentan para el aviso; eliminar un borrador libera su importe; una rectificativa ajusta lo facturado (RN-F-11).
+- [ ] **Trabajos adicionales:** una factura desde presupuesto admite líneas añadidas, cambiadas y quitadas sin crear versión del presupuesto; las añadidas quedan marcadas; el presupuesto no se modifica, muestra la diferencia, positiva o negativa, y queda «facturado» al emitir la factura completa o la fase final (RF-FA-12, RN-F-12). Una factura no admite un segundo presupuesto.
+- [ ] **Nueva versión del presupuesto:** una ampliación sube lo pendiente; una versión por debajo de lo ya facturado deja lo pendiente a cero y muestra la diferencia.
 - [ ] **Cobros:** pendiente, parcial y completo, con fecha y forma de pago; el estado de cobro no toca los datos fiscales.
 - [ ] **Cobro superior al pendiente:** se rechaza con el importe restante, también cuando lo propone el agente (RN-F-10).
 - [ ] **Exportación:** libro de facturas en CSV y Excel por periodo; los importes cuadran con los de la aplicación.
@@ -547,7 +548,7 @@ Revisa: 🤖 `seguridad-ia` · Opus 5.5 → corrige: `ingeniero-ia`. Automatiza:
 Todos los de este bloque: 🤖 `seguridad-ia` · Opus 5.5.
 
 - [ ] **Minimización:** cada campo personal es necesario para presupuestar o facturar.
-- [ ] **Roles:** el autónomo es responsable, KodigoLab encargado, y Anthropic, Stripe, el proveedor de Verifactu, el VPS, el email y el destino de las copias son subencargados. Contrato de encargo y lista de subencargados publicados.
+- [ ] **Roles:** el autónomo es responsable, KodigoLab encargado, y Anthropic, el proveedor de Verifactu, el VPS, el email y el destino de las copias son subencargados; el papel de Stripe lo fija el abogado. Contrato de encargo y lista de subencargados publicados.
 - [ ] **Derechos:** exportar y borrar los datos de un cliente concreto, respetando la conservación obligatoria de facturas emitidas.
 - [ ] **Conservación:** las facturas emitidas no se purgan; hay plazos para trazas, logs, copias y cuentas cerradas.
 - [ ] **Transferencias internacionales:** garantías para los datos que van a Anthropic y a Stripe.

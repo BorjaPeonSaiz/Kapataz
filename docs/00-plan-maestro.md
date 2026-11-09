@@ -72,8 +72,9 @@ Un asistente disponible en el portátil y en el móvil, al que se le habla como 
 | App nativa en tiendas | La PWA cubre el móvil; el frontend no depende de nada que impida empaquetarla después |
 | Trabajo sin conexión | La PWA abre y avisa, pero no permite ni encola escrituras (ADR-027) |
 | Fotos de tiques | `OcrPort` ya existe para los PDF escaneados; falta la captura y el ajuste a tiques |
+| Factura electrónica entre empresas (RD 238/2026, Orden HAC/1028/2026) | Las facturas se guardan con datos estructurados, de los que se podrá generar el formato UBL/EN 16931. Se construye después de la 1.0.0 y debe estar lista antes de que sea exigible a los autónomos: octubre de 2028, a contrastar con el BOE |
 
-> ⚠️ **Condición legal de lanzamiento:** los autónomos deben usar un sistema adaptado desde el 1 de julio de 2027, pero los productores de software ya deben ofrecer sistemas conformes desde el 29 de julio de 2025. Por eso Verifactu se construye al final, pero ningún cliente real emite facturas hasta cerrar el Bloque 12, con la declaración responsable firmada y la validación de un asesor fiscal. Fechas a contrastar con el BOE.
+> ⚠️ **Condición legal de lanzamiento:** los autónomos deben usar un sistema adaptado desde el 1 de julio de 2027, pero los productores de software ya deben ofrecer sistemas conformes desde el 29 de julio de 2025. El 5 de octubre de 2026, Hacienda anunció que prevé aplazar las obligaciones pendientes a octubre de 2028; hasta que se publique la norma, valen las fechas anteriores. Por eso Verifactu se construye al final, pero ningún cliente real emite facturas hasta cerrar el Bloque 12, con la declaración responsable firmada y la validación de un asesor fiscal. Fechas a contrastar con el BOE.
 
 ---
 
@@ -169,7 +170,7 @@ Todas las cuentas y todas las rutas (chat, clasificación y extracción) usan `c
 |---|---|
 | RF-FA-01 | El usuario puede emitir facturas por formulario o por agente, siempre pasando por un borrador revisable. |
 | RF-FA-02 | Una factura tiene serie y número correlativo **sin huecos** dentro de la serie y el año (`F-2026-0001`). El número se asigna en el momento de emitir, no al crear el borrador. |
-| RF-FA-03 | Un presupuesto aceptado se convierte en un borrador de factura, completo o de una fase, manteniendo el vínculo (RN-F-11). |
+| RF-FA-03 | Un presupuesto aceptado se convierte en un borrador de factura, completo o de una fase, manteniendo el vínculo. El borrador se edita como cualquier otro (RF-FA-12). |
 | RF-FA-04 | Una factura emitida **no se puede editar ni borrar**. Para corregirla se emite una factura rectificativa (serie `R`), por diferencias o por sustitución, que referencia a la original. |
 | RF-FA-05 | Se soportan los tipos de IVA general, reducido y superreducido, la inversión del sujeto pasivo (habitual en obra entre empresas) con su mención obligatoria, y la retención de IRPF opcional. |
 | RF-FA-06 | Estado de cobro independiente del estado fiscal: pendiente, cobrada parcialmente, cobrada, con fecha y forma de pago (RN-F-10). |
@@ -177,7 +178,8 @@ Todas las cuentas y todas las rutas (chat, clasificación y extracción) usan `c
 | RF-FA-08 | Cada emisión, rectificación y cambio de estado de cobro queda en un registro de eventos con fecha, actor (usuario o agente con confirmación) y datos. |
 | RF-FA-09 | Exportación CSV y Excel del libro de facturas emitidas por periodo, útil para la gestoría. |
 | RF-FA-10 | Un presupuesto aceptado se puede facturar por fases (anticipo, certificación de obra, final), por porcentaje, por importe o por líneas y cantidades. |
-| RF-FA-11 | El presupuesto muestra lo facturado y lo pendiente, con enlace a cada factura. La fase final cita las facturas anteriores. |
+| RF-FA-11 | El presupuesto muestra lo facturado, lo pendiente y la diferencia con lo presupuestado, con enlace a cada factura. La fase final muestra el total del servicio prestado y resta las facturas anteriores, citándolas (RN-F-12). |
+| RF-FA-12 | Una factura creada desde un presupuesto no tiene por qué coincidir con él: se pueden añadir trabajos que no estaban presupuestados, cambiar líneas o quitarlas, sin crear una nueva versión del presupuesto. Las líneas añadidas quedan marcadas como trabajo adicional. Una factura se vincula, como mucho, a un presupuesto: no se juntan dos presupuestos en una factura. |
 
 #### Voz (RF-VO)
 
@@ -234,7 +236,7 @@ Todas las cuentas y todas las rutas (chat, clasificación y extracción) usan `c
 | RF-VF-04 | Un envío fallido se reintenta y queda visible; un registro rechazado se avisa con su motivo y la forma de corregirlo. |
 | RF-VF-05 | Los registros se pueden exportar a petición de la Administración. |
 | RF-VF-06 | Cada versión del sistema tiene su declaración responsable: visible en la app, entregada al cliente y conservada por el productor. |
-| RF-VF-07 | Antes de emitir su primera factura, el usuario otorga la autorización documentada para enviar sus registros. Hasta entonces puede usar el resto de la app. |
+| RF-VF-07 | Antes de emitir su primera factura, el usuario otorga la autorización documentada para enviar sus registros, con el modelo de representación de la AEAT y firma manuscrita o electrónica válida. Aceptar unas condiciones no sirve. Hasta entonces puede usar el resto de la app. |
 
 #### Suscripción y pago (RF-PG)
 
@@ -270,7 +272,7 @@ Todas las cuentas y todas las rutas (chat, clasificación y extracción) usan `c
 | RN-09 | Ante una pregunta fiscal o legal, el agente informa en términos generales y remite a la gestoría. No da asesoramiento. |
 | RN-10 | Ninguna consulta, herramienta ni tarea en segundo plano accede a datos de otra cuenta. |
 | RN-11 | Antes de enviar nada a Claude, el servidor sustituye por seudónimos los nombres, NIF, direcciones y datos de contacto de clientes, proveedores y del propio profesional. A Claude nunca llega un PDF, una imagen ni un audio. Si la seudonimización falla, la petición no se envía. |
-| RN-12 | Sin suscripción activa, la cuenta queda 90 días en solo lectura: se puede consultar y exportar lo propio, pero no crear documentos ni usar la IA. Qué ocurre pasado ese plazo lo fija la asesoría. |
+| RN-12 | Sin suscripción activa, la cuenta queda 90 días en solo lectura: se puede consultar y exportar lo propio, pero no crear documentos ni usar la IA. Qué ocurre pasado ese plazo lo fijan el contrato con el cliente y el asesoramiento legal y de protección de datos. |
 | RN-F-01 | La numeración de facturas es correlativa por cuenta, serie y año, sin huecos ni duplicados, incluso con emisiones concurrentes. |
 | RN-F-02 | Una factura emitida es inmutable: ningún camino del código permite `UPDATE` ni `DELETE` sobre sus datos fiscales. |
 | RN-F-03 | Una rectificativa referencia siempre a la factura rectificada e indica el motivo. |
@@ -281,8 +283,8 @@ Todas las cuentas y todas las rutas (chat, clasificación y extracción) usan `c
 | RN-F-08 | El histórico importado no se mezcla con la serie emitida (RF-IN-09). |
 | RN-F-09 | Las facturas de una cuenta real son válidas y no llevan ninguna marca. Solo las del espacio de demostración llevan la marca «Documento de demostración», que no se puede quitar. |
 | RN-F-10 | Un cobro no puede superar el importe pendiente de la factura: se rechaza indicando lo que queda por cobrar. |
-| RN-F-11 | La suma de lo facturado de un presupuesto no puede superar el total de su versión vigente: se rechaza indicando lo que queda. Un borrador reserva su importe hasta que se elimina, y una rectificativa ajusta lo facturado. |
-| RN-F-12 | Cada fase es una factura completa, con su número, su IVA y su retención, y factura solo su parte. La fase final factura exactamente lo pendiente, para que la suma cuadre al céntimo con el presupuesto. |
+| RN-F-11 | El presupuesto es una referencia, no un tope: lo facturado puede ser mayor o menor. Si una factura supera lo pendiente, la app avisa de la diferencia y pide confirmarla, para evitar facturar dos veces lo mismo. Un borrador cuenta como facturado hasta que se elimina, y una rectificativa ajusta lo facturado. |
+| RN-F-12 | Cada fase es una factura completa, con su número, su IVA y su retención. El anticipo y la certificación facturan solo su parte. La fase final parte del total del servicio prestado, incluidos los trabajos adicionales, resta las bases de las facturas anteriores y aplica el IVA al resultado: con 10.000 € de servicio y 7.000 € ya facturados, la base es 3.000 €. La suma de las fases no tiene que coincidir con el presupuesto: solo cuadra al céntimo si no se cambia nada. Al emitir la factura completa o la fase final, el presupuesto queda «facturado» aunque haya diferencia. |
 
 ### 3.3 Requisitos no funcionales
 
@@ -323,6 +325,7 @@ Todas las cuentas y todas las rutas (chat, clasificación y extracción) usan `c
 | Factura | Documento fiscal emitido por la app, inmutable | `Invoice` |
 | Rectificativa | Factura que corrige otra | `CorrectiveInvoice` |
 | Fase de facturación | Parte de un presupuesto que se factura por separado: anticipo, certificación o final | `BillingPhase` |
+| Trabajo adicional | Trabajo que se factura sin estar en el presupuesto del que sale la factura | `AdditionalWork` |
 | Serie | Secuencia de numeración (`F`, `R`, `P`) | `Series` |
 | Documento fuente | PDF importado del histórico | `SourceDocument` |
 | Extracción | Resultado estructurado de leer un documento fuente | `Extraction` |
@@ -376,7 +379,7 @@ Escenario: Inyección de instrucciones en un PDF
   Y no invoca ninguna herramienta de escritura
 
 Escenario: Extracción que no cuadra
-  Dado un PDF cuyas líneas suman 1.000,00 € pero declara un total de 1.300,00 €
+  Dado un PDF cuyas líneas suman 1.000,00 € de base con IVA del 21 %, pero declara un total de 1.300,00 €
   Cuando se importa
   Entonces queda en estado "requiere revisión" con el motivo "el total no coincide con la suma (diferencia 90,00 €)"
   Y no cuenta para las consultas hasta revisarse
@@ -434,17 +437,33 @@ Escenario: Cobro superior al pendiente
   Cuando registro un cobro de 200,00 €
   Entonces se rechaza con el aviso "Quedan 120,00 € por cobrar"
 
-Escenario: Factura por fases
+Escenario: Factura por fases sin cambios sobre el presupuesto
   Dado un presupuesto aceptado de 10.000,00 € de base
   Cuando facturo un anticipo del 30 %, una certificación del 40 % y la fase final
   Entonces existen tres facturas con número propio y con su IVA
+  Y la factura final muestra 10.000,00 € de servicio, resta 7.000,00 € y tiene una base de 3.000,00 €
   Y la suma de sus bases es exactamente 10.000,00 €
   Y el presupuesto queda "facturado"
 
+Escenario: Trabajo adicional en la misma factura
+  Dado un presupuesto aceptado de 6.000,00 € de base por hacer el suelo de una casa
+  Cuando lo convierto en factura y añado 3.000,00 € por reformar los baños
+  Entonces la app avisa "Esta factura supera lo presupuestado en 3.000,00 €"
+  Y al confirmar se emite una sola factura de 9.000,00 € de base
+  Y las líneas de los baños quedan marcadas como trabajo adicional
+  Y el presupuesto queda "facturado" con una diferencia de 3.000,00 €
+
 Escenario: Fase superior a lo pendiente
   Dado un presupuesto de 10.000,00 € con 7.000,00 € facturados
-  Cuando intento facturar una fase de 4.000,00 €
-  Entonces se rechaza con el aviso "Quedan 3.000,00 € por facturar"
+  Cuando preparo una fase de 4.000,00 €
+  Entonces la app avisa "Quedan 3.000,00 € por facturar; esta fase lo supera en 1.000,00 €"
+  Y la factura solo se emite si lo confirmo
+
+Escenario: Se factura menos de lo presupuestado
+  Dado un presupuesto de 10.000,00 € con 7.000,00 € facturados
+  Cuando emito la fase final por un servicio prestado de 9.000,00 €
+  Entonces la factura resta los 7.000,00 € y tiene una base de 2.000,00 €
+  Y el presupuesto queda "facturado" con una diferencia de -1.000,00 €
 ```
 
 ---
@@ -554,7 +573,7 @@ kapataz/
 | `customers` | `tax_id` único por cuenta cuando existe |
 | `catalog_items` | Concepto, unidad, precio de referencia, origen |
 | `quotes`, `quote_versions`, `quote_lines` | Versionado al modificar un enviado |
-| `invoices`, `invoice_lines` | `status` (`draft`, `issued`), `series`, `number`, `issued_at`, `quote_version_id`, `phase_type` (`full`, `advance`, `progress`, `final`); trigger que impide `UPDATE`/`DELETE` de campos fiscales con `status='issued'` |
+| `invoices`, `invoice_lines` | `status` (`draft`, `issued`), `series`, `number`, `issued_at`, `quote_version_id`, `phase_type` (`full`, `advance`, `progress`, `final`); en las líneas, `origin` (`quote`, `additional`, `prior_invoice`, esta última para restar una factura anterior); trigger que impide `UPDATE`/`DELETE` de campos fiscales con `status='issued'` |
 | `series_counters` | Contador por cuenta, serie y año, bloqueado con `SELECT … FOR UPDATE` en la misma transacción que la emisión |
 | `billing_records` | Contenido canónico JSON, `hash`, `prev_hash`, `submission_status` (`pending`, `accepted`, `rejected`) |
 | `payments` | Cobros asociados a facturas |
@@ -589,7 +608,7 @@ kapataz/
 | `pendientes_de_cobro()` | Lectura |
 | `buscar_trabajos_similares(descripcion)` | Lectura (RAG híbrido) |
 | `proponer_presupuesto(cliente, lineas[])` | Escritura → propuesta |
-| `proponer_factura(cliente, lineas[] \| presupuesto_id, fase?)` | Escritura → propuesta |
+| `proponer_factura(cliente, lineas[] \| presupuesto_id, fase?, lineas_adicionales[]?)` | Escritura → propuesta |
 | `proponer_cobro(factura_id, importe, fecha, forma)` | Escritura → propuesta |
 | `proponer_rectificativa(factura_id, motivo, lineas[])` | Escritura → propuesta |
 
@@ -633,7 +652,7 @@ kapataz/
 | 030 | Seudonimización antes de Claude | Diccionario de la cuenta, patrones y Presidio; `LlmPort` solo acepta `SanitizedPrompt`; fallo cerrado; riesgo residual medido con RNF-17 | **4** (Propuesto) |
 | 031 | Zona de superadministración | Rol que no se obtiene por registro, TOTP obligatorio, sin acceso a datos de negocio y con todos los cambios registrados | 0 |
 | 032 | Versionado semántico desde la 1.0.0 | Sin versiones durante la construcción; la 1.0.0 es la primera versión que supera la verificación, y desde ahí cada cambio de la app publicado lleva versión, changelog y declaración responsable | 0 |
-| 033 | Facturación por fases | Cada fase es una factura completa que factura solo su parte, y la fase final factura lo pendiente; sin importes negativos por anticipos. A confirmar con el asesor | **8** (Propuesto) |
+| 033 | Facturación por fases y trabajos adicionales | Cada fase es una factura completa. La fase final muestra el total del servicio prestado y resta las bases ya facturadas, forma indicada por el asesor en noviembre de 2026. La factura puede diferir del presupuesto, que es una referencia y no un tope. Falta decidir qué ocurre si lo facturado supera el servicio prestado | **8** (Propuesto) |
 
 ---
 
@@ -694,7 +713,7 @@ Fuentes de verdad, por este orden: docs/01-especificacion.md, docs/adr/, docs/02
 Responsabilidades:
 - Modelar entidades, agregados y objetos de valor en src/kapataz/domain. Objetos de valor inmutables (dataclass frozen, slots) que no puedan representar estados imposibles.
 - Garantizar que domain/ no importa nada de infrastructure, api, FastAPI, SQLAlchemy, el SDK de Anthropic ni librerías de E/S. El tiempo entra por el puerto Clock.
-- Hacer cumplir RN-01 a RN-06 y RN-F-01 a RN-F-09 dentro del dominio, no en la API.
+- Hacer cumplir RN-01 a RN-06 y RN-F-01 a RN-F-12 dentro del dominio, no en la API.
 - Escribir y mantener los ADR con la plantilla del Anexo A. Ninguna decisión estructural sin ADR.
 - Mantener el glosario y el lenguaje ubicuo: Invoice, Quote, LineItem, Customer, BillingRecord.
 - Diseñar los puertos pensando en Verifactu (ADR-012), que se completa en el Bloque 12.
@@ -923,7 +942,7 @@ Eres el auditor de seguridad y cumplimiento de Kapataz. No modificas código: de
 Ámbitos:
 - STRIDE sobre un servicio en internet: autenticación y sesiones, aislamiento entre cuentas (RLS, IDOR), zona de superadministración, pagos y webhooks, CSRF, subida de ficheros (tipo, tamaño, PDFs maliciosos), rutas de fichero, dependencias, imágenes y secretos del servidor.
 - OWASP Top 10 LLM: inyección directa e indirecta (PDFs), manejo inseguro de salidas, agencia excesiva (herramientas de escritura sin confirmación), divulgación de datos en prompts y logs, fuga de datos entre cuentas, consumo ilimitado (bucles del agente y coste de la API).
-- RGPD: el autónomo como responsable, KodigoLab como encargado y Anthropic, Stripe y el proveedor de Verifactu como subencargados; contrato de encargo, seudonimización real de lo que se envía a Claude, transferencias internacionales, logs sin datos personales, borrado y exportación, aviso sobre el uso de IA.
+- RGPD: el autónomo como responsable, KodigoLab como encargado y Anthropic y el proveedor de Verifactu como subencargados; el papel de Stripe, que solo trata datos de los suscriptores, queda pendiente del abogado; contrato de encargo, seudonimización real de lo que se envía a Claude, transferencias internacionales, logs sin datos personales, borrado y exportación, aviso sobre el uso de IA.
 - Facturación: inmutabilidad real (trigger, no solo código), numeración sin huecos, rectificativas, integridad de la cadena de BillingRecord y conformidad con el reglamento de sistemas de facturación y Verifactu.
 
 Formato de hallazgo: ID, severidad (🔴 CRÍTICO, 🟠 ALTO, 🟡 MEDIO, ⚪ BAJO), ubicación, descripción, escenario de explotación, corrección propuesta, agente dueño.
@@ -1071,7 +1090,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `arquitecto-python` · Opus 5.5
 - [ ] **Cálculo de importes** en el dominio: base por línea, descuentos, cuota por tipo de IVA, retención, inversión del sujeto pasivo, total y reparto por fases (RN-01 a RN-03, RN-F-05, RN-F-12).
   - 🤖 `arquitecto-python` · Opus 5.5
-- [ ] **Pruebas de propiedades** con hypothesis sobre el cálculo: la suma de bases y cuotas cuadra con el total para cualquier combinación de líneas, y la suma de las fases cuadra al céntimo con el presupuesto para cualquier reparto.
+- [ ] **Pruebas de propiedades** con hypothesis sobre el cálculo: la suma de bases y cuotas cuadra con el total para cualquier combinación de líneas, y, sin trabajos adicionales, la suma de las fases cuadra al céntimo con el presupuesto para cualquier reparto.
   - 🤖 `qa-testing` · Opus 5.5
 - [ ] **Puertos** de §4.3 definidos en el dominio y la aplicación, con `FakeX` en pruebas.
   - 🤖 `arquitecto-python` · Opus 5.5
@@ -1220,7 +1239,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 
 - [ ] **Borradores de factura** directos y desde presupuesto aceptado (RF-FA-01, RF-FA-03).
   - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Facturación por fases:** por porcentaje, importe o líneas, control de lo facturado y lo pendiente, cálculo de la fase final y estados del presupuesto (RF-FA-10, RF-FA-11, RN-F-11, RN-F-12). **Cerrar ADR-033.**
+- [ ] **Facturación por fases y trabajos adicionales:** por porcentaje, importe o líneas, control de lo facturado, lo pendiente y la diferencia, aviso al superar lo pendiente, líneas adicionales, cálculo de la fase final y estados del presupuesto (RF-FA-10 a RF-FA-12, RN-F-11, RN-F-12). **Cerrar ADR-033.**
   - 🤖 `backend-fastapi` · Opus 5.5
 - [ ] **Emisión** desde la API y la UI usando el caso de uso del Bloque 2; pantalla de confirmación diferenciada.
   - 🤖 `backend-fastapi` · Opus 5.5 + `arquitecto-vue` · Sonnet 5.5
@@ -1236,7 +1255,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `ingeniero-ia` · Opus 5.5
 - [ ] **Verificador de la cadena** de `BillingRecord` (`kapataz verify-billing-chain`).
   - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Pantallas:** listado con filtros, detalle, emisión, facturación por fases con lo pendiente siempre visible, rectificación y cobro. ∥
+- [ ] **Pantallas:** listado con filtros, detalle, emisión, facturación por fases con lo pendiente y la diferencia siempre visibles, trabajos adicionales, rectificación y cobro. ∥
   - 🤖 `arquitecto-vue` · Sonnet 5.5 + `ui-ux` · Sonnet 5.5
 
 **Criterio de terminado:** escenarios de numeración concurrente e inmutabilidad en verde a través de la API; la cadena se verifica y detecta una alteración por SQL.
@@ -1321,7 +1340,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `arquitecto-python` · Opus 5.5 + 👤 decides
 - [ ] **Envío a la AEAT** con `VerifactuProveedor`, reintentos y gestión de rechazos, probado en el entorno de pruebas (RF-VF-03, RF-VF-04).
   - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Autorización de cada cliente:** paso documentado antes de la primera factura, sin bloquear el resto de la app. Aceptar unas condiciones de uso no sirve como apoderamiento (RF-VF-07).
+- [ ] **Autorización de cada cliente:** paso documentado antes de la primera factura, sin bloquear el resto de la app, con el modelo de la Resolución de 18 de diciembre de 2024 y firma manuscrita con copia del DNI, certificado cualificado o firma electrónica avanzada. Aceptar unas condiciones de uso no sirve como apoderamiento (RF-VF-07). Confirmar con el proveedor a favor de quién se otorga.
   - 🤖 `backend-fastapi` · Opus 5.5 + `arquitecto-vue` · Sonnet 5.5
 - [ ] **Exportación de registros** para la Administración (RF-VF-05).
   - 🤖 `backend-fastapi` · Opus 5.5
