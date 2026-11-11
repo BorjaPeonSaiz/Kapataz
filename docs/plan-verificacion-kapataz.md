@@ -40,7 +40,7 @@ Este es el plan que se ejecuta antes de una release. Es la **Parte II** de [`00-
 
 - **Opus 5.5 para el criterio:** donde un error acaba en una factura mal numerada, un importe mal calculado, un agente que obedece a un PDF o datos de un cliente visibles para otro.
 - **Sonnet 5.5 para la ejecución con feedback inmediato:** frontend, diseño y documentación.
-- **Fable 5.1 no se asigna por defecto.** Solo como escalado temporal, cambiando el campo `model:` del agente:
+- **Fable 5.2 no se asigna por defecto.** Solo como escalado temporal, cambiando el campo `model:` del agente:
   - la precisión de extracción o de selección de herramienta se estanca bajo el umbral tras dos iteraciones de `ingeniero-ia`;
   - un fallo intermitente de concurrencia en la numeración que `qa-testing` no reproduce tras dos intentos.
 - **Fable no se usa en la Fase 7:** sus salvaguardas adicionales de ciberseguridad lo hacen menos adecuado que Opus para esa revisión.
@@ -76,10 +76,9 @@ Este plan comprueba comportamientos que todavía no están decididos. Hay que ce
 
 | # | Decisión | Dónde aparece | Qué hace falta |
 |---|---|---|---|
-| 1 | **Consultas pendientes tras hablar con el asesor,** que confirmó la forma de la factura final: (a) comprobar en el BOE el aplazamiento y si afecta a los productores; (b) con el proveedor o la AEAT, a favor de quién se otorga la autorización de cada cliente y cuánto se conserva; (c) con un abogado y un especialista en protección de datos, qué ocurre tras los 90 días de solo lectura, qué conservar tras una baja y el contrato con el cliente; (d) con los mismos, el papel de Anthropic y Stripe; (e) con el asesor, trabajos adicionales en la fase final, facturado superior al servicio prestado y reparto del IVA de un anticipo con varios tipos | §1.4, RF-VF-07, RN-12, RF-AC-06, ADR-029, ADR-033 | Cerrarlas antes del lanzamiento. Pueden cambiar el diseño |
+| 1 | **Consultas pendientes.** En noviembre de 2026 se resolvió casi todo con dos asesores y con fuentes públicas (BOE, preguntas frecuentes de la AEAT, consultas de la DGT, RGPD, LOPDGDD y guías de la AEPD): un tipo de IVA por obra, anticipo incluido; rectificativa en lugar de final negativa; fechas vigentes de Verifactu, sin aplazamiento publicado; declaración responsable por versión; autorización con el Anexo I; subsanación de rechazos; borrado tras la solo lectura; contrato de encargo; papeles de Anthropic y Stripe. Quedan: (a) si el Real Decreto-ley 29/2026 se convalida y desde cuándo exige el pago por banco para el 10 %, que afecta a los cobros del Bloque 8; a 11 de noviembre de 2026 sigue sin votarse, y le corresponde a la Diputación Permanente del Congreso; (b) con el proveedor de envío, si la AEAT exige convenio de colaboración social a los dos intermediarios; (c) con Anthropic, si el módulo 3 de su contrato de tratamiento cubre nuestro papel de encargado; no consta en el Marco de Privacidad UE-EE. UU., así que la transferencia se apoya en las cláusulas contractuales tipo; (d) validación final de un asesor fiscal y de un abogado antes de lanzar | §1.4, RF-VF-06, RF-VF-07, RN-12, RN-F-13, RF-AC-06, ADR-029, ADR-033 | (a) antes del Bloque 8; el resto, antes del lanzamiento |
 | 2 | **Proveedor de Verifactu** | Bloque 12, ADR-012 | Elegirlo con precios y condiciones reales |
 | 3 | **WER sin umbral** | Bloque 9 | Se mide y se anota. No se declara aprobado ni suspenso mientras la especificación no fije un valor |
-| 4 | **El escenario «Extracción que no cuadra»** no indica el IVA: la diferencia de 90,00 € solo sale con el 21 % | §3.5 | Añadir el tipo de IVA al escenario |
 
 ---
 
@@ -126,7 +125,7 @@ La Fase 4 usa Claude real y cuesta dinero: estima el coste y apruébalo antes de
 
 ## Fase 1 — Funcionalidad vs. especificación
 
-- [ ] **Reglas de negocio:** cada RN está implementada en el dominio; RN-01 a RN-03 y RN-F-01 a RN-F-07 las protegen agregados u objetos de valor, no la API. Detectar reglas que vivan en el código y no estén en la especificación.
+- [ ] **Reglas de negocio:** cada RN está implementada en el dominio; RN-01 a RN-03 y RN-F-01 a RN-F-13 las protegen agregados u objetos de valor, no la API. Detectar reglas que vivan en el código y no estén en la especificación.
   - 🤖 `arquitecto-python` · Opus 5.5
 - [ ] **ADR:** ninguna implementación contradice un ADR vigente y no queda ninguno en «Propuesto».
   - 🤖 `arquitecto-python` · Opus 5.5
@@ -224,7 +223,7 @@ La Fase 4 usa Claude real y cuesta dinero: estima el coste y apruébalo antes de
   - 🤖 `qa-testing` · Opus 5.5
 - [ ] **Contrato:** schemathesis contra `openapi.json` sin fallos ni respuestas 500.
   - 🤖 `qa-testing` · Opus 5.5
-- [ ] **Cero pruebas intermitentes** (10 ejecuciones seguidas de la suite completa). Si alguna se resiste, se escala a Fable 5.1.
+- [ ] **Cero pruebas intermitentes** (10 ejecuciones seguidas de la suite completa). Si alguna se resiste, se escala a Fable 5.2.
   - 🤖 `qa-testing` · Opus 5.5
 
 ### Escenarios obligatorios
@@ -234,9 +233,13 @@ Todos los de este bloque: 🤖 `qa-testing` · Opus 5.5.
 **Dinero y fiscalidad**
 
 - [ ] **Redondeo:** propiedades con hypothesis; casos frontera (0,005 €, cantidades decimales, descuentos del 100 %); la suma de bases y cuotas cuadra con el total, y, sin trabajos adicionales, la de las fases cuadra con el presupuesto.
-- [ ] **Fiscalidad:** IVA 21/10/4 %, mezcla de tipos en una factura, inversión del sujeto pasivo con cuota cero y su mención, retención del 15 % y del 7 %.
+- [ ] **Fiscalidad:** IVA 21/10/4 %, un solo tipo por factura (un borrador con líneas a tipos distintos genera una factura por tipo, RN-F-13), inversión del sujeto pasivo con cuota cero y su mención, retención del 15 % y del 7 %.
 - [ ] **NIF, NIE y CIF:** formatos válidos e inválidos y dígito de control.
-- [ ] **Datos obligatorios:** falta un dato de RN-F-06 y la factura no se emite.
+- [ ] **Datos obligatorios:** falta un dato de RN-F-06 y la factura no se emite. Tampoco se emite sin el NIF español del destinatario, aunque sea un particular, ni con un dato que supere los límites del registro de la AEAT.
+- [ ] **Registro de facturación:** cada campo obligatorio de `RegistroAlta` y `RegistroAnulacion` tiene su dato en el `BillingRecord`; una subsanación y una anulación se encadenan en la misma cadena que las altas; el primer registro de una cuenta se marca como tal; una factura con un registro de anulación aceptado aparece como anulada sin haberse modificado (RN-F-07).
+- [ ] **Verificador de la cadena:** detecta una huella que no corresponde al contenido, un registro intermedio borrado, una huella anterior cambiada y una fecha de generación anterior a la del registro previo o posterior a la hora actual.
+- [ ] **Rectificativas:** una rectificativa de varias facturas guarda la referencia a todas, su clase y su tipo; la de sustitución guarda la base y la cuota rectificadas (RN-F-03).
+- [ ] **Total y importe a cobrar:** con retención de IRPF y con garantía, el total de la factura es base más cuota y el importe a cobrar es menor.
 
 **Numeración e inmutabilidad**
 
@@ -254,9 +257,12 @@ Todos los de este bloque: 🤖 `qa-testing` · Opus 5.5.
 - [ ] **Estados:** borrador → enviado → aceptado, rechazado o caducado, y facturado parcialmente → facturado; la caducidad se calcula con `Clock`.
 - [ ] **Versiones:** modificar un enviado crea una versión nueva y conserva la anterior.
 - [ ] **Conversión:** un presupuesto aceptado genera un borrador de factura, completo o de una fase, y mantiene el vínculo; uno no aceptado no se convierte.
-- [ ] **Fases:** por porcentaje, importe y líneas, con varios tipos de IVA, retención e inversión del sujeto pasivo; cada fase lleva su número; la fase final muestra el total del servicio, resta las bases anteriores citando cada factura y aplica el IVA al resultado (RN-F-12).
+- [ ] **Tipo de IVA por obra:** material, mano de obra y anticipos llevan el mismo tipo; el 10 % solo se aplica con los tres requisitos y el material en el 40 % de la base o menos; si lo supera, toda la obra pasa al 21 % y la app no rectifica al alza lo facturado a un particular; aviso antes de facturar al 10 % cuando el material llega al 35 % de la base; aviso al registrar un cobro en efectivo de una obra al 10 %; un presupuesto con líneas que no forman parte de la obra genera dos facturas, una al 10 % y otra al 21 %; una factura sin presupuesto pide los mismos datos para decidir el tipo; si el material supera el 40 % con fases ya facturadas al 10 %, la final va al 21 % y la app muestra el IVA que el autónomo debe ingresar (RN-F-13).
+- [ ] **Fases:** anticipo por importe cobrado, certificación y final por líneas, con retención e inversión del sujeto pasivo; el anticipo lleva el tipo de la obra, con la base calculada sobre lo cobrado; cada fase lleva su número; la fase final muestra el total del servicio, resta las bases anteriores citando cada factura y aplica el IVA al resultado; si saliera negativa, no se emite y se propone una rectificativa de la última fase emitida, y de las anteriores si no basta, que detalla lo quitado del presupuesto (RN-F-12).
 - [ ] **Aviso al superar lo pendiente:** una factura que supera lo pendiente muestra la diferencia y solo se emite con confirmación, también cuando la propone el agente; dos borradores a la vez cuentan para el aviso; eliminar un borrador libera su importe; una rectificativa ajusta lo facturado (RN-F-11).
-- [ ] **Trabajos adicionales:** una factura desde presupuesto admite líneas añadidas, cambiadas y quitadas sin crear versión del presupuesto; las añadidas quedan marcadas; el presupuesto no se modifica, muestra la diferencia, positiva o negativa, y queda «facturado» al emitir la factura completa o la fase final (RF-FA-12, RN-F-12). Una factura no admite un segundo presupuesto.
+- [ ] **Trabajos adicionales:** una factura desde presupuesto admite líneas añadidas, cambiadas y quitadas sin crear versión del presupuesto; las añadidas quedan marcadas en la app, pero no en la factura; el presupuesto no se modifica, muestra la diferencia, positiva o negativa, y queda «facturado» al emitir la factura completa o la fase final (RF-FA-12, RN-F-12). Una factura no admite un segundo presupuesto.
+- [ ] **Vencimientos y garantía:** cada factura tiene su vencimiento; las vencidas sin cobrar se avisan y el mensaje de reclamación lleva número, importe pendiente y vencimiento; la factura con garantía lleva el total con IVA, y el importe retenido, calculado sobre la base, queda pendiente con su fecha (RF-FA-14, RF-FA-15).
+- [ ] **Compartir:** el PDF de presupuestos y facturas se comparte con el menú del móvil o se descarga en el portátil, y la app no envía nada al cliente por su cuenta (RF-PR-08, RF-FA-13).
 - [ ] **Nueva versión del presupuesto:** una ampliación sube lo pendiente; una versión por debajo de lo ya facturado deja lo pendiente a cero y muestra la diferencia.
 - [ ] **Cobros:** pendiente, parcial y completo, con fecha y forma de pago; el estado de cobro no toca los datos fiscales.
 - [ ] **Cobro superior al pendiente:** se rechaza con el importe restante, también cuando lo propone el agente (RN-F-10).
@@ -304,10 +310,11 @@ Todos los de este bloque: 🤖 `qa-testing` · Opus 5.5.
 **Cuentas y pagos**
 
 - [ ] **Registro:** email ya usado, email sin verificar, enlace caducado y contraseña débil.
+- [ ] **Registro cerrado:** con el registro cerrado, solo se registra un email habilitado por el superadministrador, y esas cuentas solo emiten facturas con la marca de demostración (RN-13, RF-SA-07).
 - [ ] **Sesiones:** cierre remoto de una sesión, caducidad, recuperación de contraseña y TOTP.
 - [ ] **Pago:** el acceso solo se abre con el webhook de la pasarela, nunca por volver a la URL de éxito.
 - [ ] **Webhooks:** firma inválida rechazada; evento duplicado o desordenado sin efectos repetidos.
-- [ ] **Impago:** cobro fallido, 14 días de reintentos con la app completa, paso a solo lectura y 90 días en ese estado (RN-12); consultar y exportar siguen funcionando. Baja voluntaria: acceso hasta el fin del periodo pagado.
+- [ ] **Impago:** cobro fallido, 14 días de reintentos con la app completa, paso a solo lectura y 90 días en ese estado (RN-12); consultar y exportar siguen funcionando, y también corregir y reenviar un registro rechazado por la AEAT. Baja voluntaria: acceso hasta el fin del periodo pagado.
 - [ ] **Cierre de cuenta:** exportación ofrecida y borrado que respeta lo que hay que conservar.
 
 **Superadministración**
@@ -362,7 +369,7 @@ Todos los de este bloque: 🤖 `qa-testing` · Opus 5.5.
 - [ ] **Regresión de prompts:** cambiar un prompt sin volver a pasar la evaluación hace fallar el check (huella del prompt registrada en el informe).
   - 🤖 `ingeniero-ia` · Opus 5.5
 - [ ] **Estabilidad:** tres ejecuciones con la misma configuración (`claude-opus-5-5` no admite fijar `temperature`); la variación de métricas es < 2 puntos.
-  - 🤖 `ingeniero-ia` · Opus 5.5 → escalado a Fable 5.1 si no se alcanza tras dos iteraciones
+  - 🤖 `ingeniero-ia` · Opus 5.5 → escalado a Fable 5.2 si no se alcanza tras dos iteraciones
 - [ ] **Fugas hacia Claude:** en el dataset, 0 NIF, emails, teléfonos, IBAN o nombres de clientes registrados, y ≥ 98 % de los nombres no registrados detectados (RNF-17). Incluye nombres en conceptos de línea, direcciones de obra y mensajes dictados.
   - 🤖 `qa-testing` · Opus 5.5
 - [ ] **Coste por seudonimización:** comparar la precisión de extracción con y sin seudónimos, sobre datos sintéticos, para conocer cuánta calidad se paga por la privacidad.
@@ -548,9 +555,9 @@ Revisa: 🤖 `seguridad-ia` · Opus 5.5 → corrige: `ingeniero-ia`. Automatiza:
 Todos los de este bloque: 🤖 `seguridad-ia` · Opus 5.5.
 
 - [ ] **Minimización:** cada campo personal es necesario para presupuestar o facturar.
-- [ ] **Roles:** el autónomo es responsable, KodigoLab encargado, y Anthropic, el proveedor de Verifactu, el VPS, el email y el destino de las copias son subencargados; el papel de Stripe lo fija el abogado. Contrato de encargo y lista de subencargados publicados.
+- [ ] **Roles:** el autónomo es responsable, KodigoLab encargado, y Anthropic, el proveedor de Verifactu, el VPS, el email y el destino de las copias son subencargados; Stripe es encargado para el cobro y responsable independiente para fraude y cumplimiento normativo, y la política de privacidad lo explica. Contrato de encargo como anexo de las condiciones y lista de subencargados publicada; los cambios se notifican al autónomo y requieren su aprobación.
 - [ ] **Derechos:** exportar y borrar los datos de un cliente concreto, respetando la conservación obligatoria de facturas emitidas.
-- [ ] **Conservación:** las facturas emitidas no se purgan; hay plazos para trazas, logs, copias y cuentas cerradas.
+- [ ] **Conservación:** las facturas emitidas no se purgan mientras la cuenta está activa; al acabar la solo lectura se borran, tras ofrecer la exportación y avisar de que conservarlas es obligación del autónomo, y solo queda bloqueada la autorización firmada (RN-12). Hay plazos para trazas, logs y copias.
 - [ ] **Transferencias internacionales:** garantías para los datos que van a Anthropic y a Stripe.
 - [ ] **Información al usuario:** política de privacidad, aviso sobre el uso de IA y sobre la seudonimización, y sin fuentes desde CDN ni analítica de terceros.
 - [ ] 👤 **Revisión legal** de los textos y de los contratos con un asesor.
@@ -563,7 +570,7 @@ Todos los de este bloque: 🤖 `seguridad-ia` · Opus 5.5.
   - 🤖 `seguridad-ia` · Opus 5.5 + `arquitecto-python` · Opus 5.5
 - [ ] **Credenciales del proveedor de Verifactu:** guardadas como secretos, separadas entre staging y producción.
   - 🤖 `seguridad-ia` · Opus 5.5 → corrige: `plataforma-entrega`
-- [ ] **Sin doble uso:** ningún camino permite alterar, ocultar o borrar registros de facturación, ni siquiera el superadministrador.
+- [ ] **Sin doble uso:** ningún camino permite alterar, ocultar o borrar registros de facturación, ni siquiera el superadministrador. La única excepción es el borrado de la cuenta completa al terminar la solo lectura (RN-12), que nunca borra registros sueltos.
   - 🤖 `seguridad-ia` · Opus 5.5 → corrige: `backend-fastapi`
 - [ ] **Suscripción terminada** (RN-12, ADR-016): durante los 90 días de solo lectura se pueden consultar y exportar los datos propios.
   - verifica: 🤖 `seguridad-ia` · Opus 5.5
@@ -639,7 +646,7 @@ Todos los de este bloque: 🤖 `seguridad-ia` · Opus 5.5.
   - 🤖 `plataforma-entrega` · Opus 5.5
 - [ ] **Artefacto de release:** sin datos de usuario, secretos ni PDFs reales; SBOM incluido.
   - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] 👤 **Alta real de principio a fin** con un pago real con tarjeta y otro con PayPal, en un móvil y por alguien no técnico. Anota lo que tarda.
+- [ ] 👤 **Alta real de principio a fin**, con emails habilitados y el registro aún cerrado (RN-13), con un pago real con tarjeta y otro con PayPal, en un móvil y por alguien no técnico. Anota lo que tarda.
 
 ---
 
@@ -698,6 +705,7 @@ Todos los de este bloque: 🤖 `seguridad-ia` · Opus 5.5.
 - [ ] **Re-revisión** de cada hallazgo corregido por el mismo agente que lo detectó; cada corrección lleva su prueba de regresión.
 - [ ] **Publicar la 1.0.0:** `VERSION`, `CHANGELOG.md`, etiqueta `v1.0.0`, imagen, release en GitHub, declaración responsable e instrucciones de vuelta atrás comprobados.
   - 🤖 `plataforma-entrega` · Opus 5.5
+- [ ] 👤 **Abrir el registro** desde la zona de superadministración, una vez publicada la 1.0.0 (RN-13).
 - [ ] **Activar el control de versión en CI:** desde aquí, un PR que cambia la app sin subir la versión ni actualizar el changelog falla.
   - 🤖 `plataforma-entrega` · Opus 5.5
 
