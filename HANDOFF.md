@@ -6,7 +6,7 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 
 - **Bloque en curso:** 0 — Fundaciones y documentación, en la rama `bloque-00-fundaciones`, con su PR abierto contra `main`.
 - **Objetivo:** que el repositorio contenga todo el conocimiento del proyecto antes de la primera línea de código.
-- **Estado:** entregables escritos y alineados con las decisiones de Borja. Falta su visto bueno al PR (criterio de terminado del bloque).
+- **Estado:** entregables escritos y alineados con las decisiones de Borja. Condiciones de Anthropic (ADR-029) aceptadas por Borja el 12/11/2026. Falta su visto bueno al PR #3 (criterio de terminado del bloque).
 - **Hecho:**
   - `CLAUDE.md` y los 10 agentes de `.claude/agents/`, copiados del plan.
   - `docs/01-especificacion.md`, generado del plan: 141 identificadores y 33 escenarios.
@@ -34,7 +34,7 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 
 ## Siguiente acción
 
-Borja revisa el PR del Bloque 0, acepta las condiciones de Anthropic (ADR-029) e integra. Después, el Bloque 1 en la rama `bloque-01-esqueleto`.
+Borja revisa e integra el PR #3 del Bloque 0. Después, el Bloque 1 en la rama `bloque-01-esqueleto`.
 
 ## Pendiente
 

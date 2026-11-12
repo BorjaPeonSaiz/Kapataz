@@ -1187,7 +1187,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `ingeniero-ia` · Opus 5.5
 - [x] **Diseño base:** principios, paleta, tipografía y bocetos en texto de las pantallas principales en `docs/02-arquitectura.md §Diseño`.
   - 🤖 `ui-ux` · Sonnet 5.5 ∥
-- [ ] **Tratamiento de datos con Anthropic (ADR-029):** contrastar acuerdo de tratamiento, retención y región de inferencia con las condiciones vigentes.
+- [x] **Tratamiento de datos con Anthropic (ADR-029):** contrastar acuerdo de tratamiento, retención y región de inferencia con las condiciones vigentes.
   - 🤖 `seguridad-ia` · Opus 5.5 + 👤 revisas y aceptas las condiciones
 
 **Entregables:** `CLAUDE.md`, `HANDOFF.md`, `.claude/agents/*`, `docs/01–04`, `docs/adr/ADR-001…033`.

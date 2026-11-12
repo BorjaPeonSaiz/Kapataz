@@ -115,6 +115,6 @@ Ningún dato contradice la decisión. Los matices nuevos se recogen en «Consecu
 - [ ] **Canal de aviso de subencargados nuevos:** a confirmar con su equipo de privacidad. Mientras tanto, suscribirse al canal de novedades del centro de confianza y mantener al día el email de la cuenta.
 - [ ] **Información para la evaluación de impacto de la transferencia** (sección I.4 del contrato de tratamiento): solicitada. Debe aclarar cómo se cubre la transferencia de Anthropic Ireland a Anthropic, PBC.
 - [ ] **Cuenta de la API:** crearla con el email de la empresa. No se puede cambiar después, y la retención cero se concede a esa organización concreta.
-- [ ] **Condiciones:** Borja debe revisar y aceptar las condiciones comerciales y el contrato de tratamiento vigentes al crear la cuenta.
+- [x] **Condiciones:** Borja revisó y aceptó el 12/11/2026 las condiciones comerciales y el contrato de tratamiento tal como se contrastan en este ADR, incluidas dos novedades frente al plan: Claude Fable y Mythos no admiten retención cero, y al terminar el contrato Anthropic devuelve o borra los datos en 30 días. Al crear la cuenta de la API se acepta la versión vigente; si ha cambiado desde esa fecha, se vuelve a revisar.
 - [ ] **Lista de subencargados:** revisarla a mano en el centro de confianza y guardar una copia con fecha.
 - [ ] **Revisión del abogado:** contrato de encargo con los autónomos, lista de subencargados, evaluación de la transferencia y lectura del carácter personal de los datos seudonimizados. Guardar las respuestas escritas del soporte como prueba.
