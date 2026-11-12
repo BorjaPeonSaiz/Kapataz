@@ -76,7 +76,7 @@ Este plan comprueba comportamientos que todavía no están decididos. Hay que ce
 
 | # | Decisión | Dónde aparece | Qué hace falta |
 |---|---|---|---|
-| 1 | **Consultas pendientes.** En noviembre de 2026 se resolvió casi todo con dos asesores y con fuentes públicas (BOE, preguntas frecuentes de la AEAT, consultas de la DGT, RGPD, LOPDGDD y guías de la AEPD): un tipo de IVA por obra, anticipo incluido; rectificativa en lugar de final negativa; fechas vigentes de Verifactu, sin aplazamiento publicado; declaración responsable por versión; autorización con el Anexo I; subsanación de rechazos; borrado tras la solo lectura; contrato de encargo; papeles de Anthropic y Stripe. Quedan: (a) si el Real Decreto-ley 29/2026 se convalida y desde cuándo exige el pago por banco para el 10 %, que afecta a los cobros del Bloque 8; a 11 de noviembre de 2026 sigue sin votarse, y le corresponde a la Diputación Permanente del Congreso; (b) con el proveedor de envío, si la AEAT exige convenio de colaboración social a los dos intermediarios; (c) con Anthropic, si el módulo 3 de su contrato de tratamiento cubre nuestro papel de encargado; no consta en el Marco de Privacidad UE-EE. UU., así que la transferencia se apoya en las cláusulas contractuales tipo; (d) validación final de un asesor fiscal y de un abogado antes de lanzar | §1.4, RF-VF-06, RF-VF-07, RN-12, RN-F-13, RF-AC-06, ADR-029, ADR-033 | (a) antes del Bloque 8; el resto, antes del lanzamiento |
+| 1 | **Consultas pendientes.** En noviembre de 2026 se resolvió casi todo con dos asesores y con fuentes públicas (BOE, preguntas frecuentes de la AEAT, consultas de la DGT, RGPD, LOPDGDD y guías de la AEPD): un tipo de IVA por obra, anticipo incluido; rectificativa en lugar de final negativa; fechas vigentes de Verifactu, sin aplazamiento publicado; declaración responsable por versión; autorización con el Anexo I; subsanación de rechazos; borrado tras la solo lectura; contrato de encargo; papeles de Anthropic y Stripe. Quedan: (a) si el Real Decreto-ley 29/2026 se convalida y desde cuándo exige el pago por banco para el 10 %, que afecta a los cobros del Bloque 8; a 11 de noviembre de 2026 sigue sin votarse, y le corresponde a la Diputación Permanente del Congreso; (b) con el proveedor de envío, si la AEAT exige convenio de colaboración social a los dos intermediarios; (c) con Anthropic, la retención cero, el canal de aviso de subencargados nuevos y la información para la evaluación de impacto de la transferencia (ADR-029); su soporte ya confirmó por escrito que el módulo 3 cubre nuestro papel de encargado y que no está adherida al Marco de Privacidad UE-EE. UU., así que la transferencia se apoya en las cláusulas contractuales tipo; (d) validación final de un asesor fiscal y de un abogado antes de lanzar | §1.4, RF-VF-06, RF-VF-07, RN-12, RN-F-13, RF-AC-06, ADR-029, ADR-033 | (a) antes del Bloque 8; el resto, antes del lanzamiento |
 | 2 | **Proveedor de Verifactu** | Bloque 12, ADR-012 | Elegirlo con precios y condiciones reales |
 | 3 | **WER sin umbral** | Bloque 9 | Se mide y se anota. No se declara aprobado ni suspenso mientras la especificación no fije un valor |
 
@@ -147,7 +147,7 @@ La Fase 4 usa Claude real y cuesta dinero: estima el coste y apruébalo antes de
   - 🤖 `backend-fastapi` · Opus 5.5 + `arquitecto-vue` · Sonnet 5.5
 - [ ] **Superadministración:** RF-SA completos; un cliente no tiene ningún ajuste de modelo.
   - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Verifactu:** RF-VF completos; `RegistroFacturacionPort` no se salta en ningún camino de emisión.
+- [ ] **Verifactu:** RF-VF completos; `BillingRecordSubmissionPort` no se salta en ningún camino de emisión.
   - 🤖 `arquitecto-python` · Opus 5.5
 - [ ] **Escenarios Gherkin** de §3.5 automatizados y en verde.
   - 🤖 `qa-testing` · Opus 5.5
@@ -243,7 +243,7 @@ Todos los de este bloque: 🤖 `qa-testing` · Opus 5.5.
 
 **Numeración e inmutabilidad**
 
-- [ ] **Numeración concurrente:** 20 emisiones en paralelo con procesos distintos sobre PostgreSQL real, en una cuenta y en varias a la vez; sin huecos ni duplicados.
+- [ ] **Numeración concurrente:** 20 emisiones en paralelo con procesos distintos sobre PostgreSQL real, en una cuenta y en varias a la vez; sin huecos ni duplicados. Emisiones simultáneas de las series F y R en la misma cuenta no bifurcan la cadena de registros (RN-F-07).
 - [ ] **Series independientes:** `F`, `R` y `P` numeran por separado en cada cuenta; el número se asigna al emitir, no al crear el borrador.
 - [ ] **Cambio de año:** la primera factura del año reinicia la numeración; una emisión el 31/12 a las 23:59:59 y otra el 01/01 a las 00:00:00.
 - [ ] **Fecha anterior:** se rechaza emitir con fecha anterior a la última de la serie.
@@ -295,7 +295,7 @@ Todos los de este bloque: 🤖 `qa-testing` · Opus 5.5.
 **Aislamiento entre cuentas**
 
 - [ ] **Por la API:** cada ruta se prueba con identificadores de otra cuenta y responde 404.
-- [ ] **En la base de datos:** con el rol de la aplicación, una consulta sin cuenta fijada no devuelve filas; toda tabla de negocio tiene política RLS.
+- [ ] **En la base de datos:** con el rol de la aplicación, una consulta sin cuenta fijada no devuelve filas; toda tabla de negocio tiene política RLS, y las únicas tablas sin RLS son las globales de la lista cerrada de §4.5 del plan maestro. Los agregados del superadministrador solo salen de funciones `SECURITY DEFINER` que no devuelven datos de negocio (RF-SA-05).
 - [ ] **Agente y búsqueda:** ninguna herramienta ni búsqueda devuelve datos de otra cuenta.
 - [ ] **Worker:** cada tarea corre en el contexto de su cuenta.
 

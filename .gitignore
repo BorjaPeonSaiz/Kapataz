@@ -1,2 +1,5 @@
 # Consultas a profesionales: se guardan solo en local
 docs/consultas/
+
+# Memoria local de Engram: no se versiona (CLAUDE.md, «Engram»)
+.engram/
