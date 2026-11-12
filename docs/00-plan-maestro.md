@@ -59,7 +59,7 @@ Un asistente disponible en el portátil y en el móvil, al que se le habla como 
 | Voz | Dictado de órdenes, transcrito en el servidor de Kapataz |
 | Acceso | Registro abierto con email y contraseña; uso desde el navegador y como PWA instalable en el móvil, sin instalar nada más |
 | Suscripción | Cuota mensual con tarjeta o PayPal; la app se abre al confirmarse el pago |
-| Privacidad | Claude solo recibe texto seudonimizado: los datos de clientes y proveedores no salen de nuestros servidores |
+| Privacidad | Claude solo recibe texto seudonimizado: los datos de clientes, de proveedores y del propio profesional no salen de nuestros servidores |
 | Superadministración | Zona exclusiva del dueño de la plataforma: modelo de Claude, límites, costes y suscripciones |
 | Consumo de IA | Claude incluido en la cuota, con un límite de uso por cuenta |
 | Demo | Datos sintéticos de dos profesionales ficticios en cuentas de demostración |
@@ -104,7 +104,7 @@ Un asistente disponible en el portátil y en el móvil, al que se le habla como 
 | Servido | FastAPI sirve el build de Vue detrás de un proxy TLS: **mismo origen** para app y API | Sin CORS y con cookies sencillas (ADR-013) |
 | Autenticación | Sesión en cookie `HttpOnly`, contraseña con **Argon2id**, TOTP opcional y obligatorio para el superadministrador | Sin tokens en el navegador (ADR-025) |
 | Pagos | **Stripe** Checkout y Billing: tarjeta y PayPal | Los datos de tarjeta nunca pasan por nuestro servidor (ADR-016) |
-| Verifactu | Modalidad **VERI*FACTU** con envío mediante un proveedor externo por API | Evita la firma de registros y la custodia de claves; se puede cambiar detrás de `RegistroFacturacionPort` (ADR-012) |
+| Verifactu | Modalidad **VERI*FACTU** con envío mediante un proveedor externo por API | Evita la firma de registros y la custodia de claves; se puede cambiar detrás de `BillingRecordSubmissionPort` (ADR-012) |
 | Tareas en segundo plano | Cola en PostgreSQL (**procrastinate**) y proceso worker | Ingesta, embeddings y transcripción sin añadir Redis (ADR-026) |
 | Ficheros | `FileStoragePort`: disco del servidor en v1, almacenamiento S3 compatible en la UE después | PDFs separados por cuenta |
 | Email | SMTP transaccional con proveedor en la UE | Verificación y recuperación de contraseña |
@@ -114,6 +114,7 @@ Un asistente disponible en el portátil y en el móvil, al que se le habla como 
 | Pruebas Python | pytest, pytest-cov, hypothesis, mutmut, schemathesis, freezegun | Equivalente a Pest/Spectator |
 | Calidad frontend | vue-tsc, ESLint, Prettier, Vitest, Playwright, axe-core | |
 | Infraestructura | Trivy (imágenes), ShellCheck (scripts), k6 (carga) | |
+| Seguridad en CI | Semgrep (análisis estático), gitleaks (secretos en el repo) | Junto con pip-audit, npm audit, bandit y Trivy, bloquean el PR (§7) |
 | CI | GitHub Actions en `ubuntu-latest` con PostgreSQL real y **LLM falso determinista** | CI no llama a la API de Claude: sin clave, sin coste y reproducible (ADR-008) |
 
 ### Modelo de Claude (ADR-005)
@@ -315,7 +316,7 @@ Todas las cuentas y todas las rutas (chat, clasificación y extracción) usan `c
 |---|---|
 | RN-01 | Los importes se representan como `Decimal` en dominio y como céntimos enteros en BD. Prohibido `float` en cualquier cálculo monetario. |
 | RN-02 | Los totales se calculan por código en el dominio. El LLM nunca calcula ni redondea importes; si propone un total, se descarta y se recalcula. |
-| RN-03 | Redondeo a dos decimales por línea y por cuota (ROUND_HALF_UP), con la suma de bases y cuotas cuadrando con el total. |
+| RN-03 | Redondeo a dos decimales por línea y por cuota (ROUND_HALF_UP), con la suma de bases y cuotas cuadrando con el total. Excepción: cuando se parte de un importe con IVA incluido, como el anticipo cobrado (RN-F-12), se redondea la base y la cuota es la diferencia entre ese importe y la base, para que el total coincida al céntimo con lo cobrado. |
 | RN-04 | Ninguna operación de escritura (crear presupuesto, emitir factura, registrar cobro) se ejecuta desde el agente sin confirmación explícita del usuario en la interfaz. |
 | RN-05 | El contenido de un documento importado es **dato, nunca instrucción**: el texto de un PDF no puede alterar el comportamiento del agente. |
 | RN-06 | Un precio propuesto por el agente indica siempre su origen (catálogo, mediana del histórico o presupuesto similar concreto). Si no hay origen, la línea queda sin precio y marcada. |
@@ -329,22 +330,22 @@ Todas las cuentas y todas las rutas (chat, clasificación y extracción) usan `c
 | RN-F-01 | La numeración de facturas es correlativa por cuenta, serie y año, sin huecos ni duplicados, incluso con emisiones concurrentes. |
 | RN-F-02 | Una factura emitida es inmutable: ningún camino del código permite `UPDATE` ni `DELETE` sobre sus datos fiscales. |
 | RN-F-03 | Una rectificativa referencia siempre a la factura o facturas que rectifica e indica el motivo. Guarda su clase (R1 a R4 del registro de la AEAT, según el motivo) y si es por sustitución o por diferencias; la de sustitución guarda además la base y la cuota rectificadas. |
-| RN-F-04 | La fecha de expedición no puede ser anterior a la de la última factura emitida de la misma serie. |
+| RN-F-04 | La fecha de expedición no puede ser anterior a la de la última factura emitida de la misma serie. Se comprueba después de bloquear el contador (RN-F-01), para que una emisión simultánea no pueda colarse entre la comprobación y el número. |
 | RN-F-05 | Una factura con inversión del sujeto pasivo lleva cuota de IVA cero y la mención legal correspondiente. |
 | RN-F-06 | Los datos obligatorios (emisor, destinatario con NIF español, número, fecha, descripción general de la operación, base, tipo, cuota, total) son requisito para emitir; si falta alguno, no se emite. En la v1 toda factura es completa y lleva el NIF del destinatario, también si es un particular: no se emiten facturas simplificadas ni a clientes sin NIF español (§1.4). Los datos respetan los límites del registro de la AEAT: nombre o razón social de 120 caracteres, serie y número juntos de 60, descripción de 500 y NIF de 9. |
-| RN-F-07 | Cada emisión genera un registro de facturación con el contenido canónico de la factura y una huella SHA-256 encadenada con la anterior de la misma cuenta. Hay una sola cadena por cuenta, y en ella van las altas, las subsanaciones y las anulaciones, así que una factura puede tener varios registros. Una factura con un registro de anulación aceptado está anulada: ese estado se deduce de la cadena, sin modificar la factura (RN-F-02), y coincide con el estado «Anulado» que devuelve la consulta de la AEAT. El contenido canónico usa desde el Bloque 2 los mismos campos que `RegistroAlta` y `RegistroAnulacion` de los esquemas de la AEAT (Orden HAC/1177/2024, arts. 7 y 13): tipo de factura, descripción, destinatario, desglose con clave de régimen y calificación, cuota total, importe total, datos del registro anterior o marca de primer registro, identificación del sistema, y fecha, hora y huso horario de generación, con un minuto de margen como máximo. El Bloque 12 lo convierte a XML, calcula la huella con el algoritmo oficial y lo envía. |
+| RN-F-07 | Cada emisión genera un registro de facturación con el contenido canónico de la factura y una huella SHA-256 encadenada con la anterior de la misma cuenta. Hay una sola cadena por cuenta, y en ella van las altas, las subsanaciones y las anulaciones, así que una factura puede tener varios registros. Toda operación que añade un registro bloquea primero la cabeza de la cadena de la cuenta, en la misma transacción y antes que el contador de la serie, siempre en ese orden. Así, dos emisiones simultáneas no enlazan con el mismo registro anterior aunque sean de series distintas (F y R). Una factura con un registro de anulación aceptado está anulada: ese estado se deduce de la cadena, sin modificar la factura (RN-F-02), y coincide con el estado «Anulado» que devuelve la consulta de la AEAT. El contenido canónico usa desde el Bloque 2 los mismos campos que `RegistroAlta` y `RegistroAnulacion` de los esquemas de la AEAT (Orden HAC/1177/2024, arts. 7 y 13): tipo de factura, descripción, destinatario, desglose con clave de régimen y calificación, cuota total, importe total, datos del registro anterior o marca de primer registro, identificación del sistema, y fecha, hora y huso horario de generación, con un minuto de margen como máximo. El Bloque 12 lo convierte a XML, calcula la huella con el algoritmo oficial y lo envía. |
 | RN-F-08 | El histórico importado no se mezcla con la serie emitida (RF-IN-09). |
 | RN-F-09 | Las facturas de una cuenta real son válidas y no llevan ninguna marca. Solo las del espacio de demostración llevan la marca «Documento de demostración», que no se puede quitar. |
 | RN-F-10 | Un cobro no puede superar el importe pendiente de la factura: se rechaza indicando lo que queda por cobrar. |
 | RN-F-11 | El presupuesto es una referencia, no un tope: lo facturado puede ser mayor o menor. Si una factura supera lo pendiente, la app avisa de la diferencia y pide confirmarla, para evitar facturar dos veces lo mismo. Un borrador cuenta como facturado hasta que se elimina, y una rectificativa ajusta lo facturado. |
-| RN-F-12 | Cada fase es una factura completa, con su número, su IVA y su retención, y lleva el tipo de la obra (RN-F-13). El anticipo se factura al cobrarlo, por el importe recibido, porque ahí se devenga el IVA (art. 75.Dos de la Ley del IVA): con 6.000 € cobrados para una obra al 10 %, la base es 6.000 / 1,10 = 5.454,55 € y la cuota, 545,45 €. La certificación desglosa los trabajos realizados. La fase final recoge todos los trabajos realizados, presupuestados o no, resta las bases de las facturas anteriores citándolas y aplica el IVA al resultado: con 10.000 € de servicio y 7.000 € ya facturados, la base es 3.000 €. Si lo facturado supera el servicio, no se emite una final negativa: se emite una factura rectificativa por la diferencia, que rectifica la última fase emitida y, si su importe no basta, también las anteriores, y que detalla lo que se ha quitado del presupuesto (art. 80.Dos de la Ley del IVA y art. 15 del RD 1619/2012). La suma de las fases no tiene que coincidir con el presupuesto: solo cuadra al céntimo si no se cambia nada. Al emitir la factura completa o la fase final, el presupuesto queda «facturado» aunque haya diferencia. |
+| RN-F-12 | Cada fase es una factura completa, con su número, su IVA y su retención, y lleva el tipo de la obra (RN-F-13). El anticipo se factura al cobrarlo, por el importe recibido, porque ahí se devenga el IVA (art. 75.Dos de la Ley del IVA): con 6.000 € cobrados para una obra al 10 %, la base es 6.000 / 1,10 = 5.454,55 € y la cuota, 6.000 − 5.454,55 = 545,45 € (excepción de RN-03). La certificación desglosa los trabajos realizados. La fase final recoge todos los trabajos realizados, presupuestados o no, resta las bases de las facturas anteriores citándolas y aplica el IVA al resultado: con 10.000 € de servicio y 7.000 € ya facturados, la base es 3.000 €. Si lo facturado supera el servicio, no se emite una final negativa: se emite una factura rectificativa por la diferencia, que rectifica la última fase emitida y, si su importe no basta, también las anteriores, y que detalla lo que se ha quitado del presupuesto (art. 80.Dos de la Ley del IVA y art. 15 del RD 1619/2012). La suma de las fases no tiene que coincidir con el presupuesto: solo cuadra al céntimo si no se cambia nada. Al emitir la factura completa o la fase final, el presupuesto queda «facturado» aunque haya diferencia. |
 | RN-F-13 | El tipo de IVA se decide para la obra entera, no por línea: material, mano de obra y anticipos llevan el mismo, porque el material forma parte de la obra (arts. 90.Dos y 91.Uno.2.10º de la Ley del IVA). Va al 10 % si el destinatario es una persona física que usa la vivienda para fines particulares o una comunidad de propietarios, la vivienda se terminó al menos dos años antes de empezar la obra y el material que aporta el autónomo no supera el 40 % de la base; si no, al 21 %. La DGT lo confirma: el anticipo lleva el tipo de la operación que paga y no se separan los materiales (consultas V2662-13, V1392-26 y V0624-23). La app pide los dos primeros datos en el presupuesto, o en la factura si no sale de un presupuesto, y calcula el 40 % con las líneas marcadas como material. Si al final el material supera el 40 %, toda la obra pasa al 21 %, pero lo ya facturado al 10 % a un particular no se puede rectificar al alza: el autónomo ingresa la diferencia (art. 89.Tres y Cinco de la Ley del IVA; consulta V0624-23). En ese caso la fase final va al 21 % y la app muestra al autónomo el IVA que debe ingresar por lo ya facturado al 10 %. Por eso la app avisa antes de facturar al 10 % cuando el material llega al 35 % de la base. El Real Decreto-ley 29/2026 exige además, para el 10 %, que la obra se pague con tarjeta, transferencia, cheque nominativo o ingreso en cuenta, y lo extiende a viviendas alquiladas como vivienda habitual: la app registra la forma de cada cobro y avisa si es en efectivo. Pendiente: confirmar su convalidación y desde cuándo se aplica. Lo que no forma parte de la obra, como muebles o electrodomésticos que solo se venden, sin instalarlos, va al 21 %: al facturar un presupuesto con líneas de los dos tipos, la app genera dos facturas, una con la obra al 10 % y otra con lo que va al 21 %. La regla es general: una factura emitida por la app lleva un solo tipo de IVA, y un borrador con líneas a tipos distintos genera una factura por tipo. El histórico importado conserva sus facturas como son. |
 
 ### 3.3 Requisitos no funcionales
 
 | ID | Requisito |
 |---|---|
-| RNF-01 | **Privacidad:** los datos se guardan en servidores de la UE. Los nombres, NIF, direcciones y datos de contacto de clientes y proveedores no salen de ellos. Anthropic recibe solo texto seudonimizado, y el usuario lo sabe antes de usar la IA. |
+| RNF-01 | **Privacidad:** los datos se guardan en servidores de la UE. Los nombres, NIF, direcciones y datos de contacto de clientes, de proveedores y del propio profesional no salen de ellos. Anthropic recibe solo texto seudonimizado, y el usuario lo sabe antes de usar la IA. |
 | RNF-02 | Del alta al primer uso en < 5 min, sin instalar nada. |
 | RNF-03 | Disponibilidad objetivo del 99,5 % mensual. |
 | RNF-04 | Consulta con una herramienta: primera respuesta visible (streaming) < 3 s y completa < 15 s, también con 4G en el móvil. |
@@ -383,6 +384,7 @@ Todas las cuentas y todas las rutas (chat, clasificación y extracción) usan `c
 | Retención | Retención de IRPF que se descuenta en la factura. No es la garantía | `Withholding` |
 | Garantía | Parte del importe de una factura cuyo cobro se aplaza hasta una fecha, como garantía de la obra | `Guarantee` |
 | Vencimiento | Fecha límite de cobro de una factura o de su garantía | `due_date` |
+| Cobro | Pago recibido de una factura, con fecha y forma de pago | `Payment` |
 | Serie | Secuencia de numeración (`F`, `R`, `P`) | `Series` |
 | Documento fuente | PDF importado del histórico | `SourceDocument` |
 | Extracción | Resultado estructurado de leer un documento fuente | `Extraction` |
@@ -391,7 +393,7 @@ Todas las cuentas y todas las rutas (chat, clasificación y extracción) usan `c
 | Registro de facturación | Registro encadenado de cada emisión, según Verifactu | `BillingRecord` |
 | Herramienta | Función que el agente puede invocar | `Tool` |
 
-> El código usa nombres en inglés para las clases y en español para los textos de usuario. El glosario es la fuente única de ambos.
+> El código usa nombres en inglés para las clases y en español para los textos de usuario. El glosario es la fuente única de ambos. Excepción: las herramientas del agente (§4.6) se llaman en español, porque las lee el modelo en conversaciones en español.
 
 ### 3.5 Escenarios Gherkin obligatorios
 
@@ -629,7 +631,7 @@ api/  ──►  application/  ──►  domain/
 | `customers` | `Customer`, deduplicación, `TaxId` (validación de NIF/NIE/CIF) |
 | `catalog` | `CatalogItem`, precios de referencia |
 | `documents` | `SourceDocument`, `Extraction`, estados de revisión |
-| `assistant` | Definición de herramientas, políticas de confirmación, transcripción |
+| `assistant` | Catálogo de herramientas (nombre y si son de lectura o de escritura), políticas de confirmación, transcripción. Los esquemas Pydantic que validan los parámetros de cada herramienta viven en `application/agent`, porque el dominio es Python puro |
 | `settings` | Perfil del profesional, perfil fiscal |
 | `accounts` | `Tenant`, `User`, `PlatformAdmin`, `Subscription`, sesiones, límites de consumo de IA |
 
@@ -640,13 +642,13 @@ api/  ──►  application/  ──►  domain/
 | `LlmPort` (chat con herramientas, salida estructurada; solo acepta `SanitizedPrompt`) | `ClaudeLlm`, `FakeLlm` (pruebas) | Otro proveedor |
 | `PseudonymizerPort` | `PresidioPseudonymizer`, `FakePseudonymizer` | |
 | `EmbeddingPort` | `LocalEmbeddings` (fastembed), `FakeEmbeddings` | |
-| `TranscriptionPort` | `FasterWhisper` | |
-| `PdfTextPort` | `PdfPlumberReader` | |
-| `OcrPort` | `TesseractOcr` | Fotos de tiques |
-| `PdfRenderPort` | `ReportLabRenderer` | |
+| `TranscriptionPort` | `FasterWhisper`, `FakeTranscription` | |
+| `PdfTextPort` | `PdfPlumberReader`, `FakePdfText` | |
+| `OcrPort` | `TesseractOcr`, `FakeOcr` | Fotos de tiques |
+| `PdfRenderPort` | `ReportLabRenderer`, `FakePdfRender` | |
 | `SearchPort` | `HybridPostgresSearch` (texto + pgvector + RRF) | |
-| `RegistroFacturacionPort` | `NullRegistroFacturacion` hasta el Bloque 12; después `VerifactuProveedor` | `VerifactuAeat` (envío directo como colaborador social) |
-| `SuscripcionPort` | `StripeSuscripcion`, `FakeSuscripcion` | Otra pasarela |
+| `BillingRecordSubmissionPort` | `NullBillingRecordSubmission` hasta el Bloque 12; después `VerifactuProviderSubmission` | `VerifactuAeatSubmission` (envío directo como colaborador social) |
+| `SubscriptionPort` | `StripeSubscriptions`, `FakeSubscriptions` | Otra pasarela |
 | `FileStoragePort` | `LocalFileStorage` | Almacenamiento S3 compatible en la UE |
 | `EmailPort` | `SmtpEmail`, `FakeEmail` | |
 | `Clock` | `SystemClock`, `FrozenClock` | |
@@ -673,6 +675,7 @@ kapataz/
 │   │   ├── application/{use_cases,agent,dto}/
 │   │   ├── infrastructure/{persistence,llm,privacy,embeddings,speech,pdf,search,storage,email,jobs,fiscal,payments,logging}/
 │   │   ├── api/{routers,schemas,errors.py,sse.py}
+│   │   ├── static/             # build de Vue que sirve FastAPI (ADR-013)
 │   │   ├── bootstrap.py        # composición de dependencias
 │   │   └── main.py
 │   ├── tests/{unit,integration,contract,e2e_api,security,evals}/
@@ -693,6 +696,7 @@ kapataz/
     ├── 03-modelo-amenazas.md
     ├── 04-evaluacion-ia.md     # metodología, resultados por modelo y perfil
     ├── plan-verificacion-kapataz.md  # verificación pre-release detallada
+    ├── api/                    # openapi.json exportado del backend
     ├── adr/                    # ADR-001 … ADR-033
     ├── operacion/              # despliegue, copias y runbooks
     ├── usuario/                # primeros-pasos.md, uso.md, que-hacer-si.md
@@ -703,9 +707,11 @@ kapataz/
 
 | Tabla | Notas |
 |---|---|
-| `tenants`, `users`, `sessions` | Cuentas, usuarios y sesiones abiertas |
+| `tenants`, `users`, `sessions` | Cuentas, usuarios y sesiones abiertas. `tenants.kind` distingue la cuenta normal (`standard`) del espacio de demostración (`demo`), que guarda en `parent_tenant_id` la cuenta a la que pertenece (RF-CF-04, RN-13). Las facturas de un espacio `demo` llevan la marca de RN-F-09 |
 | `subscriptions`, `payment_events` | Estado de la suscripción y eventos de la pasarela, sin repetir ninguno |
 | `platform_settings` | Modelo y `effort` por ruta, límites, tope global y plazos de gracia y de solo lectura, y `registration_open` (RN-13). Solo escribe el superadministrador |
+| `platform_admins` | Superadministradores: se crean fuera del registro, con TOTP obligatorio (RF-SA-01, ADR-031) |
+| `platform_audit_events` | Cada cambio hecho en la zona de superadministración, con fecha, autor y valores anterior y nuevo (RF-SA-06) |
 | `professional` | Una fila por cuenta. Datos fiscales y logotipo |
 | `customers` | `tax_id` único por cuenta cuando existe. `tax_id_type` y `tax_id_country` quedan preparados para identificadores extranjeros; la v1 solo admite NIF español (§1.4) |
 | `catalog_items` | Concepto, unidad, precio de referencia, origen |
@@ -713,7 +719,9 @@ kapataz/
 | `invoices`, `invoice_lines` | `status` (`draft`, `issued`), `series`, `number`, `issued_at`, `quote_version_id`, `phase_type` (`full`, `advance`, `progress`, `final`); en las líneas, `origin` (`quote`, `additional`, `prior_invoice`, esta última para restar una factura anterior); trigger que impide `UPDATE`/`DELETE` de campos fiscales con `status='issued'`. También `due_date` (RF-FA-14) y la garantía: `guarantee_pct`, `guarantee_amount` y `guarantee_due_date` (RF-FA-15), con nombre distinto de la retención de IRPF. En las líneas, `is_material` y `outside_works`, como en el presupuesto (RN-F-13). Una factura que no sale de un presupuesto guarda también `recipient_type` y `dwelling_over_two_years` (RN-F-13). Datos que pide el registro de la AEAT (RN-F-07): `invoice_type` (`F1` y `R1` a `R4` en la v1; `F2`, `F3` y `R5` reservados), `correction_type` (`substitution`, `difference`), `operation_date` cuando difiere de la de expedición, `description` (descripción general, 500 caracteres), `regime_key`, `operation_class` (`S1`, `S2`, `N1`, `N2`) y `exemption_cause`. Importes: `tax_total` y `total_amount` (base más cuota, sin restar la retención de IRPF ni la garantía) se guardan aparte de `amount_due`, el importe a cobrar |
 | `invoice_corrections` | Relación entre una rectificativa y cada factura que rectifica (RN-F-03, RN-F-12), con `rectified_base` y `rectified_tax` en las de sustitución |
 | `series_counters` | Contador por cuenta, serie y año, bloqueado con `SELECT … FOR UPDATE` en la misma transacción que la emisión |
+| `billing_chain_heads` | Una fila por cuenta con el último registro de la cadena. Toda operación que añade un registro la bloquea con `SELECT … FOR UPDATE` antes que el contador de la serie (RN-F-07) |
 | `billing_records` | Varios por factura. `record_type` (`registration`, `cancellation`), `is_correction` (subsanación) y `prior_rejection`. Contenido canónico JSON con los campos del registro de la AEAT (RN-F-07), `hash` y `generated_at` con huso horario. Encadenamiento: `is_first` o los datos del registro anterior (`prev_issuer_tax_id`, `prev_series_number`, `prev_issue_date`, `prev_hash`). Sistema que lo generó: `system_name`, `system_id`, `system_version` (antes de la 1.0.0, el identificador del commit) e `installation_number`. Envío: `submission_status` (`pending`, `accepted`, `accepted_with_errors`, `rejected`), `error_code`, `error_description` (1.500 caracteres), `submission_csv`, `submitted_at`, `external_ref` (referencia propia de 60 caracteres, que la AEAT devuelve y por la que se puede consultar) y `sent_with_incident` (registro generado durante una incidencia que impidió enviarlo a tiempo) |
+| `submission_authorizations` | Autorización de cada cuenta para enviar sus registros (RF-VF-07): a favor de quién, tipo de firma, documento firmado guardado con `FileStoragePort`, fecha de firma, revocación y fecha hasta la que se conserva bloqueada (RN-12). Se crea en el Bloque 12 |
 | `payments` | Cobros asociados a facturas, con `paid_at` y `method` (`cash`, `card`, `transfer`, `bizum`, `cheque`, `deposit`), para el estado de cobro (RF-FA-06) y el aviso de cobro en efectivo en obras al 10 % (RN-F-13) |
 | `source_documents`, `extractions`, `extraction_fields` | Hash del fichero, estado, confianza por campo |
 | `historical_invoices`, `historical_lines` | Histórico importado ya revisado, separado de `invoices` |
@@ -723,13 +731,15 @@ kapataz/
 | `ai_usage` | Tokens y coste por petición y por cuenta |
 
 > Toda tabla de negocio lleva `tenant_id` con una política RLS. La aplicación se conecta con un rol sin `BYPASSRLS` y fija la cuenta en cada transacción. El borrado de un espacio de demostración lo hace una función de mantenimiento que solo actúa sobre ese tipo de cuenta.
+>
+> Algunas tablas se leen antes de saber de qué cuenta se trata: al iniciar sesión, al validar la cookie o al recibir un webhook de Stripe. Esas tablas globales no llevan RLS: `users`, `sessions`, `subscriptions`, `payment_events` y las de plataforma (`platform_settings`, `platform_admins`, `platform_audit_events`). Solo las consulta un repositorio de cuentas acotado, y una prueba falla si aparece una tabla sin RLS que no esté en esa lista. Los agregados que ve el superadministrador, como el coste por cuenta, salen de funciones `SECURITY DEFINER` que solo devuelven metadatos y agregados (RF-SA-05). Así el rol de la aplicación no necesita `BYPASSRLS`.
 
 ### 4.6 Flujo del agente
 
 1. Llega el mensaje (texto o transcripción) y se comprueba el límite de uso de la cuenta.
 2. El orquestador construye el contexto: prompt de sistema versionado, herramientas disponibles, últimos turnos y, si procede, fragmentos recuperados **delimitados como datos**. Todo pasa por la seudonimización (RN-11): Claude ve `[CLIENTE_1]`, y la tabla de equivalencias se queda en el servidor.
 3. Claude responde con texto o con llamadas a herramientas. El sistema y las herramientas forman un prefijo estable para aprovechar el prompt caching.
-4. Cada herramienta valida sus parámetros con Pydantic. Las de **lectura** se ejecutan; las de **escritura** solo producen una **propuesta** (`PendingAction`) que la interfaz muestra con botón Confirmar/Descartar.
+4. Cada herramienta valida sus parámetros con su esquema Pydantic, definido en `application/agent`. Las de **lectura** se ejecutan; las de **escritura** solo producen una **propuesta** (`PendingAction`) que la interfaz muestra con botón Confirmar/Descartar.
 5. Los resultados de herramientas vuelven al modelo; máximo N iteraciones (configurable, por defecto 6).
 6. La respuesta se emite por SSE. El servidor restituye los datos reales antes de enviarla, y las cifras se renderizan desde el resultado de la herramienta, no desde el texto del modelo (RN-02).
 
@@ -773,7 +783,7 @@ kapataz/
 | 013 | Vue 3 servido por FastAPI detrás de un proxy TLS | Build estático en `backend/src/kapataz/static`; mismo origen para app y API | 0 |
 | 014 | Despliegue con Docker Compose en un VPS de la UE | Caddy con TLS automático, imágenes versionadas y vuelta atrás probada; hosting compartido descartado | 10 |
 | 015 | Logs estructurados sin datos personales | structlog JSON; nunca contenido de documentos ni NIF en logs; sin analítica de terceros | 0 |
-| 016 | Suscripción con Stripe | Checkout y Billing con tarjeta y PayPal, webhooks firmados y sin repetición, `SuscripcionPort`; 14 días de gracia y 90 días de solo lectura, configurables por el superadministrador | 10 |
+| 016 | Suscripción con Stripe | Checkout y Billing con tarjeta y PayPal, webhooks firmados y sin repetición, `SubscriptionPort`; 14 días de gracia y 90 días de solo lectura, configurables por el superadministrador | 10 |
 | 017 | Separación entre histórico importado y facturas emitidas | Tablas distintas; consultas agregan ambas con origen marcado | 2 |
 | 018 | Confirmación humana obligatoria para escrituras del agente | `PendingAction` firmada con caducidad; la UI es la única que confirma | 6 |
 | 019 | Defensa ante inyección de instrucciones | Contenido de documentos delimitado como datos, herramientas de escritura solo como propuesta, lista blanca de herramientas por turno | 6 |
@@ -781,13 +791,13 @@ kapataz/
 | 021 | Trazabilidad de OWASP | Marcador `owasp` en las pruebas; `traceability.py --check` falla si una categoría queda sin prueba | 0 |
 | 022 | Cadena de suministro | Lockfiles con hashes, acciones de GitHub fijadas por SHA, imágenes fijadas por digest y SBOM en cada release | 1 |
 | 023 | Precios de referencia robustos | Mediana y MAD, muestras mínimas y exclusión de atípicos | **7** (Propuesto) |
-| 024 | Multitenencia con Row Level Security | Una BD compartida, `tenant_id` y políticas RLS; rol de aplicación sin `BYPASSRLS` | 0 |
+| 024 | Multitenencia con Row Level Security | Una BD compartida, `tenant_id` y políticas RLS; rol de aplicación sin `BYPASSRLS`. Las tablas globales que se leen antes de conocer la cuenta van sin RLS y en una lista cerrada; los agregados del superadministrador, por funciones `SECURITY DEFINER` acotadas (§4.5) | 0 |
 | 025 | Autenticación propia con sesiones en cookie | Argon2id, cookie `HttpOnly`, `Secure` y `SameSite`, sesiones revocables y TOTP opcional | 0 |
 | 026 | Cola de tareas en PostgreSQL | procrastinate y un proceso worker; cada tarea lleva su `tenant_id` | 4 |
 | 027 | PWA como única app móvil | Instalable, con pantalla sin conexión y sin escrituras offline | 0 |
 | 028 | Límites de consumo de IA | Contabilidad por petición, límite mensual por cuenta y tope global de gasto | **6** (Propuesto) |
 | 029 | Tratamiento de datos con Anthropic | Anthropic como subencargado aunque reciba datos seudonimizados, porque siguen siendo datos personales (considerando 26 del RGPD). Su contrato de tratamiento incluye cláusulas contractuales tipo (módulos 2 y 3) para la transferencia fuera de la UE, más una evaluación de impacto de la transferencia. Anthropic no está adherida al Marco de Privacidad UE-EE. UU.: su soporte lo confirmó por escrito en noviembre de 2026, así que la transferencia a Estados Unidos se apoya solo en esas cláusulas, que se rigen por la ley irlandesa. Datos confirmados en noviembre de 2026: la entidad que contrata con clientes del Espacio Económico Europeo es Anthropic Ireland, Limited, y es la que se nombra como subencargado; su soporte confirmó por escrito que el módulo 3 cubre nuestro papel de encargado; la API borra entradas y salidas en 30 días (lo marcado por seguridad, hasta 2 años, y las puntuaciones de clasificación, hasta 7); los datos se almacenan en Estados Unidos y no hay tratamiento solo en la UE (`inference_geo` admite `us` y `global`). Antes de usar datos reales: pedir la retención cero al equipo de ventas, confirmar con su equipo de privacidad el canal de aviso de subencargados nuevos (mientras tanto, suscribirse al canal de novedades de su centro de confianza y comprobar el email de la cuenta) y pedirle la información para la evaluación de impacto de la transferencia | 0 |
-| 030 | Seudonimización antes de Claude | Diccionario de la cuenta, patrones y Presidio; `LlmPort` solo acepta `SanitizedPrompt`; fallo cerrado; riesgo residual medido con RNF-17 | **4** (Propuesto) |
+| 030 | Seudonimización antes de Claude | Diccionario de la cuenta, patrones y Presidio; `LlmPort` solo acepta `SanitizedPrompt`; fallo cerrado; riesgo residual medido con RNF-17. Se mide en la ingesta (Bloque 4) y se cierra al cubrir también el chat (Bloque 6) | **6** (Propuesto) |
 | 031 | Zona de superadministración | Rol que no se obtiene por registro, TOTP obligatorio, sin acceso a datos de negocio y con todos los cambios registrados | 0 |
 | 032 | Versionado semántico desde la 1.0.0 | Sin versiones durante la construcción; la 1.0.0 es la primera versión que supera la verificación, y desde ahí cada cambio de la app publicado lleva versión, changelog y declaración responsable | 0 |
 | 033 | Facturación por fases y trabajos adicionales | Cada fase es una factura completa. Según los asesores consultados en noviembre de 2026: el anticipo se factura al cobrarlo, por el importe recibido; la certificación desglosa los trabajos realizados, todos al tipo de la obra; la fase final recoge todos los trabajos, presupuestados o no, y resta las bases ya facturadas. Si saliera negativa, se emite una rectificativa (art. 15 del RD 1619/2012), no una final negativa como propuso un asesor. La factura puede diferir del presupuesto, que es una referencia y no un tope. El tipo de IVA es el de la obra entera, también en el anticipo (arts. 75.Dos, 90.Dos y 91.Uno.2.10º de la Ley del IVA; consultas de la DGT V2662-13, V1392-26 y V0624-23), no el 21 % que indicó un asesor. Lo que no forma parte de la obra va en una segunda factura al 21 % (RN-F-13) | **8** (Propuesto) |
@@ -950,7 +960,7 @@ Responsabilidades:
 - Pruebas de concurrencia de numeración con hilos y procesos.
 - Pruebas de aislamiento: cada endpoint, herramienta y tarea se prueba desde otra cuenta.
 - Pruebas de fuga: se captura lo que llega a LlmPort y se comprueba que no contiene datos personales (RNF-17).
-- Pagos con FakeSuscripcion y webhooks simulados; en staging, con el modo de pruebas de la pasarela.
+- Pagos con FakeSubscriptions y webhooks simulados; en staging, con el modo de pruebas de la pasarela.
 - Prueba de carga con k6 con la IA simulada (RNF-16).
 - Mutación con mutmut sobre domain/billing.
 - Relojes congelados con FrozenClock; ninguna prueba depende de la fecha real.
@@ -1150,17 +1160,17 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 
 **Objetivo:** que el repo contenga todo el conocimiento del proyecto antes de la primera línea de código.
 
-- [ ] **Crear `CLAUDE.md`** a partir del Anexo B.
+- [x] **Crear `CLAUDE.md`** a partir del Anexo B.
   - 🤖 hilo principal · Opus 5.5
-- [ ] **Crear `HANDOFF.md`** en la raíz con las secciones «Estado y objetivo actual», «Siguiente acción», «Pendiente» y «Trampas del entorno».
+- [x] **Crear `HANDOFF.md`** en la raíz con las secciones «Estado y objetivo actual», «Siguiente acción», «Pendiente» y «Trampas del entorno».
   - 🤖 hilo principal · Opus 5.5
-- [ ] **Comprobar Engram:** `mem_current_project` detecta el proyecto `kapataz`, y `.engram/` queda fuera del repositorio.
+- [x] **Comprobar Engram:** `mem_current_project` detecta el proyecto `kapataz`, y `.engram/` queda fuera del repositorio.
   - 🤖 hilo principal · Opus 5.5
-- [ ] **Crear los 10 agentes** en `.claude/agents/` con el contenido exacto de §6.4.
+- [x] **Crear los 10 agentes** en `.claude/agents/` con el contenido exacto de §6.4.
   - 🤖 hilo principal · Opus 5.5
-- [ ] **Generar `docs/01-especificacion.md`** con §1 y §3 completos: visión, alcance, historias de usuario, RF, RN, RNF, glosario y escenarios.
+- [x] **Generar `docs/01-especificacion.md`** con §1 y §3 completos: visión, alcance, historias de usuario, RF, RN, RNF, glosario y escenarios.
   - 🤖 `arquitecto-python` · Opus 5.5
-- [ ] **Generar `docs/02-arquitectura.md`:** diagramas C4 (contexto, contenedores, componentes) en Mermaid, capas, puertos y adaptadores, modelo de datos con diagrama ER, flujo del agente en diagrama de secuencia, flujo de emisión de factura, y la **Definición de Terminado**:
+- [x] **Generar `docs/02-arquitectura.md`:** diagramas C4 (contexto, contenedores, componentes) en Mermaid, capas, puertos y adaptadores, modelo de datos con diagrama ER, flujo del agente en diagrama de secuencia, flujo de emisión de factura, y la **Definición de Terminado**:
   - pruebas con marcador de requisito y en verde;
   - ruff, mypy `--strict` e import-linter en verde;
   - sin literales de UI fuera de i18n;
@@ -1169,15 +1179,15 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - acceso a datos siempre con contexto de cuenta;
   - sin datos personales en logs.
   - 🤖 `arquitecto-python` · Opus 5.5
-- [ ] **Generar los ADR 001–033** de §5 con la plantilla del Anexo A. Los marcados como «Propuesto» quedan abiertos con las opciones a evaluar.
+- [x] **Generar los ADR 001–033** de §5 con la plantilla del Anexo A. Los marcados como «Propuesto» quedan abiertos con las opciones a evaluar.
   - 🤖 `arquitecto-python` · Opus 5.5
-- [ ] **Generar `docs/03-modelo-amenazas.md`** inicial: activos, límites de confianza, STRIDE por componente y OWASP LLM Top 10 aplicado.
+- [x] **Generar `docs/03-modelo-amenazas.md`** inicial: activos, límites de confianza, STRIDE por componente y OWASP LLM Top 10 aplicado.
   - 🤖 `seguridad-ia` · Opus 5.5 (redacta el contenido; el hilo principal escribe el fichero porque el agente es de solo lectura)
-- [ ] **Generar `docs/04-evaluacion-ia.md`** con la metodología: métricas, datasets, protocolo de medición y plantilla de resultados.
+- [x] **Generar `docs/04-evaluacion-ia.md`** con la metodología: métricas, datasets, protocolo de medición y plantilla de resultados.
   - 🤖 `ingeniero-ia` · Opus 5.5
-- [ ] **Diseño base:** principios, paleta, tipografía y bocetos en texto de las pantallas principales en `docs/02-arquitectura.md §Diseño`.
+- [x] **Diseño base:** principios, paleta, tipografía y bocetos en texto de las pantallas principales en `docs/02-arquitectura.md §Diseño`.
   - 🤖 `ui-ux` · Sonnet 5.5 ∥
-- [ ] **Tratamiento de datos con Anthropic (ADR-029):** contrastar acuerdo de tratamiento, retención y región de inferencia con las condiciones vigentes.
+- [x] **Tratamiento de datos con Anthropic (ADR-029):** contrastar acuerdo de tratamiento, retención y región de inferencia con las condiciones vigentes.
   - 🤖 `seguridad-ia` · Opus 5.5 + 👤 revisas y aceptas las condiciones
 
 **Entregables:** `CLAUDE.md`, `HANDOFF.md`, `.claude/agents/*`, `docs/01–04`, `docs/adr/ADR-001…033`.
@@ -1191,9 +1201,9 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 
 - [ ] **Backend mínimo:** `pyproject.toml` con uv, estructura de capas, `bootstrap.py`, `/api/health` (comprueba BD y API de Claude por separado), `/api/chat` con `FakeLlm` y SSE.
   - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Cuentas mínimas:** `tenants`, `users`, registro con verificación de email, inicio y cierre de sesión (RF-AC-01, ADR-025), con `FakeSuscripcion` hasta el Bloque 10.
+- [ ] **Cuentas mínimas:** `tenants`, `users`, registro con verificación de email, inicio y cierre de sesión (RF-AC-01, ADR-025), con `FakeSubscriptions` hasta el Bloque 10.
   - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Configuración de calidad:** ruff, mypy `--strict`, contrato de import-linter con las cuatro capas, bandit, pip-audit, pytest con marcadores `req`, `llm`, `slow`.
+- [ ] **Configuración de calidad:** ruff, mypy `--strict`, contrato de import-linter con las cuatro capas, bandit, pip-audit, pytest con marcadores `req`, `owasp`, `llm`, `slow`.
   - 🤖 `arquitecto-python` · Opus 5.5
 - [ ] **`traceability.py`** inicial que lee los IDs de `docs/01-especificacion.md` y los marcadores de las pruebas.
   - 🤖 `qa-testing` · Opus 5.5
@@ -1236,11 +1246,11 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `backend-fastapi` · Opus 5.5
 - [ ] **Repositorios SQLAlchemy** y unidad de trabajo.
   - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Casos de uso de emisión:** `EmitirFactura` con bloqueo de fila del contador, numeración sin huecos (RN-F-01), comprobación de fecha (RN-F-04), datos obligatorios (RN-F-06), `BillingRecord` encadenado (RN-F-07) y llamada al `RegistroFacturacionPort` nulo.
+- [ ] **Casos de uso de emisión:** `IssueInvoice` con bloqueo de la cabeza de la cadena y después del contador (RN-F-07), numeración sin huecos (RN-F-01), comprobación de fecha con el contador ya bloqueado (RN-F-04), datos obligatorios (RN-F-06), `BillingRecord` encadenado (RN-F-07) y llamada al `BillingRecordSubmissionPort` nulo.
   - 🤖 `backend-fastapi` · Opus 5.5
 - [ ] **Contenido canónico del `BillingRecord`** con los campos de `RegistroAlta` y `RegistroAnulacion` de los esquemas de la AEAT (RN-F-07). Una prueba comprueba que cada campo obligatorio del esquema tiene su dato en el registro, y otra, que una subsanación y una anulación se encadenan en la misma cadena que las altas.
   - 🤖 `arquitecto-python` · Opus 5.5 + `qa-testing` · Opus 5.5
-- [ ] **Pruebas de concurrencia:** 20 emisiones en paralelo con procesos distintos en una cuenta y en varias a la vez; ningún hueco ni duplicado.
+- [ ] **Pruebas de concurrencia:** 20 emisiones en paralelo con procesos distintos en una cuenta y en varias a la vez; ningún hueco ni duplicado. También emisiones simultáneas de las series F y R en la misma cuenta: la cadena de registros no se bifurca.
   - 🤖 `qa-testing` · Opus 5.5
 - [ ] **Prueba de inmutabilidad por SQL directo:** un `UPDATE` sobre una factura emitida falla por el trigger.
   - 🤖 `qa-testing` · Opus 5.5
@@ -1299,7 +1309,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `backend-fastapi` · Opus 5.5
 - [ ] **Pantalla de revisión** con PDF a la izquierda (pdf.js) y campos a la derecha, apilados en el móvil, con los campos dudosos resaltados. ∥
   - 🤖 `arquitecto-vue` · Sonnet 5.5 + `ui-ux` · Sonnet 5.5
-- [ ] **Evaluación de extracción** con Claude real, informe en `docs/04-evaluacion-ia.md`: precisión sobre texto seudonimizado (RNF-06), fugas (RNF-17) y coste por documento. **Cerrar ADR-030.**
+- [ ] **Evaluación de extracción** con Claude real, informe en `docs/04-evaluacion-ia.md`: precisión sobre texto seudonimizado (RNF-06), fugas (RNF-17) y coste por documento. Primera medición del ADR-030, que se cierra en el Bloque 6.
   - 🤖 `ingeniero-ia` · Opus 5.5
 
 **Criterio de terminado:** RNF-06 y RNF-17 medidos; las facturas con errores sembrados quedan en revisión con el motivo correcto.
@@ -1343,7 +1353,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `qa-testing` · Opus 5.5
 - [ ] **Evaluación de `claude-opus-5-5`** por ruta (precisión de herramienta, exactitud de parámetros, latencia y coste por pregunta) para fijar el `effort`, con el coste de la evaluación aprobado antes, y **cierre del ADR-005**.
   - 🤖 `ingeniero-ia` · Opus 5.5 → escalado a Fable 5.2 solo si se estanca bajo el umbral tras dos iteraciones
-- [ ] **Seudonimización en el chat:** mensajes, resultados de herramientas y fragmentos recuperados; los nombres reales se restituyen también durante el streaming.
+- [ ] **Seudonimización en el chat:** mensajes, resultados de herramientas y fragmentos recuperados; los nombres reales se restituyen también durante el streaming. **Cerrar ADR-030.**
   - 🤖 `ingeniero-ia` · Opus 5.5
 - [ ] **Contabilidad y límites de uso:** tokens y coste por petición, límite mensual por cuenta, tope global y aviso en la interfaz (RF-UC, ADR-028).
   - 🤖 `ingeniero-ia` · Opus 5.5 + `arquitecto-vue` · Sonnet 5.5
@@ -1352,7 +1362,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 - [ ] **Revisión de seguridad intermedia** del agente.
   - 🤖 `seguridad-ia` · Opus 5.5 → corrige: `ingeniero-ia`
 
-**Criterio de terminado:** RNF-04, RNF-07 y RNF-17 cumplidos; coste medio por consulta medido; escenario de inyección en verde; ADR-005, 018, 019 y 028 cerrados.
+**Criterio de terminado:** RNF-04, RNF-07 y RNF-17 cumplidos; coste medio por consulta medido; escenario de inyección en verde; ADR-005, 018, 019, 028 y 030 cerrados.
 
 ---
 
@@ -1485,7 +1495,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `backend-fastapi` · Opus 5.5 + `ui-ux` · Sonnet 5.5
 - [ ] **Elegir el proveedor de envío:** comparar precio, autorización que exige a cada cliente, datos que recibe y dónde los trata, frente a la alternativa de colaborador social.
   - 🤖 `arquitecto-python` · Opus 5.5 + 👤 decides
-- [ ] **Envío a la AEAT** con `VerifactuProveedor`, reintentos y gestión de rechazos, probado en el entorno de pruebas (RF-VF-03, RF-VF-04). Corregir y reenviar un registro rechazado funciona también con la cuenta en solo lectura (RN-12).
+- [ ] **Envío a la AEAT** con `VerifactuProviderSubmission`, reintentos y gestión de rechazos, probado en el entorno de pruebas (RF-VF-03, RF-VF-04). Corregir y reenviar un registro rechazado funciona también con la cuenta en solo lectura (RN-12).
   - 🤖 `backend-fastapi` · Opus 5.5
 - [ ] **Autorización de cada cliente:** paso documentado antes de la primera factura, sin bloquear el resto de la app, con el modelo de la Resolución de 18 de diciembre de 2024 y firma manuscrita con copia del DNI, certificado cualificado o firma electrónica avanzada. Aceptar unas condiciones de uso no sirve como apoderamiento (RF-VF-07). Se otorga a favor de quien envía con su certificado. Confirmar con el proveedor si, al haber dos intermediarios, la AEAT exige convenio de colaboración social a los dos (preguntas frecuentes de desarrolladores, §16.3).
   - 🤖 `backend-fastapi` · Opus 5.5 + `arquitecto-vue` · Sonnet 5.5
