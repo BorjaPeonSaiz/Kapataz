@@ -4,7 +4,7 @@
 - **Fecha:** 2026-11-12
 - **Decide:** arquitecto-python (aprueba: Borja)
 - **Requisitos relacionados:** RN-11, RNF-01, RNF-12 (protección del servicio y de los datos); OWASP A03 y LLM03 (ADR-021)
-- **Se cierra en:** Bloque 1
+- **Se cierra en:** Bloque 1. Cerrado el 12/11/2026 (ver «Cierre en el Bloque 1»).
 
 ## Contexto
 
@@ -65,3 +65,31 @@ Se elige la opción 3.
 - Check de CI que rechaza un `uses:` de un workflow sin SHA completo y un `FROM` sin digest.
 - `test_llm03_huella_modelos_locales`: la huella de cada modelo local coincide con la registrada.
 - `uv sync --locked` y `npm ci` en CI: fallan si el lockfile no corresponde a las dependencias declaradas.
+
+## Cierre en el Bloque 1
+
+Implementado:
+
+- **Python:** `backend/uv.lock`, instalado con `uv sync --locked` en CI y en la imagen. FastAPI y uvicorn fijados con `==`.
+- **Frontend:** `frontend/package-lock.json`, instalado con `npm ci`.
+- **CI:** acciones de terceros fijadas por SHA, con la versión en comentario. Las herramientas de seguridad (Trivy, gitleaks, Semgrep y actionlint) corren en contenedores fijados por digest, no como acciones.
+- **Imágenes base** (`Dockerfile` y `docker-compose.yml`) fijadas por digest.
+- **Check de plataforma en CI:** rechaza un `uses:` sin SHA completo y un `FROM` o `image:` sin digest.
+- **Auditoría:** `pip-audit`, `npm audit --audit-level=high`, bandit, Semgrep, gitleaks sobre el historial y Trivy sobre el repositorio y la imagen.
+
+Estado de la auditoría:
+
+- Python sin vulnerabilidades conocidas. npm sin vulnerabilidades altas: quedan 14 moderadas en herramientas de desarrollo (`minimatch` y `glob`), sin arreglo compatible.
+- Trivy limpio con `--ignore-unfixed`. Sin esa opción quedan 49 altas de Debian sin arreglo publicado, que se revisan en cada actualización de la imagen base.
+
+Excepción aceptada (12/11/2026):
+
+- La etapa final del `Dockerfile` hace `apt-get upgrade` sobre la imagen base fijada por digest. Así se corrigen dos CVE altos de zlib que la imagen base aún no traía corregidos. El coste es que dos builds del mismo commit pueden diferir en paquetes de Debian, lo que rompe en parte «lo que se instala es exactamente lo revisado».
+- Lo mitiga que Trivy revisa la imagen construida en cada CI.
+- Se retira el `upgrade` cuando un digest nuevo de la imagen base traiga esos arreglos. Se revisa en cada actualización del digest.
+
+Queda para su bloque:
+
+- **SBOM** (job `sbom-y-auditoria`): con la primera release, la 1.0.0 (ADR-032).
+- **Huella de modelos locales** (`test_llm03_huella_modelos_locales`): cuando entren los modelos (Bloques 4, 5 y 9).
+- **Revisión de licencias** de dependencias y modelos: antes de la Parte II.

@@ -3,3 +3,39 @@ docs/consultas/
 
 # Memoria local de Engram: no se versiona (CLAUDE.md, «Engram»)
 .engram/
+
+# Secretos y entornos: solo se versionan las plantillas *.example (ADR-014):
+# .env.local.example, .env.production.example y backend/.env.example
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Estado de los despliegues en el servidor (deploy/lib.sh)
+.deploy/
+
+# Build del frontend: lo genera npm run build y lo copia el Dockerfile (ADR-013)
+backend/src/kapataz/static/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Node
+node_modules/
+frontend/dist/
+frontend/coverage/
+
+# Copias de la base de datos: nunca en el repositorio
+*.dump
+*.dump.age
+
+# Certificados del HTTPS local (deploy/local-up.sh --https): nunca en el repositorio
+.local-tls/

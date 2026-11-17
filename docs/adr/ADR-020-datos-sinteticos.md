@@ -8,7 +8,7 @@
 
 ## Contexto
 
-Kapataz necesita datos para cuatro cosas: la demo pública, el modo demostración de cada cuenta (RF-CF-04), las pruebas automáticas y los datasets de evaluación de la IA (RNF-06, RNF-07, RNF-17). Hasta publicar la 1.0.0, las cuentas solo trabajan en el espacio de demostración (RN-13).
+Kapataz necesita datos para cuatro cosas: la demo pública, el modo demostración de cada cuenta (RF-CF-04), las pruebas automáticas y los datasets de evaluación de la IA (RNF-06, RNF-07, RNF-17). Mientras queden pendientes legales, las cuentas solo trabajan en el espacio de demostración (RN-13).
 
 Esos datos tienen que parecer reales: maquetaciones de PDF distintas, errores típicos, nombres que se repiten, IVA general y reducido, inversión del sujeto pasivo y retenciones. Pero no pueden ser de nadie: usar facturas reales metería datos personales en el repo, en CI y en lo que se envía a Claude.
 

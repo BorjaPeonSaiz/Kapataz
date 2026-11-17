@@ -2,13 +2,13 @@
 
 > **Producto:** servicio web de pago con IA para autónomos de oficio, en portátil y móvil: consulta del histórico, presupuestos y facturas por texto o voz.
 >
-> **Stack:** Python 3.12 · uv · FastAPI · Pydantic v2 · SQLAlchemy 2 · Alembic · PostgreSQL (RLS, pgvector) · API de Claude · bucle de agente propio · Presidio + spaCy · fastembed · pdfplumber · Tesseract · ReportLab · faster-whisper · procrastinate · Stripe · Vue 3 + Vite + TypeScript + Tailwind + Pinia · PWA · pdf.js · Docker Compose · Caddy.
+> **Stack:** Python 3.12 · uv · FastAPI · Pydantic v2 · SQLAlchemy 2 · Alembic · PostgreSQL (RLS, pgvector) · API de Claude · bucle de agente propio · Presidio + spaCy · fastembed · pdfplumber · Tesseract · ReportLab · faster-whisper · procrastinate · Stripe · Vue 3 + Vite + TypeScript + Tailwind + Pinia · PWA · pdf.js · Docker Compose detrás del proxy del proveedor.
 >
 > **Herramientas:** ruff, mypy `--strict`, import-linter, bandit, pip-audit, Semgrep, gitleaks, Trivy, ZAP, ShellCheck, pytest, pytest-cov, hypothesis, mutmut, schemathesis, freezegun, vue-tsc, ESLint, Prettier, Vitest, Playwright, axe-core, npm audit, k6, GitHub Actions.
 >
 > **Observabilidad:** structlog JSON, `/api/health`, métricas básicas, monitor externo de disponibilidad, alertas de errores y de gasto de IA, `agent_runs`, `audit_events`, `ai_usage`.
 >
-> **Despliegue:** Docker Compose en un VPS de la UE, con staging y producción separados; solo Caddy se expone a internet. CI en `ubuntu-latest` con PostgreSQL real y `FakeLlm` determinista; CI no llama a la API de Claude (ADR-008).
+> **Despliegue:** Docker Compose en un VPS de la UE. Dos entornos, local y producción, sin staging. Hasta cerrar el Bloque 12 todo se hace en local; el primer despliegue llega en ese bloque, y la Parte II se ejecuta después en producción, antes de la 1.0.0, cuando solo hay cuentas de demostración con datos sintéticos (RN-13); solo el proxy del proveedor se expone a internet y enruta al puerto 8000 de la api (ADR-014). CI en `ubuntu-latest` con PostgreSQL real y `FakeLlm` determinista; CI no llama a la API de Claude (ADR-008).
 >
 > **Cómo leer cada tarea:** `🤖 agente · Modelo`. Cuando la detecta un agente de solo lectura, se indica también quién corrige: `→ corrige: agente`.
 >
@@ -112,7 +112,7 @@ La Fase 4 usa Claude real y cuesta dinero: estima el coste y apruébalo antes de
   - 🤖 hilo principal · Sonnet 5.5
 - [ ] **Decisiones cerradas:** la tabla «Antes de empezar» está resuelta y todo ID citado en este plan existe en la especificación o en el catálogo de ADR.
   - 🤖 `arquitecto-python` · Opus 5.5 + 👤
-- [ ] **Staging limpio** con datos sintéticos versionados que incluyan los casos límite: varias cuentas, suscripciones activas y terminadas, clientes ambiguos, inversión del sujeto pasivo, retenciones, rectificativas, PDFs con errores sembrados y PDF trampa. Ningún dato real.
+- [ ] **Producción limpia, antes de la 1.0.0,** con datos sintéticos versionados que incluyan los casos límite: varias cuentas, suscripciones activas y terminadas, clientes ambiguos, inversión del sujeto pasivo, retenciones, rectificativas, PDFs con errores sembrados y PDF trampa. Ningún dato real.
   - 🤖 `qa-testing` · Opus 5.5
 - [ ] **Matriz de trazabilidad** con `cd backend && uv run python tools/traceability.py --check`, cruzada con los RF, RN y RNF de `docs/01-especificacion.md`.
   - 🤖 `qa-testing` · Opus 5.5
@@ -444,7 +444,7 @@ Todos los de este bloque: 🤖 `qa-testing` · Opus 5.5.
   - 🤖 `plataforma-entrega` · Opus 5.5
 - [ ] **SAST:** bandit y Semgrep (reglas de Python, FastAPI y TypeScript) sin hallazgos altos.
   - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **DAST:** ZAP baseline contra staging, también con sesión iniciada.
+- [ ] **DAST:** ZAP baseline contra producción antes de la 1.0.0, también con sesión iniciada.
   - 🤖 `plataforma-entrega` · Opus 5.5
 - [ ] **Imágenes:** Trivy sin CVE críticos; contenedores sin root.
   - 🤖 `plataforma-entrega` · Opus 5.5
@@ -523,7 +523,7 @@ Revisa: 🤖 `seguridad-ia` · Opus 5.5 → corrige: el agente dueño. Automatiz
 | ✓ | Categoría | Riesgo concreto en Kapataz | Mitigación | Ref. | Prueba automatizada |
 |---|---|---|---|---|---|
 | [ ] | **A01 · Control de acceso roto** (incluye SSRF) | Una cuenta llega a datos de otra cambiando un identificador; un cliente entra en la zona de superadministración; descarga de documentos manipulando rutas | RLS con rol sin `BYPASSRLS`; un identificador ajeno responde 404; documentos servidos por ID, nunca por ruta; zona de superadministración con rol propio y TOTP; el servidor no hace peticiones a URLs que aporte el usuario | RN-10, RNF-13, ADR-024, ADR-031 | `test_a01_idor_todas_las_rutas`, `test_a01_rls_sin_cuenta_sin_filas`, `test_a01_admin_404_para_clientes`, `test_a01_path_traversal_404` |
-| [ ] | **A02 · Configuración de seguridad incorrecta** | Documentación de la API, modo depuración o CORS abierto en producción; PostgreSQL o `/metrics` accesibles desde internet | HSTS, CSP sin `unsafe-inline`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy: microphone=(self)`, `/docs` desactivado en producción, sin CORS; solo Caddy expuesto | RNF-12, ADR-013 | `test_a02_cabeceras_seguridad`, `test_a02_docs_desactivado_en_produccion`, ZAP baseline contra staging, escaneo de puertos del servidor |
+| [ ] | **A02 · Configuración de seguridad incorrecta** | Documentación de la API, modo depuración o CORS abierto en producción; PostgreSQL o `/metrics` accesibles desde internet | HSTS, CSP sin `unsafe-inline`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy: microphone=(self)`, `/docs` desactivado en producción, sin CORS; las cabeceras las pone la app; solo el proxy del proveedor expuesto | RNF-12, ADR-013, ADR-014 | `test_a02_cabeceras_seguridad`, `test_a02_docs_desactivado_en_produccion`, ZAP baseline contra producción antes de la 1.0.0, escaneo de puertos del servidor |
 | [ ] | **A03 · Fallos en la cadena de suministro de software** | Dependencia comprometida; imagen base alterada; acciones de CI secuestradas | `uv.lock` con hashes y `npm ci`; `pip-audit` y `npm audit`; Trivy; imágenes fijadas por digest; SBOM CycloneDX en cada release; acciones de GitHub fijadas por SHA | ADR-022 | Etapa de seguridad del CI; job `sbom-y-auditoria` |
 | [ ] | **A04 · Fallos criptográficos** | Contraseñas débiles de guardar; firma de `PendingAction` falsificable; clave en el repo; copias sin cifrar | Argon2id; HMAC de 256 bits con clave en los secretos del servidor; `hmac.compare_digest`; SHA-256 para la cadena; TLS en todo; copias cifradas; ninguna criptografía casera | ADR-018, ADR-025, RNF-15 | `test_a04_firma_alterada_rechazada`, `test_a04_password_argon2id`, regla Semgrep `comparacion-de-firma-con-==` |
 | [ ] | **A05 · Inyección** | SQL construido con cadenas; búsqueda de texto inyectada desde el chat; **fórmulas en la exportación CSV/Excel** (`=HYPERLINK(...)` en el nombre de un cliente); **marcado de ReportLab** inyectado en conceptos (`<link>`, `<img>`); XSS en Vue | Consultas parametrizadas, sin `text()` con f-strings; `websearch_to_tsquery` para la búsqueda; celdas que empiezan por `= + - @ \t \r` se prefijan con `'`; todo texto de usuario se escapa antes de pasar a `Paragraph`; prohibido `v-html` | RF-FA-09, RF-PR-06 | `test_a05_busqueda_sintaxis_maliciosa`, `test_a05_csv_formula_neutralizada`, `test_a05_reportlab_marcado_escapado`, regla ESLint `vue/no-v-html`, regla Semgrep `sqlalchemy-text-fstring` |
@@ -560,7 +560,7 @@ Todos los de este bloque: 🤖 `seguridad-ia` · Opus 5.5.
 - [ ] **Conservación:** las facturas emitidas no se purgan mientras la cuenta está activa; al acabar la solo lectura se borran, tras ofrecer la exportación y avisar de que conservarlas es obligación del autónomo, y solo queda bloqueada la autorización firmada (RN-12). Hay plazos para trazas, logs y copias.
 - [ ] **Transferencias internacionales:** garantías para los datos que van a Anthropic y a Stripe.
 - [ ] **Información al usuario:** política de privacidad, aviso sobre el uso de IA y sobre la seudonimización, y sin fuentes desde CDN ni analítica de terceros.
-- [ ] 👤 **Revisión legal** de los textos y de los contratos con un asesor.
+- [ ] 👤 **Revisión legal** de los textos y de los contratos con un asesor. Pendiente legal: no bloquea la 1.0.0 de la demo (plan maestro, §1.5).
 
 ### Facturación y Verifactu
 
@@ -568,15 +568,15 @@ Todos los de este bloque: 🤖 `seguridad-ia` · Opus 5.5.
   - 🤖 `seguridad-ia` · Opus 5.5
 - [ ] **Conformidad con la normativa vigente:** Real Decreto 1007/2023, Orden HAC/1177/2024 y especificaciones técnicas de la AEAT, contrastadas de nuevo antes de la release.
   - 🤖 `seguridad-ia` · Opus 5.5 + `arquitecto-python` · Opus 5.5
-- [ ] **Credenciales del proveedor de Verifactu:** guardadas como secretos, separadas entre staging y producción.
+- [ ] **Credenciales del proveedor de Verifactu:** guardadas como secretos; en local solo las de pruebas; en producción, las de pruebas hasta la 1.0.0 y nunca a la vez que las reales.
   - 🤖 `seguridad-ia` · Opus 5.5 → corrige: `plataforma-entrega`
 - [ ] **Sin doble uso:** ningún camino permite alterar, ocultar o borrar registros de facturación, ni siquiera el superadministrador. La única excepción es el borrado de la cuenta completa al terminar la solo lectura (RN-12), que nunca borra registros sueltos.
   - 🤖 `seguridad-ia` · Opus 5.5 → corrige: `backend-fastapi`
 - [ ] **Suscripción terminada** (RN-12, ADR-016): durante los 90 días de solo lectura se pueden consultar y exportar los datos propios.
   - verifica: 🤖 `seguridad-ia` · Opus 5.5
   - prueba: 🤖 `qa-testing` · Opus 5.5
-- [ ] 👤 **Declaración responsable** de la versión que se publica firmada, disponible en la app y conservada junto a las anteriores (RF-VF-06).
-- [ ] 👤 **Validación fiscal** con una gestoría o asesor. Fuera del alcance de los agentes.
+- [ ] 👤 **Declaración responsable** de la versión que se publica firmada, disponible en la app y conservada junto a las anteriores (RF-VF-06). La firma es un pendiente legal: no bloquea la 1.0.0 de la demo.
+- [ ] 👤 **Validación fiscal** con una gestoría o asesor. Fuera del alcance de los agentes. Pendiente legal: no bloquea la 1.0.0 de la demo.
 
 **Condición de lanzamiento:** ningún cliente real emite facturas hasta cerrar esta sección. Este plan no certifica el cumplimiento fiscal: eso lo confirma el asesor.
 
@@ -584,7 +584,7 @@ Todos los de este bloque: 🤖 `seguridad-ia` · Opus 5.5.
 
 ## Fase 8 — Rendimiento
 
-> El servidor de referencia se fija en el Bloque 1. Anótalo en el informe. Las pruebas de carga simulan la IA con `FakeLlm`, para no gastar dinero, y se lanzan solo contra staging.
+> El servidor de referencia se fija en el Bloque 1. Anótalo en el informe. Las pruebas de carga simulan la IA con `FakeLlm`, para no gastar dinero, y se lanzan contra producción antes de la 1.0.0, cuando no hay usuarios reales. Después, solo en local o con una ventana de mantenimiento avisada.
 
 - [ ] **Latencia del chat:** primera respuesta visible < 3 s y completa < 15 s en consultas de una herramienta, también con 4G (RNF-04); p50 y p95 sobre el dataset del agente. Registrar el peso del razonamiento de `claude-opus-5-5` y del `effort` elegido.
   - 🤖 `ingeniero-ia` · Opus 5.5
@@ -632,7 +632,7 @@ Todos los de este bloque: 🤖 `seguridad-ia` · Opus 5.5.
   - 🤖 `plataforma-entrega` · Opus 5.5
 - [ ] **PRs de bloque:** todos integrados con sus checks requeridos en verde; las excepciones aprobadas están en el registro.
   - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **Despliegue:** staging antes que producción, migraciones controladas, health checks reales y parada mínima, con las sesiones y las tareas en curso conservadas.
+- [ ] **Despliegue:** probado antes en local con el mismo Compose; copia de la base de datos antes de desplegar y migración probada sobre una copia restaurada en local; migraciones controladas, health checks reales y parada mínima, con las sesiones y las tareas en curso conservadas.
   - 🤖 `plataforma-entrega` · Opus 5.5
 - [ ] **Vuelta atrás** probada: un despliegue fallido deja la versión anterior funcionando.
   - 🤖 `plataforma-entrega` · Opus 5.5
@@ -642,11 +642,11 @@ Todos los de este bloque: 🤖 `seguridad-ia` · Opus 5.5.
   - 🤖 `plataforma-entrega` · Opus 5.5
 - [ ] **Email:** SPF, DKIM y DMARC configurados; los emails de verificación y recuperación no caen en spam.
   - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **Stripe y Verifactu en producción:** claves y webhooks separados de los de staging; el entorno de pruebas de la AEAT nunca se usa con datos reales.
+- [ ] **Stripe y Verifactu en producción:** al pasar a las claves y webhooks reales, las de pruebas salen del `.env` de producción y solo quedan en local; el entorno de pruebas de la AEAT nunca se usa con datos reales.
   - 🤖 `plataforma-entrega` · Opus 5.5
 - [ ] **Artefacto de release:** sin datos de usuario, secretos ni PDFs reales; SBOM incluido.
   - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] 👤 **Alta real de principio a fin**, con emails habilitados y el registro aún cerrado (RN-13), con un pago real con tarjeta y otro con PayPal, en un móvil y por alguien no técnico. Anota lo que tarda.
+- [ ] 👤 **Alta de principio a fin**, con emails habilitados y el registro aún cerrado (RN-13), con un pago con tarjeta y otro con PayPal en el modo de pruebas de Stripe (el pago real es un pendiente legal), en un móvil y por alguien no técnico. Anota lo que tarda.
 
 ---
 
@@ -703,9 +703,9 @@ Todos los de este bloque: 🤖 `seguridad-ia` · Opus 5.5.
 - [ ] **Pasada final de seguridad y cumplimiento** sobre lo corregido.
   - 🤖 `seguridad-ia` · Opus 5.5
 - [ ] **Re-revisión** de cada hallazgo corregido por el mismo agente que lo detectó; cada corrección lleva su prueba de regresión.
-- [ ] **Publicar la 1.0.0:** `VERSION`, `CHANGELOG.md`, etiqueta `v1.0.0`, imagen, release en GitHub, declaración responsable e instrucciones de vuelta atrás comprobados.
+- [ ] **Publicar la 1.0.0:** `VERSION`, `CHANGELOG.md`, etiqueta `v1.0.0`, imagen, release en GitHub, declaración responsable generada (su firma es un pendiente legal) e instrucciones de vuelta atrás comprobados.
   - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] 👤 **Abrir el registro** desde la zona de superadministración, una vez publicada la 1.0.0 (RN-13).
+- [ ] 👤 **Abrir el registro** desde la zona de superadministración, solo cuando se hayan cerrado todos los pendientes legales (plan maestro §1.5, RN-13). Publicar la 1.0.0 no basta.
 - [ ] **Activar el control de versión en CI:** desde aquí, un PR que cambia la app sin subir la versión ni actualizar el changelog falla.
   - 🤖 `plataforma-entrega` · Opus 5.5
 
@@ -731,9 +731,9 @@ Todos los de este bloque: 🤖 `seguridad-ia` · Opus 5.5.
 - [ ] Restauración probada con RPO y RTO cumplidos; despliegue con vuelta atrás probado.
 - [ ] 👤 Prueba en móviles reales superada.
 - [ ] 👤 Prueba con usuario de oficio realizada y hallazgos registrados.
-- [ ] 👤 Revisión legal de privacidad, contratos y condiciones.
-- [ ] Verifactu verificado: registros, huella, QR y envío aceptado en el entorno de pruebas de la AEAT; autorización de clientes resuelta.
-- [ ] 👤 Declaración responsable firmada y validación fiscal de un asesor antes de que un cliente real emita facturas.
+- [ ] 👤 Revisión legal de privacidad, contratos y condiciones, o anotada como pendiente legal de la demo.
+- [ ] Verifactu verificado: registros, huella, QR y envío aceptado en el entorno de pruebas de la AEAT; flujo de autorización de clientes construido (la autorización real es un pendiente legal).
+- [ ] 👤 Declaración responsable firmada y validación fiscal de un asesor antes de que un cliente real emita facturas. En la demo quedan anotadas como pendientes legales.
 
 ---
 

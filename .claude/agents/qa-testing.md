@@ -14,7 +14,7 @@ Responsabilidades:
 - Pruebas de concurrencia de numeración con hilos y procesos.
 - Pruebas de aislamiento: cada endpoint, herramienta y tarea se prueba desde otra cuenta.
 - Pruebas de fuga: se captura lo que llega a LlmPort y se comprueba que no contiene datos personales (RNF-17).
-- Pagos con FakeSubscriptions y webhooks simulados; en staging, con el modo de pruebas de la pasarela.
+- Pagos con FakeSubscriptions, webhooks simulados y el modo de pruebas de la pasarela. El pago real es un pendiente legal (§1.5 del plan).
 - Prueba de carga con k6 con la IA simulada (RNF-16).
 - Mutación con mutmut sobre domain/billing.
 - Relojes congelados con FrozenClock; ninguna prueba depende de la fecha real.

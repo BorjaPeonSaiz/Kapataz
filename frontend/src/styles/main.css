@@ -1,0 +1,65 @@
+@import "./fonts.css";
+@import "./tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: theme("fontFamily.sans");
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-bottom: 6rem;
+  }
+  body {
+    margin: 0;
+    min-width: 320px;
+    background-color: var(--color-bg);
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: theme("fontFamily.display");
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+  a {
+    color: var(--color-primary);
+    text-underline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Cifras tabulares para importes, cantidades, fechas y números de documento. */
+  .num {
+    font-family: theme("fontFamily.sans");
+    font-variant-numeric: tabular-nums;
+  }
+  .focus-ring:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

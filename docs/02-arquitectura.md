@@ -65,9 +65,10 @@ flowchart TB
         spa["SPA Vue 3<br/>Vite, TypeScript, Tailwind, Pinia"]
     end
 
+    proxy["Proxy del proveedor del VPS<br/>termina TLS y enruta al puerto 8000"]
+
     subgraph vps["VPS en la UE - Docker Compose"]
-        caddy["Caddy<br/>TLS automático, HTTPS y HSTS"]
-        api["api<br/>FastAPI: API REST, SSE del chat<br/>y build estático de la SPA"]
+        api["api :8000<br/>FastAPI: API REST, SSE del chat,<br/>build estático de la SPA y HSTS"]
         worker["worker<br/>procrastinate: ingesta, embeddings<br/>y transcripción"]
         db[("PostgreSQL<br/>datos con RLS, pgvector<br/>y cola de procrastinate")]
         files[("Almacenamiento de ficheros<br/>disco del servidor en v1,<br/>separado por cuenta")]
@@ -81,8 +82,8 @@ flowchart TB
 
     autonomo --> spa
     superadmin --> spa
-    spa -->|"HTTPS, mismo origen, cookie de sesión"| caddy
-    caddy -->|"HTTP interno"| api
+    spa -->|"HTTPS, mismo origen, cookie de sesión"| proxy
+    proxy -->|"HTTP interno con X-Forwarded-For y X-Forwarded-Proto"| api
     api -->|"SQL con la cuenta fijada"| db
     worker -->|"SQL con la cuenta fijada"| db
     api -->|"Encola tareas con tenant_id"| db
@@ -99,8 +100,8 @@ flowchart TB
 
 | Contenedor | Responsabilidad | ADR |
 |---|---|---|
-| Caddy | Única entrada desde internet. TLS automático. La BD y los servicios internos no se exponen (RNF-12). | ADR-014 |
-| api | FastAPI. Sirve la API, el SSE del chat y el build de Vue en el mismo origen: sin CORS y con cookies sencillas. Ejecuta el agente. | ADR-002, ADR-013 |
+| Proxy del proveedor (fuera de nuestro Compose) | Única entrada desde internet. Termina TLS, redirige HTTP a HTTPS y enruta al puerto 8000 de la api. La BD y los servicios internos no se exponen (RNF-12). Las condiciones que debe cumplir están en ADR-014. | ADR-014 |
+| api | FastAPI con uvicorn en el puerto 8000. Sirve la API, el SSE del chat y el build de Vue en el mismo origen: sin CORS y con cookies sencillas. Pone HSTS y las cabeceras de seguridad. Ejecuta el agente. | ADR-002, ADR-013, ADR-014 |
 | worker | Proceso aparte con procrastinate. Ingesta, embeddings y transcripción. Cada tarea lleva su `tenant_id`. Concurrencia limitada para Whisper. | ADR-026, ADR-011 |
 | PostgreSQL | Datos de negocio con RLS, búsqueda de texto, pgvector y la cola de tareas. Sin Redis. | ADR-004, ADR-007, ADR-024 |
 | Almacenamiento de ficheros | PDFs separados por cuenta, detrás de `FileStoragePort`. Disco del servidor en v1; S3 compatible en la UE después. | — |
@@ -517,7 +518,7 @@ erDiagram
 - Toda tabla de negocio lleva `tenant_id` y una política RLS (ADR-024).
 - La aplicación se conecta con un rol **sin `BYPASSRLS`**. Sin cuenta fijada, una consulta no devuelve filas.
 - La cuenta se fija en cada transacción (§8).
-- Algunas tablas se leen antes de saber de qué cuenta se trata: al iniciar sesión, al validar la cookie o al recibir un webhook de Stripe. Esas tablas globales no llevan RLS y forman una lista cerrada: `users`, `sessions`, `subscriptions`, `payment_events` y las de plataforma (`platform_settings`, `platform_admins`, `platform_audit_events`). Solo las consulta un repositorio de cuentas acotado.
+- Algunas tablas se leen antes de saber de qué cuenta se trata: al iniciar sesión, al validar la cookie o al recibir un webhook de Stripe. Esas tablas globales no llevan RLS y forman una lista cerrada: `users`, `sessions`, `email_verifications`, `subscriptions`, `payment_events` y las de plataforma (`platform_settings`, `platform_admins`, `platform_audit_events`). Solo las consulta un repositorio de cuentas acotado.
 - Una prueba comprueba que toda tabla de negocio tiene política RLS, y falla si aparece una tabla sin RLS que no esté en esa lista.
 - Los agregados que ve el superadministrador, como el coste por cuenta, salen de funciones `SECURITY DEFINER` que solo devuelven metadatos y agregados (RF-SA-05). Así el rol de la aplicación no necesita `BYPASSRLS`.
 - El trigger de inmutabilidad actúa en la BD: un `UPDATE` por SQL directo sobre una factura emitida falla, aunque no pase por el código.
@@ -700,7 +701,7 @@ Notas:
 
 **Suscripción.** Su estado solo cambia por webhook de Stripe con firma verificada y sin efectos repetidos. Nunca por lo que diga el navegador (ADR-016). Sin suscripción activa, la cuenta pasa a solo lectura (RN-12).
 
-**Red y logs.** Solo Caddy se expone a internet; la BD y los servicios internos no (RNF-12). Los logs son structlog JSON con `request_id`, `run_id`, `tenant_id`, `use_case` y duración. Nunca NIF, nombres de clientes ni contenido de documentos (ADR-015).
+**Red y logs.** Solo el proxy del proveedor se expone a internet y enruta al puerto 8000 de la api; la BD y los servicios internos no (RNF-12). Solo el servicio `kapataz` está en la red compartida `kronoqr-app`, por la que llega el proxy; `kapataz-db` va solo en una red interna sin salida (`kapataz-internal`), y `kapataz` y `kapataz-worker` salen a internet por una red propia (`kapataz-egress`). uvicorn solo acepta las cabeceras `X-Forwarded-*` de la subred de `kronoqr-app` (ADR-014). Los logs son structlog JSON con `request_id`, `run_id`, `tenant_id`, `use_case` y duración. Nunca NIF, nombres de clientes ni contenido de documentos (ADR-015).
 
 El análisis de amenazas completo está en [`03-modelo-amenazas.md`](./03-modelo-amenazas.md).
 

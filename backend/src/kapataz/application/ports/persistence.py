@@ -1,0 +1,79 @@
+"""Unidad de trabajo y repositorios (ADR-001, ADR-024)."""
+
+from contextlib import AbstractAsyncContextManager
+from datetime import datetime
+from typing import Protocol
+from uuid import UUID
+
+from kapataz.domain.accounts.email_address import EmailAddress
+from kapataz.domain.accounts.model import (
+    EmailVerification,
+    Session,
+    SessionId,
+    Tenant,
+    TenantId,
+    User,
+    UserId,
+)
+
+
+class AccountRepository(Protocol):
+    """Repositorio de cuentas acotado.
+
+    Es el único que lee las tablas globales sin RLS (``users``, ``sessions``,
+    ``email_verifications``), porque se consultan antes de saber de qué cuenta
+    se trata: al iniciar sesión o al validar la cookie (ADR-024).
+    """
+
+    async def add_tenant(self, tenant: Tenant) -> None:
+        """Requiere la cuenta fijada en la transacción: ``tenants`` tiene RLS."""
+        ...
+
+    async def add_user(self, user: User) -> None:
+        """Lanza ``EmailAlreadyRegisteredError`` si el email ya existe."""
+        ...
+
+    async def get_user_by_email(self, email: EmailAddress) -> User | None: ...
+
+    async def mark_email_verified(self, user_id: UserId, at: datetime) -> None: ...
+
+    async def add_email_verification(
+        self, verification: EmailVerification, token_hash: str
+    ) -> None: ...
+
+    async def get_email_verification_for_update(self, token_hash: str) -> EmailVerification | None:
+        """Bloquea la fila: dos peticiones con el mismo enlace no lo usan dos veces."""
+        ...
+
+    async def mark_email_verification_used(self, verification_id: UUID, at: datetime) -> None: ...
+
+    async def add_session(self, session: Session, token_hash: str) -> None: ...
+
+    async def get_session_with_user(self, token_hash: str) -> tuple[Session, User] | None: ...
+
+    async def touch_session(self, session_id: SessionId, at: datetime) -> None: ...
+
+    async def revoke_session(self, session_id: SessionId, at: datetime) -> None: ...
+
+
+class UnitOfWork(Protocol):
+    """Una transacción. Sin ``commit()`` explícito, todo se deshace al salir."""
+
+    @property
+    def accounts(self) -> AccountRepository: ...
+
+    async def set_tenant(self, tenant_id: TenantId) -> None:
+        """Fija la cuenta solo para esta transacción (``SET LOCAL``, ADR-024)."""
+        ...
+
+    async def commit(self) -> None: ...
+
+
+class UnitOfWorkFactory(Protocol):
+    def __call__(self) -> AbstractAsyncContextManager[UnitOfWork]: ...
+
+
+class DatabaseProbe(Protocol):
+    async def ping(self) -> bool:
+        """``True`` si la base de datos responde; nunca lanza."""
+        ...

@@ -2,6 +2,7 @@
 
 - **Estado:** Aceptado
 - **Fecha:** 2026-11-12
+- **Modificado:** 2026-11-17. Borja confirma `email_verifications` en la lista cerrada de tablas globales sin RLS.
 - **Decide:** arquitecto-python (aprueba: Borja)
 - **Requisitos relacionados:** RN-10, RNF-13, RF-AC-05, RF-CF-04, RN-13, RF-SA-05
 
@@ -41,7 +42,7 @@ Se elige la opción 4.
 - `chunks` tiene RLS: la búsqueda híbrida no puede devolver fragmentos de otra cuenta. Ninguna caché ni el prompt caching mezclan cuentas.
 - Un identificador de otra cuenta responde 404, nunca 403.
 - El espacio de demostración es un tipo de cuenta: `tenants.kind` vale `demo` y `parent_tenant_id` guarda la cuenta a la que pertenece. Su borrado lo hace una función de mantenimiento que solo actúa sobre ese tipo de cuenta.
-- **Tablas globales sin RLS, en una lista cerrada.** Algunas tablas se leen antes de saber de qué cuenta se trata: al iniciar sesión, al validar la cookie o al recibir un webhook de Stripe. Esas tablas no llevan RLS: `users`, `sessions`, `subscriptions`, `payment_events` y las de plataforma (`platform_settings`, `platform_admins`, `platform_audit_events`). Solo las consulta un repositorio de cuentas acotado.
+- **Tablas globales sin RLS, en una lista cerrada.** Algunas tablas se leen antes de saber de qué cuenta se trata: al iniciar sesión, al validar la cookie o al recibir un webhook de Stripe. Esas tablas no llevan RLS: `users`, `sessions`, `email_verifications`, `subscriptions`, `payment_events` y las de plataforma (`platform_settings`, `platform_admins`, `platform_audit_events`). Solo las consulta un repositorio de cuentas acotado.
 - Las tablas de plataforma no son de una cuenta y solo las escribe el superadministrador (ADR-031), que no lee datos de negocio (RF-SA-05).
 - **Agregados del superadministrador** (como el coste por cuenta): salen de funciones `SECURITY DEFINER` que solo devuelven metadatos y agregados (RF-SA-05). Así el rol de la aplicación no necesita `BYPASSRLS`.
 
