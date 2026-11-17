@@ -18,7 +18,7 @@ Kapataz emite facturas válidas desde la primera factura real, con el sistema VE
 - Entendemos que ese aplazamiento no afecta a los productores, cuya obligación ya es exigible. La nota no lo dice de forma expresa: está pendiente de confirmar con el asesor fiscal.
 - La misma nota anuncia una segunda modificación de los ámbitos de aplicación y de aspectos técnicos, para converger con la factura electrónica y con ViDA. Hay que revisar las especificaciones de la AEAT antes de empezar el Bloque 12.
 
-**Garantía de lanzamiento.** Verifactu se construye al final, pero ningún cliente real emite facturas hasta cerrar el Bloque 12, con la declaración responsable firmada y la validación de un asesor fiscal. Para garantizarlo, el registro está cerrado hasta la 1.0.0 (RN-13) y las cuentas habilitadas solo emiten facturas con la marca de demostración (RN-F-09).
+**Garantía de lanzamiento.** Verifactu se construye al final, pero ningún cliente real emite facturas hasta cerrar el Bloque 12, con la declaración responsable firmada y la validación de un asesor fiscal. Para garantizarlo, el registro está cerrado mientras queden pendientes legales (RN-13, plan maestro §1.5) y las cuentas habilitadas solo emiten facturas con la marca de demostración (RN-F-09).
 
 ## Opciones consideradas
 
@@ -73,7 +73,7 @@ Kapataz emite facturas válidas desde la primera factura real, con el sistema VE
 
 **3. Confirmación con el asesor fiscal** de que el aplazamiento a 2028 no afecta al productor.
 
-**4. Cierre:** registros, huella y QR verificados; envío aceptado en el entorno de pruebas de la AEAT; autorización resuelta; declaración responsable firmada y validación fiscal del asesor.
+**4. Cierre:** registros, huella y QR verificados; envío aceptado en el entorno de pruebas de la AEAT; flujo de autorización construido. La declaración responsable firmada, la validación fiscal del asesor y la autorización real de los clientes son pendientes legales (plan maestro, §1.5).
 
 ## Consecuencias
 

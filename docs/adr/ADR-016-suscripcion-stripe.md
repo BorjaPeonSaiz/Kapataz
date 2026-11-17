@@ -66,4 +66,4 @@ Opción 1.
 - `tests/integration/payments/test_retorno_navegador.py`: volver de la página de pago sin webhook no abre el acceso. `@pytest.mark.req("RF-PG-02")`.
 - `tests/integration/payments/test_gracia_y_solo_lectura.py` con `FrozenClock`: tras un cobro fallido, la app sigue completa durante los 14 días de gracia y después pasa a solo lectura; pasados 90 días se inicia el borrado. `@pytest.mark.req("RF-PG-04")` y `@pytest.mark.req("RN-12")`.
 - **Escenarios** «Acceso tras pagar la cuota» y «Suscripción terminada».
-- **Staging** con el modo de pruebas de Stripe; en el Bloque 10, pagos reales con tarjeta y con PayPal en cuentas habilitadas por el superadministrador (RN-13).
+- **Local y, desde el Bloque 12, producción,** con el modo de pruebas de Stripe (no hay staging, ADR-014). En el Bloque 10, alta y pago con tarjeta y con PayPal en modo de pruebas, con `stripe listen` para los webhooks, en cuentas habilitadas por el superadministrador (RN-13). El pago real es un pendiente legal (plan maestro, §1.5).

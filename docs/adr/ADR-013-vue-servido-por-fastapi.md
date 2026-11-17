@@ -13,21 +13,21 @@ Fuerzas:
 
 - La sesión va en una cookie `HttpOnly`, sin tokens en el navegador (ADR-025). Con app y API en el mismo origen, la cookie y la protección CSRF son sencillas y no hace falta CORS.
 - El chat usa SSE (RNF-04).
-- Solo HTTPS con HSTS (RNF-12); TLS lo termina Caddy (ADR-014).
+- Solo HTTPS con HSTS (RNF-12); TLS lo termina el proxy del proveedor (ADR-014).
 - Del alta al primer uso en menos de 5 min, sin instalar nada (RNF-02).
 - El cliente de API se genera desde el contrato OpenAPI (ADR-002).
 
 ## Opciones consideradas
 
-1. **FastAPI sirve el build estático de Vue, detrás de Caddy: mismo origen para app y API**
+1. **FastAPI sirve el build estático de Vue, detrás del proxy TLS: mismo origen para app y API**
    - Ventajas: sin CORS; cookies `SameSite` simples; una sola imagen y un solo despliegue, con app y API siempre de la misma versión.
    - Inconvenientes: Python sirve ficheros estáticos, algo menos eficiente que un servidor web; el build de Vue entra en la imagen del backend.
 2. **Orígenes separados** (frontend en un dominio o CDN y API en otro)
    - Ventajas: caché de CDN; despliegues independientes.
    - Inconvenientes: CORS y cookies entre sitios; dos despliegues que pueden desincronizarse con el contrato.
-3. **Caddy sirve los estáticos y hace de proxy de `/api`**
+3. **Un servidor web propio (por ejemplo, Caddy) sirve los estáticos y hace de proxy de `/api`, detrás del proxy del proveedor**
    - Ventajas: también mismo origen; servidor web eficiente para estáticos.
-   - Inconvenientes: dos artefactos que versionar juntos; el build hay que copiarlo a la imagen o al volumen de Caddy.
+   - Inconvenientes: un contenedor más y dos artefactos que versionar juntos; el build hay que copiarlo a su imagen o volumen.
 4. **Renderizado en servidor (Nuxt)**
    - Ventajas: primera carga más rápida y SEO.
    - Inconvenientes: un servidor Node más en producción; una app privada no necesita SEO.
@@ -38,7 +38,7 @@ Opción 1.
 
 - El build de Vite se copia a `backend/src/kapataz/static` al construir la imagen.
 - FastAPI sirve la app en `/` y responde `index.html` a las rutas de la SPA. La API vive bajo `/api` y sus errores siguen RFC 9457.
-- Caddy termina TLS, añade HSTS y hace de proxy hacia FastAPI (ADR-014).
+- El proxy del proveedor termina TLS y enruta al puerto 8000 de FastAPI. HSTS y las demás cabeceras de seguridad las pone un middleware de la app (ADR-014).
 - Los ficheros con hash del build se sirven con caché larga; `index.html` y el service worker, sin caché, para que la PWA detecte la nueva versión (RF-MO-04).
 - El service worker nunca guarda respuestas de la API con datos del usuario (ADR-027).
 
@@ -48,7 +48,7 @@ Opción 1.
   - Seguridad de sesión más simple: sin CORS ni cookies entre sitios.
   - App y API se despliegan y vuelven atrás juntas.
 - **Negativas y mitigación**
-  - Estáticos servidos por Python → caché larga para los ficheros con hash y compresión en Caddy. Si hiciera falta, se pasa a la opción 3 sin cambiar de origen.
+  - Estáticos servidos por Python → caché larga para los ficheros con hash y, si el proxy del proveedor no comprime, compresión en la app solo para los estáticos (nunca en el SSE del chat). Si hiciera falta, se pasa a la opción 3 sin cambiar de origen.
   - CI construye el frontend antes de la imagen → etapa «build frontend» antes de «imagen» (§6.4, `plataforma-entrega`).
 - **Qué haría reconsiderarla**
   - Que servir estáticos desde FastAPI afecte a RNF-04 o RNF-16.

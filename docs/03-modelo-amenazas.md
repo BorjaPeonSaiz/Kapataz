@@ -23,7 +23,7 @@ Kapataz es un servicio web de pago y multicuenta. Lo usan autónomos de oficio d
 
 Entra en el modelo:
 
-- La app servida por FastAPI detrás de Caddy, el worker, PostgreSQL y los ficheros, en un VPS de la UE con Docker Compose (ADR-013, ADR-014).
+- La app servida por FastAPI detrás del proxy del proveedor del VPS, el worker, PostgreSQL y los ficheros, en un VPS de la UE con Docker Compose (ADR-013, ADR-014).
 - La PWA y lo que guarda en el dispositivo (ADR-027).
 - Las conexiones salientes: API de Claude, Stripe, proveedor de Verifactu (y, a través de él, la AEAT), SMTP y destino de las copias.
 - La zona de superadministración (ADR-031).
@@ -40,14 +40,14 @@ Queda fuera:
 
 | ID | Supuesto | Si deja de ser cierto |
 |---|---|---|
-| S-01 | Un solo VPS en la UE por entorno, con staging y producción separados. Solo Caddy escucha en internet (RNF-12). | Revisar §3 y las amenazas de disponibilidad. |
+| S-01 | Dos entornos, local y producción, sin staging. Producción en un VPS de la UE compartido con KronoQR. Solo el proxy nginx existente escucha en internet y enruta al puerto 8000 de la api (RNF-12, ADR-014). | Revisar §3 y las amenazas de disponibilidad. Si el proxy no cumple las condiciones de ADR-014, volver a un proxy propio. |
 | S-02 | Un usuario por cuenta en la v1 (§1.4). | Añadir amenazas entre usuarios de una misma cuenta. |
 | S-03 | La app y el worker son los únicos clientes de PostgreSQL, con un rol sin `BYPASSRLS` (ADR-024). Las migraciones usan otro rol. | Revisar T-14, T-15 y T-49. |
 | S-04 | Claude solo recibe texto seudonimizado. Nunca un PDF, una imagen ni un audio (RN-11, ADR-010, ADR-011). No se usa la Files API. | Reabrir §5 (LLM02) y §6. |
 | S-05 | La entidad que trata con Anthropic es Anthropic Ireland, Limited. Los datos se almacenan en EE. UU. y no hay inferencia solo en la UE (ADR-029). | Revisar §6.2. |
 | S-06 | El proveedor de Verifactu no está elegido. Se elige en el Bloque 12 (ADR-012). Se supone que el envío lo hace el worker, por los reintentos; el plan no lo fija. | Revisar T-49 a T-52 en el Bloque 12. |
 | S-07 | El superadministrador es el dueño de la plataforma y la misma persona que opera el servidor. | Separar los actores de §3.1. |
-| S-08 | Hasta publicar la 1.0.0, el registro está cerrado y ninguna factura es real (RN-13). Ningún cliente real emite facturas antes de cerrar el Bloque 12. | Las amenazas de facturación pasan a ser inmediatas. |
+| S-08 | Kapataz es por ahora una demo de portafolio (plan maestro, §1.5). Mientras queden pendientes legales, el registro está cerrado, ninguna factura es real y solo se usan datos sintéticos (RN-13). No hay nada desplegado hasta cerrar el Bloque 12. | Las amenazas de facturación pasan a ser inmediatas. |
 | S-09 | Kapataz no entrena ni ajusta modelos. Los modelos locales (Whisper, spaCy, embeddings) van fijados en la imagen o en un volumen. | Revisar LLM03 y LLM04. |
 
 ---
@@ -106,7 +106,7 @@ flowchart LR
   end
 
   subgraph VPS["VPS en la UE · Docker Compose"]
-    C["Caddy<br/>TLS y HSTS"]
+    C["Proxy del proveedor<br/>TLS, enruta al puerto 8000"]
     HOST["Anfitrión<br/>Docker y secretos"]
     subgraph RED["Red interna"]
       API["api<br/>FastAPI y SPA"]
@@ -134,7 +134,7 @@ flowchart LR
   U -->|"LC-1 HTTPS: cookie, órdenes, PDF y audio no confiables"| C
   SA -->|"LC-1 y LC-9: HTTPS y TOTP"| C
   STR -->|"LC-1 webhooks firmados"| C
-  C -->|"LC-2 HTTP interno"| API
+  C -->|"LC-2 HTTP interno con X-Forwarded-*"| API
   API -->|"LC-3 SQL, rol sin BYPASSRLS, cuenta fijada"| DB
   W -->|"LC-3 SQL, cuenta de la tarea"| DB
   API --> FS
@@ -157,8 +157,8 @@ flowchart LR
 
 | ID | Límite | Qué lo cruza | Controles previstos |
 |---|---|---|---|
-| LC-1 | Internet → Caddy | Peticiones del navegador y la PWA, PDFs, audio, webhooks de Stripe | Solo HTTPS con HSTS (RNF-12); cookie `HttpOnly`, `Secure` y `SameSite` (ADR-025); CSRF; límites de peticiones (Bloque 10); firma de webhooks (ADR-016). |
-| LC-2 | Caddy → api | HTTP interno | Solo Caddy expuesto; `/docs` y `/metrics` no accesibles desde fuera (Fase 6 y Fase 7). |
+| LC-1 | Internet → proxy del proveedor | Peticiones del navegador y la PWA, PDFs, audio, webhooks de Stripe | Solo HTTPS con HSTS (RNF-12); cookie `HttpOnly`, `Secure` y `SameSite` (ADR-025); CSRF; límites de peticiones (Bloque 10); firma de webhooks (ADR-016). |
+| LC-2 | Proxy del proveedor → api (puerto 8000) | HTTP interno con `X-Forwarded-For` y `X-Forwarded-Proto` | Solo el proxy expuesto; el puerto 8000 no se publica en la IP pública; uvicorn solo acepta `X-Forwarded-*` de la subred de la red compartida `kronoqr-app`; `kapataz-db` y `kapataz-worker` fuera de esa red; HSTS y cabeceras puestas por la app; `/docs` y `/metrics` no accesibles desde fuera (Fase 6 y Fase 7). El proveedor ve el tráfico en claro: es subencargado como alojamiento (ADR-014). |
 | LC-3 | Aplicación → PostgreSQL | SQL con contexto de cuenta | RLS en toda tabla de negocio; tablas globales sin RLS solo en una lista cerrada y consultadas por un repositorio de cuentas acotado (§4.5 del plan); rol sin `BYPASSRLS` ni propiedad de tablas; cuenta fijada en cada transacción, también en el worker (ADR-024, ADR-026). |
 | LC-T | Cuenta A ↔ cuenta B | Lógico: atraviesa API, agente, búsqueda, worker, ficheros y cachés | RN-10, RNF-13; un identificador ajeno responde 404. |
 | LC-D | Contenido no confiable → procesos del servidor | Texto de PDFs, OCR, audio, textos que escribe el usuario | Límites de tamaño, páginas, tiempo y memoria (Bloque 4); contenido como dato, nunca instrucción (RN-05). |
@@ -187,13 +187,14 @@ S = suplantación, T = manipulación, R = repudio, I = divulgación, D = denegac
 | T-04 | E | Un PDF con una fuente manipulada ejecuta JavaScript en el visor (CVE-2024-4367). | `pdfjs-dist` ≥ 4.2.67 e `isEvalSupported: false` | 4 | Fase 7 · «Visor en la pantalla de revisión» |
 | T-05 | T | Una escritura sin conexión se encola y se pierde o se duplica. | Sin escrituras offline (RF-MO-03, ADR-027) | 10 | Escenario «Sin conexión en el móvil» |
 
-### 4.2 Caddy y borde
+### 4.2 Proxy del proveedor y borde
 
 | ID | Amenaza | Escenario | Mitigación prevista | Bloque | Prueba |
 |---|---|---|---|---|---|
-| T-06 | I, T | Tráfico en claro o degradado a HTTP. | Solo HTTPS con HSTS (RNF-12); TLS automático (ADR-014) | 1, 10 | `test_a02_cabeceras_seguridad`; calificación TLS A (Fase 10) |
+| T-06 | I, T | Tráfico en claro o degradado a HTTP. | Solo HTTPS, que termina el proxy del proveedor, con redirección de HTTP a HTTPS; HSTS puesto por la app, sin depender del proxy (RNF-12, ADR-014) | 1, 10 | `test_a02_cabeceras_seguridad`; `test_transporte.py` contra producción antes de la 1.0.0; calificación TLS A (Fase 10) |
+| T-69 | S | Un cliente envía una cabecera `X-Forwarded-For` falsa para saltarse los límites por IP o falsear la IP de los registros. | uvicorn con `--proxy-headers` y `--forwarded-allow-ips` limitado a la subred de `kronoqr-app` (172.18.0.0/16); el puerto 8000 no se publica; solo el servicio `kapataz` está en esa red. Riesgo residual aceptado: otro contenedor de KronoQR en esa red podría falsear la cabecera; los dos proyectos los opera la misma persona (ADR-014) | 1, 10 | `test_transporte.py` contra producción antes de la 1.0.0: la IP que ve la api es la del cliente y no la de la cabecera falsa; escaneo de puertos (Fase 7) |
 | T-07 | D | Inundación de peticiones al inicio de sesión, al registro o al envío de emails. | Límites de peticiones por IP y por cuenta (Bloque 10); bloqueo creciente (ADR-025) | 10 | Fase 7 · STRIDE «Denegación»; `test_a07_bloqueo_creciente` |
-| T-08 | I | PostgreSQL, `/metrics` o `/docs` accesibles desde internet. | Solo Caddy expuesto; `/docs` desactivado en producción; solo puertos 80 y 443 (RNF-12) | 1, 10 | `test_a02_docs_desactivado_en_produccion`; escaneo de puertos (Fase 7) |
+| T-08 | I | PostgreSQL, `/metrics` o `/docs` accesibles desde internet. | Solo el proxy del proveedor expuesto; el 8000 y el 5432 no responden desde fuera; `/docs` desactivado en producción; solo puertos 80 y 443 (RNF-12) | 1, 10 | `test_a02_docs_desactivado_en_produccion`; escaneo de puertos (Fase 7) |
 
 ### 4.3 api: autenticación y sesiones
 
@@ -291,7 +292,7 @@ S = suplantación, T = manipulación, R = repudio, I = divulgación, D = denegac
 
 | ID | Amenaza | Escenario | Mitigación prevista | Bloque | Prueba |
 |---|---|---|---|---|---|
-| T-55 | S | Credenciales del proveedor robadas o mezcladas entre staging y producción. | Guardadas como secretos y separadas por entorno (Fase 7, Fase 10) | 12 | Fase 7 · «Credenciales del proveedor de Verifactu» |
+| T-55 | S | Credenciales del proveedor robadas, o claves de pruebas y reales mezcladas en producción. | Guardadas como secretos; en local solo claves de pruebas; en producción, las de pruebas hasta el bloque que pide las reales y nunca las dos a la vez (Fase 7, Fase 10, ADR-014) | 12 | Fase 7 · «Credenciales del proveedor de Verifactu» |
 | T-56 | R, T | El estado local de un registro no coincide con el de la AEAT. | Conciliación periódica por `external_ref` si el proveedor ofrece la consulta (Bloque 12) | 12 | Fase 3 · «Envío» |
 | T-57 | D | El proveedor o la AEAT no responden. | Reintentos visibles y `sent_with_incident` (RF-VF-04) | 12 | Fase 3 · «Envío» |
 | T-58 | T | Una factura del espacio de demostración o de una cuenta anterior a la 1.0.0 llega a la AEAT de producción. | RN-13 y RN-F-09 marcan esas facturas, pero el plan no dice que nunca se envíen. **Propuesta P-07** | 12 | Prueba de P-07 |
@@ -310,7 +311,7 @@ S = suplantación, T = manipulación, R = repudio, I = divulgación, D = denegac
 | T-66 | I | El servidor conecta con un destino no previsto (telemetría de una librería, exfiltración). | Tráfico saliente revisado (Fase 7); modelos sin telemetría. **Propuesta P-11:** lista blanca aplicada por el cortafuegos | 10 | Fase 7 · «Tráfico saliente» |
 | T-67 | I | Datos personales en logs o en `agent_runs`. | structlog sin datos personales y con filtro que enmascara NIF, emails y teléfonos (ADR-015) | 1, 6 | `test_a09_logs_sin_datos_personales`, `test_llm02_agent_runs_sin_datos_personales` |
 
-> La tabla OWASP Top 10 web (edición 2025) de la Fase 7 ya asigna prueba a cada categoría. Correspondencia: A01 → T-14, T-18, T-27; A02 → T-08; A03 → T-63; A04 → T-09, T-33; A05 → T-30, T-31; A06 → T-16, T-33, T-46; A07 → T-09 a T-13; A08 → T-23, T-24, T-48, T-68; A09 → T-20, T-67; A10 → T-36, T-47.
+> La tabla OWASP Top 10 web (edición 2025) de la Fase 7 ya asigna prueba a cada categoría. Correspondencia: A01 → T-14, T-18, T-27; A02 → T-08; A03 → T-63; A04 → T-09, T-33; A05 → T-30, T-31, T-69; A06 → T-16, T-33, T-46; A07 → T-09 a T-13; A08 → T-23, T-24, T-48, T-68; A09 → T-20, T-67; A10 → T-36, T-47.
 
 ---
 
@@ -469,7 +470,7 @@ Controles que **no están en el plan**. Ninguno cambia una decisión aceptada. C
 | P-16 | Fijar plazos de retención de logs, `agent_runs`, copias y ficheros de exportación; la exportación caduca y solo se descarga con sesión. | T-32 | `plataforma-entrega` + `backend-fastapi` | 10 |
 | P-17 | Procedimiento y runbook de brecha de seguridad, con aviso al responsable sin dilación (art. 33.2 RGPD) ⚖️. | §6.1 | `plataforma-entrega` | 10 |
 | P-18 | Registro de actividades de tratamiento como encargado (art. 30.2 RGPD) y valorar con el abogado si procede una evaluación de impacto ⚖️. | §6.1 | 👤 + abogado | Antes de lanzar |
-| P-19 | Los agentes de desarrollo (Claude Code) no tienen acceso a secretos de staging ni de producción, ni a datos reales. | R-05, T-65 | Hilo principal + `plataforma-entrega` | 1 |
+| P-19 | Los agentes de desarrollo (Claude Code) no tienen acceso a secretos de producción ni a datos reales. | R-05, T-65 | Hilo principal + `plataforma-entrega` | 1 |
 | P-20 | Identificadores no secuenciales (UUID) en los recursos que expone la API. | T-17 | `arquitecto-python` | 2 |
 
 ---

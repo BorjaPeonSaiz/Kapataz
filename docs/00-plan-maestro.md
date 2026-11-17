@@ -76,7 +76,24 @@ Un asistente disponible en el portátil y en el móvil, al que se le habla como 
 | Facturas simplificadas (tipos F2, F3 y R5 del registro de la AEAT) | `invoice_type` ya admite esos valores. La v1 solo emite facturas completas con destinatario identificado (RN-F-06), porque el tipo de IVA de la obra depende de quién es el destinatario (RN-F-13) |
 | Clientes sin NIF español (bloque `IDOtro` del registro de la AEAT) | `customers` guarda `tax_id_type` y `tax_id_country`. La v1 solo valida y admite NIF español, que incluye el NIE |
 
-> ⚠️ **Condición legal de lanzamiento:** los productores de software solo pueden ofrecer sistemas adaptados desde el 29 de julio de 2025. Las sociedades deben usarlos antes del 1 de enero de 2027, y el resto, autónomos incluidos, antes del 1 de julio de 2027 (Real Decreto-ley 15/2025). El 5 de octubre de 2026, Hacienda publicó la previsión de aplazar las obligaciones pendientes de empresarios y profesionales a octubre de 2028, pero a 11 de noviembre de 2026 no hay norma en el BOE y la AEAT sigue citando las fechas de 2027. Entendemos que ese aplazamiento no afecta a los productores, cuya obligación ya es exigible; la nota no lo dice de forma expresa y está pendiente de confirmar con el asesor fiscal. La misma nota anuncia una segunda modificación de los ámbitos de aplicación y de ciertos aspectos técnicos, para converger con la factura electrónica y con ViDA, que mantendrá las garantías de integridad, conservación, trazabilidad e inalterabilidad en términos sustancialmente equivalentes: hay que revisar las especificaciones técnicas de la AEAT antes de empezar los bloques de Verifactu. Por eso Verifactu se construye al final, pero ningún cliente real emite facturas hasta cerrar el Bloque 12, con la declaración responsable firmada y la validación de un asesor fiscal. Para garantizarlo, el registro está cerrado hasta publicar la 1.0.0 (RN-13). Revisar el BOE antes de lanzar.
+> ⚠️ **Condición legal de lanzamiento:** los productores de software solo pueden ofrecer sistemas adaptados desde el 29 de julio de 2025. Las sociedades deben usarlos antes del 1 de enero de 2027, y el resto, autónomos incluidos, antes del 1 de julio de 2027 (Real Decreto-ley 15/2025). El 5 de octubre de 2026, Hacienda publicó la previsión de aplazar las obligaciones pendientes de empresarios y profesionales a octubre de 2028, pero a 11 de noviembre de 2026 no hay norma en el BOE y la AEAT sigue citando las fechas de 2027. Entendemos que ese aplazamiento no afecta a los productores, cuya obligación ya es exigible; la nota no lo dice de forma expresa y está pendiente de confirmar con el asesor fiscal. La misma nota anuncia una segunda modificación de los ámbitos de aplicación y de ciertos aspectos técnicos, para converger con la factura electrónica y con ViDA, que mantendrá las garantías de integridad, conservación, trazabilidad e inalterabilidad en términos sustancialmente equivalentes: hay que revisar las especificaciones técnicas de la AEAT antes de empezar los bloques de Verifactu. Por eso Verifactu se construye al final, pero ningún cliente real emite facturas hasta cerrar el Bloque 12, con la declaración responsable firmada y la validación de un asesor fiscal. Para garantizarlo, el registro está cerrado mientras quede algún pendiente legal (§1.5, RN-13). Revisar el BOE antes de lanzar.
+
+### 1.5 Demo de portafolio y pendientes legales
+
+Por ahora, Kapataz es una **demo para el portafolio** de KodigoLab, no un producto con clientes (Borja, 17/11/2026):
+
+- **Todo se construye y se prueba en local** hasta cerrar el Bloque 12, con el mismo Compose que en el servidor. El primer despliegue en `https://kapataz.kodigolab.es` se hace entonces, para ejecutar la Parte II (ADR-014).
+- **La 1.0.0 es la demo que supera la Parte II.** Publicarla no abre el registro ni hace reales las facturas (RN-13).
+- **Pendientes legales:** lo que depende de un asesor, un abogado o un tercero queda marcado como pendiente legal. No bloquea ningún bloque ni la 1.0.0. Mientras quede alguno abierto, el registro sigue cerrado, solo hay cuentas de demostración y solo se usan datos sintéticos.
+
+| Pendiente legal | Dónde se marca |
+|---|---|
+| Validación fiscal de un asesor: IVA de la facturación por fases (ADR-033), aplazamiento de VERI*FACTU para el productor, `ImporteTotal` del registro y validación del módulo | Bloques 8 y 12 |
+| Declaración responsable firmada como productor (RF-VF-06) | Bloque 12 |
+| Contrato con el proveedor de envío y autorización real de cada cliente (RF-VF-07) | Bloque 12 |
+| Condiciones de uso, contrato de encargo, política de privacidad, aviso de IA y plazos de conservación, revisados por un abogado | Bloque 10 |
+| Retención cero, evaluación de la transferencia y lista de subencargados de Anthropic (ADR-029) | Bloque 6 |
+| Pago real con tarjeta y con PayPal (Stripe en modo real) | Bloque 10 |
 
 ---
 
@@ -108,7 +125,7 @@ Un asistente disponible en el portátil y en el móvil, al que se le habla como 
 | Tareas en segundo plano | Cola en PostgreSQL (**procrastinate**) y proceso worker | Ingesta, embeddings y transcripción sin añadir Redis (ADR-026) |
 | Ficheros | `FileStoragePort`: disco del servidor en v1, almacenamiento S3 compatible en la UE después | PDFs separados por cuenta |
 | Email | SMTP transaccional con proveedor en la UE | Verificación y recuperación de contraseña |
-| Despliegue | **Docker Compose** en un VPS de la UE con **Caddy** (TLS automático) | Sencillo de operar. Un hosting compartido de webs y WordPress no sirve: no ejecuta procesos Python permanentes, PostgreSQL ni Whisper (ADR-014) |
+| Despliegue | **Docker Compose** en un VPS de la UE, detrás del **proxy del proveedor**, que termina TLS y enruta al puerto 8000 de la api; HSTS y cabeceras de seguridad las pone la app | Sencillo de operar. Un hosting compartido de webs y WordPress no sirve: no ejecuta procesos Python permanentes, PostgreSQL ni Whisper (ADR-014) |
 | Logs | **structlog** JSON a la salida estándar, recogidos por Docker | Diagnóstico sin datos personales ni analítica de terceros (ADR-015) |
 | Calidad Python | ruff, mypy `--strict`, import-linter, bandit, pip-audit | Equivalente a Pint/PHPStan/Deptrac |
 | Pruebas Python | pytest, pytest-cov, hypothesis, mutmut, schemathesis, freezegun | Equivalente a Pest/Spectator |
@@ -326,7 +343,7 @@ Todas las cuentas y todas las rutas (chat, clasificación y extracción) usan `c
 | RN-10 | Ninguna consulta, herramienta ni tarea en segundo plano accede a datos de otra cuenta. |
 | RN-11 | Antes de enviar nada a Claude, el servidor sustituye por seudónimos los nombres, NIF, direcciones y datos de contacto de clientes, proveedores y del propio profesional. A Claude nunca llega un PDF, una imagen ni un audio. Si la seudonimización falla, la petición no se envía. |
 | RN-12 | Sin suscripción activa, la cuenta queda 90 días en solo lectura: se puede consultar y exportar lo propio, pero no crear documentos ni usar la IA. Se pueden corregir y reenviar los registros rechazados de facturas ya emitidas, aunque la ley no lo exige: la subsanación no tiene plazo máximo y puede hacerse desde otro sistema. Pasado ese plazo, la cuenta se borra: la exportación cuenta como devolución de los datos (art. 28.3.g del RGPD), y el contrato lo dice de forma expresa. Antes de borrar, se avisa al usuario de que conservar sus facturas es obligación suya (art. 29.2.e de la Ley General Tributaria y art. 19 del RD 1619/2012). Los registros de Verifactu ya los tiene la AEAT. KodigoLab conserva bloqueada solo la autorización firmada mientras puedan exigirse responsabilidades (arts. 32 y 33.4 de la LOPDGDD). La baja voluntaria sigue el mismo camino que el impago. |
-| RN-13 | Hasta publicar la 1.0.0, el registro está cerrado, como excepción a RF-AC-01: solo existen las cuentas de cortesía que crea el superadministrador (RF-SA-04) y las que habilita para probar el pago (RF-SA-07). Esas cuentas trabajan solo en el espacio de demostración, así que sus facturas llevan la marca de RN-F-09 y ninguna es una factura real. El superadministrador abre el registro al publicar la 1.0.0. |
+| RN-13 | Mientras quede algún pendiente legal abierto (§1.5), el registro está cerrado, como excepción a RF-AC-01: solo existen las cuentas de cortesía que crea el superadministrador (RF-SA-04) y las que habilita para probar el pago (RF-SA-07). Esas cuentas trabajan solo en el espacio de demostración, así que sus facturas llevan la marca de RN-F-09 y ninguna es una factura real. Publicar la 1.0.0 no abre el registro: el superadministrador lo abre cuando se han cerrado todos los pendientes legales. |
 | RN-F-01 | La numeración de facturas es correlativa por cuenta, serie y año, sin huecos ni duplicados, incluso con emisiones concurrentes. |
 | RN-F-02 | Una factura emitida es inmutable: ningún camino del código permite `UPDATE` ni `DELETE` sobre sus datos fiscales. |
 | RN-F-03 | Una rectificativa referencia siempre a la factura o facturas que rectifica e indica el motivo. Guarda su clase (R1 a R4 del registro de la AEAT, según el motivo) y si es por sustitución o por diferencias; la de sustitución guarda además la base y la cuota rectificadas. |
@@ -529,7 +546,7 @@ Escenario: Material cerca del límite del 40 %
   Entonces la app avisa de que el material es el 36 % de la base y el límite es el 40 %
   Y mantiene el 10 %
 
-Escenario: Registro cerrado antes de la 1.0.0
+Escenario: Registro cerrado con pendientes legales
   Dado que el registro está cerrado
   Cuando intento registrarme con un email que el superadministrador no ha habilitado
   Entonces no puedo crear la cuenta
@@ -684,7 +701,9 @@ kapataz/
 │   ├── package.json
 │   ├── src/{app,features/{account,admin,chat,quotes,invoices,documents,customers,settings},components,composables,stores,i18n,styles}
 │   └── tests/{unit,e2e}
-├── deploy/                     # Dockerfile, compose.yaml, Caddyfile, scripts de copia y restauración
+├── Dockerfile                  # imagen de la app; en la raíz porque así lo espera el panel del proveedor (ADR-014)
+├── docker-compose.yml          # servicios kapataz (la api, puerto 8000), worker y PostgreSQL
+├── deploy/                     # scripts de copia y restauración
 ├── samples/                    # PDFs sintéticos versionados para demo y pruebas
 ├── evals/
 │   ├── extraction/             # PDFs + JSON esperado
@@ -732,7 +751,7 @@ kapataz/
 
 > Toda tabla de negocio lleva `tenant_id` con una política RLS. La aplicación se conecta con un rol sin `BYPASSRLS` y fija la cuenta en cada transacción. El borrado de un espacio de demostración lo hace una función de mantenimiento que solo actúa sobre ese tipo de cuenta.
 >
-> Algunas tablas se leen antes de saber de qué cuenta se trata: al iniciar sesión, al validar la cookie o al recibir un webhook de Stripe. Esas tablas globales no llevan RLS: `users`, `sessions`, `subscriptions`, `payment_events` y las de plataforma (`platform_settings`, `platform_admins`, `platform_audit_events`). Solo las consulta un repositorio de cuentas acotado, y una prueba falla si aparece una tabla sin RLS que no esté en esa lista. Los agregados que ve el superadministrador, como el coste por cuenta, salen de funciones `SECURITY DEFINER` que solo devuelven metadatos y agregados (RF-SA-05). Así el rol de la aplicación no necesita `BYPASSRLS`.
+> Algunas tablas se leen antes de saber de qué cuenta se trata: al iniciar sesión, al validar la cookie o al recibir un webhook de Stripe. Esas tablas globales no llevan RLS: `users`, `sessions`, `email_verifications`, `subscriptions`, `payment_events` y las de plataforma (`platform_settings`, `platform_admins`, `platform_audit_events`). Solo las consulta un repositorio de cuentas acotado, y una prueba falla si aparece una tabla sin RLS que no esté en esa lista. Los agregados que ve el superadministrador, como el coste por cuenta, salen de funciones `SECURITY DEFINER` que solo devuelven metadatos y agregados (RF-SA-05). Así el rol de la aplicación no necesita `BYPASSRLS`.
 
 ### 4.6 Flujo del agente
 
@@ -781,7 +800,7 @@ kapataz/
 | 011 | Voz con faster-whisper en nuestro servidor | Claude no transcribe audio. El audio no pasa a terceros y se borra al terminar; concurrencia limitada en el worker | 0 |
 | 012 | Facturación conforme a Verifactu | Inmutabilidad, numeración sin huecos, rectificativas y `BillingRecord` encadenado desde el Bloque 2; solo modalidad VERI*FACTU, con envío mediante proveedor externo y autorización documentada de cada cliente; el proveedor concreto se elige en el Bloque 12 | **12** (Propuesto) |
 | 013 | Vue 3 servido por FastAPI detrás de un proxy TLS | Build estático en `backend/src/kapataz/static`; mismo origen para app y API | 0 |
-| 014 | Despliegue con Docker Compose en un VPS de la UE | Caddy con TLS automático, imágenes versionadas y vuelta atrás probada; hosting compartido descartado | 10 |
+| 014 | Despliegue con Docker Compose en un VPS de la UE | Detrás del proxy del proveedor, que termina TLS y enruta al puerto 8000 de la api; HSTS y cabeceras en la app; imágenes versionadas y vuelta atrás probada; hosting compartido descartado; primer despliegue al cerrar el Bloque 12 | 12 |
 | 015 | Logs estructurados sin datos personales | structlog JSON; nunca contenido de documentos ni NIF en logs; sin analítica de terceros | 0 |
 | 016 | Suscripción con Stripe | Checkout y Billing con tarjeta y PayPal, webhooks firmados y sin repetición, `SubscriptionPort`; 14 días de gracia y 90 días de solo lectura, configurables por el superadministrador | 10 |
 | 017 | Separación entre histórico importado y facturas emitidas | Tablas distintas; consultas agregan ambas con origen marcado | 2 |
@@ -960,7 +979,7 @@ Responsabilidades:
 - Pruebas de concurrencia de numeración con hilos y procesos.
 - Pruebas de aislamiento: cada endpoint, herramienta y tarea se prueba desde otra cuenta.
 - Pruebas de fuga: se captura lo que llega a LlmPort y se comprueba que no contiene datos personales (RNF-17).
-- Pagos con FakeSubscriptions y webhooks simulados; en staging, con el modo de pruebas de la pasarela.
+- Pagos con FakeSubscriptions, webhooks simulados y el modo de pruebas de la pasarela. El pago real es un pendiente legal (§1.5 del plan).
 - Prueba de carga con k6 con la IA simulada (RNF-16).
 - Mutación con mutmut sobre domain/billing.
 - Relojes congelados con FrozenClock; ninguna prueba depende de la fecha real.
@@ -983,8 +1002,8 @@ model: opus
 Eres el responsable de que Kapataz esté disponible, seguro y recuperable en internet.
 
 Responsabilidades:
-- Dockerfile multietapa sin root e imágenes fijadas por digest; Compose con api, worker, PostgreSQL y Caddy.
-- Entornos separados de staging y producción en un VPS de la UE. Solo Caddy se expone a internet.
+- Dockerfile multietapa sin root e imágenes fijadas por digest; Compose con api, worker y PostgreSQL.
+- Dos entornos: local y producción en un VPS de la UE, sin staging. Todo se construye y se prueba en local hasta cerrar el Bloque 12; el primer despliegue se hace entonces (§1.5 del plan). Solo el proxy nginx existente se expone a internet; enruta a `kapataz:8000` por la red `kronoqr-app` (ADR-014).
 - Secretos fuera del repo y de las imágenes, incluida la clave de la API de Claude.
 - CI en GitHub Actions sobre ubuntu-latest con PostgreSQL real, caché de uv y npm, etapas lint → seguridad (pip-audit, npm audit, bandit, Semgrep, gitleaks, Trivy) → unitarias → integración/contrato → build frontend → E2E → imagen. Se ejecuta en cada PR y sus comprobaciones son requisito para integrar en main.
 - Despliegue con migraciones controladas, health checks reales y vuelta atrás probada.
@@ -997,7 +1016,7 @@ Reglas:
 - Una migración que no se puede revertir se despliega en dos pasos compatibles.
 - Una copia que no se ha restaurado no cuenta como copia.
 - Scripts con ShellCheck sin avisos.
-- Prueba cada cambio en staging antes de producción.
+- Prueba cada cambio en local con el mismo Compose antes de desplegarlo. Desde la 1.0.0, copia de la base de datos antes de cada despliegue y migración probada sobre una copia restaurada en local.
 ```
 
 #### `.claude/agents/arquitecto-vue.md`
@@ -1148,9 +1167,9 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 | 7 | Presupuestos | 6 |
 | 8 | Facturas | 7 |
 | 9 | Voz | 6 |
-| 10 | Frontend completo, PWA y producción | 7, 8, 9 |
+| 10 | Frontend completo, PWA y preparación de producción | 7, 8, 9 |
 | 11 | Pulido y documentación de portafolio | 10 |
-| 12 | Módulo Verifactu | 8, 11 |
+| 12 | Módulo Verifactu y primer despliegue | 8, 11 |
 
 > Los bloques 4 y 9 pueden solaparse con otros si hay capacidad, porque tocan adaptadores distintos.
 
@@ -1197,34 +1216,34 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 
 ### Bloque 1 — Esqueleto ejecutable (walking skeleton)
 
-**Objetivo:** algo desplegado en internet con HTTPS en lo que se inicia sesión desde el portátil y desde el móvil y el chat responde con un LLM falso, con CI en verde.
+**Objetivo:** algo ejecutable en local con HTTPS en lo que se inicia sesión desde el portátil y desde el móvil y el chat responde con un LLM falso, con CI en verde. Hasta el Bloque 12 no se despliega nada (§1.5).
 
-- [ ] **Backend mínimo:** `pyproject.toml` con uv, estructura de capas, `bootstrap.py`, `/api/health` (comprueba BD y API de Claude por separado), `/api/chat` con `FakeLlm` y SSE.
+- [x] **Backend mínimo:** `pyproject.toml` con uv, estructura de capas, `bootstrap.py`, `/api/health` (comprueba BD y API de Claude por separado), `/api/chat` con `FakeLlm` y SSE.
   - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Cuentas mínimas:** `tenants`, `users`, registro con verificación de email, inicio y cierre de sesión (RF-AC-01, ADR-025), con `FakeSubscriptions` hasta el Bloque 10.
+- [x] **Cuentas mínimas:** `tenants`, `users`, registro con verificación de email, inicio y cierre de sesión (RF-AC-01, ADR-025), con `FakeSubscriptions` hasta el Bloque 10.
   - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Configuración de calidad:** ruff, mypy `--strict`, contrato de import-linter con las cuatro capas, bandit, pip-audit, pytest con marcadores `req`, `owasp`, `llm`, `slow`.
+- [x] **Configuración de calidad:** ruff, mypy `--strict`, contrato de import-linter con las cuatro capas, bandit, pip-audit, pytest con marcadores `req`, `owasp`, `llm`, `slow`.
   - 🤖 `arquitecto-python` · Opus 5.5
-- [ ] **`traceability.py`** inicial que lee los IDs de `docs/01-especificacion.md` y los marcadores de las pruebas.
+- [x] **`traceability.py`** inicial que lee los IDs de `docs/01-especificacion.md` y los marcadores de las pruebas.
   - 🤖 `qa-testing` · Opus 5.5
-- [ ] **Frontend mínimo:** Vite + Vue + TS + Tailwind + Pinia + Router + vue-i18n, pantallas de acceso y de chat que consume el SSE, manifiesto de PWA, cliente generado desde OpenAPI. ∥
+- [x] **Frontend mínimo:** Vite + Vue + TS + Tailwind + Pinia + Router + vue-i18n, pantallas de acceso y de chat que consume el SSE, manifiesto de PWA, cliente generado desde OpenAPI. ∥
   - 🤖 `arquitecto-vue` · Sonnet 5.5
-- [ ] **Tokens de diseño y componentes base** iniciales (botón, campo, burbuja de chat). ∥
+- [x] **Tokens de diseño y componentes base** iniciales (botón, campo, burbuja de chat). ∥
   - 🤖 `ui-ux` · Sonnet 5.5
-- [ ] **FastAPI sirve el build** de Vue en `/` (ADR-013).
+- [x] **FastAPI sirve el build** de Vue en `/` (ADR-013).
   - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Entorno con Docker:** Dockerfile sin root y Compose con api, worker, PostgreSQL y Caddy, para desarrollo y para el servidor.
+- [x] **Entorno con Docker:** `Dockerfile` sin root y `docker-compose.yml` en la raíz del repositorio, con los servicios `kapataz` (la api, también en la red compartida `kronoqr-app`), `kapataz-worker` y `kapataz-db` (en una red interna propia), con volúmenes persistentes `kapataz-db-data` y `kapataz-uploads`, para desarrollo y para el servidor. La api escucha en `0.0.0.0:8000` con `--proxy-headers`, y un middleware pone HSTS y las cabeceras de seguridad (ADR-014).
   - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **Despliegue en staging** en un VPS de la UE, con HTTPS y vuelta atrás.
+- [ ] **HTTPS en local con mkcert** para probar desde un móvil real en la red local: certificado para la IP del portátil y autoridad de certificación local instalada en el móvil. Sin servicios externos y sin nada expuesto a internet. El despliegue en producción pasa al Bloque 12 (§1.5, ADR-014).
   - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **CI** en cada PR con las etapas de lint, seguridad (`pip-audit`, `npm audit`, bandit, Semgrep, gitleaks y Trivy), unitarias con PostgreSQL real y build.
+- [x] **CI** en cada PR con las etapas de lint, seguridad (`pip-audit`, `npm audit`, bandit, Semgrep, gitleaks y Trivy), unitarias con PostgreSQL real y build.
   - 🤖 `plataforma-entrega` · Opus 5.5
 - [ ] **Protección de `main`:** solo se integra por PR y con las comprobaciones de CI y seguridad en verde como requisito.
   - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **Cerrar ADR-022.**
+- [x] **Cerrar ADR-022.**
   - 🤖 `plataforma-entrega` · Opus 5.5
 
-**Criterio de terminado:** en staging, con HTTPS, se inicia sesión desde un portátil y desde un móvil real y el chat responde con el `FakeLlm`. CI y comprobaciones de seguridad en verde en el PR del bloque; `main` protegida.
+**Criterio de terminado:** en local, por HTTPS, se inicia sesión desde un portátil y desde un móvil real y el chat responde con el `FakeLlm`. CI y comprobaciones de seguridad en verde en el PR del bloque; `main` protegida.
 
 ---
 
@@ -1436,7 +1455,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 
 ---
 
-### Bloque 10 — Frontend completo, PWA y producción
+### Bloque 10 — Frontend completo, PWA y preparación de producción
 
 - [ ] **Asistente de primer arranque** (RF-CF-01). ∥
   - 🤖 `arquitecto-vue` · Sonnet 5.5 + `ui-ux` · Sonnet 5.5
@@ -1448,22 +1467,22 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `backend-fastapi` · Opus 5.5 + `arquitecto-vue` · Sonnet 5.5
 - [ ] **PWA completa:** instalación en Android e iOS, pantalla sin conexión y aviso de nueva versión (RF-MO).
   - 🤖 `arquitecto-vue` · Sonnet 5.5
-- [ ] **Registro y pago con Stripe:** Checkout con tarjeta y PayPal, webhooks firmados, recibos, cancelación, 14 días de gracia y paso a solo lectura (RF-PG, RN-12). **Cerrar ADR-016.**
+- [ ] **Registro y pago con Stripe:** Checkout con tarjeta y PayPal, webhooks firmados, recibos, cancelación, 14 días de gracia y paso a solo lectura (RF-PG, RN-12), en el modo de pruebas de Stripe con `stripe listen` para los webhooks. El pago real es un pendiente legal (§1.5). **Cerrar ADR-016.**
   - 🤖 `backend-fastapi` · Opus 5.5 + `arquitecto-vue` · Sonnet 5.5
 - [ ] **Zona de superadministración:** modelo y `effort`, límites, costes, suscripciones, cuentas de cortesía y apertura del registro (RF-SA, RN-13, ADR-031).
   - 🤖 `backend-fastapi` · Opus 5.5 + `arquitecto-vue` · Sonnet 5.5
-- [ ] **Producción:** entorno separado de staging, TLS, cabeceras de seguridad, límites de peticiones y secretos fuera del repo.
+- [ ] **Producción preparada:** TLS, cabeceras de seguridad, límites de peticiones y secretos fuera del repo; procedimiento de despliegue con copia previa y migración probada sobre una copia restaurada, ensayado en local con el mismo Compose. El primer despliegue se hace en el Bloque 12 (§1.5, ADR-014).
   - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **Copias de seguridad:** cifradas y fuera del servidor, con archivado de WAL y simulacro de restauración (RNF-15).
+- [ ] **Copias de seguridad:** cifradas, con archivado de WAL y simulacro de restauración en local; el envío fuera del servidor queda preparado y se activa con el primer despliegue (RNF-15).
   - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **Observabilidad:** logs, métricas básicas, monitor externo de disponibilidad, alertas de errores y de gasto de IA, y un runbook por alerta en `docs/operacion/`.
+- [ ] **Observabilidad:** logs, métricas básicas, alertas de errores y de gasto de IA, y un runbook por alerta en `docs/operacion/`. El monitor externo de disponibilidad se activa con el primer despliegue.
   - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **Prueba de carga** con k6 y la IA simulada (RNF-16).
+- [ ] **Prueba de carga** en local con k6 y la IA simulada (RNF-16). Se repite en producción en la Parte II.
   - 🤖 `qa-testing` · Opus 5.5
-- [ ] **Imágenes identificadas por commit** y con SBOM; la primera versión numerada será la 1.0.0 (ADR-032). **Cerrar ADR-014.**
+- [ ] **Imágenes identificadas por commit** y con SBOM; la primera versión numerada será la 1.0.0 (ADR-032).
   - 🤖 `plataforma-entrega` · Opus 5.5
 
-**Criterio de terminado:** producción en HTTPS; alta y pago reales con tarjeta y con PayPal en cuentas habilitadas por el superadministrador, con el registro cerrado (RN-13); una cuenta nueva llega al primer uso en < 5 min; la PWA instalada funciona en un Android y un iPhone reales; restauración desde copia probada.
+**Criterio de terminado:** despliegue, copia y restauración probados en local con el mismo Compose; alta y pago con el modo de pruebas de Stripe, con tarjeta y con PayPal, en cuentas habilitadas por el superadministrador, con el registro cerrado (RN-13); una cuenta nueva llega al primer uso en < 5 min; la PWA instalada funciona en un Android y un iPhone reales con el HTTPS local.
 
 ---
 
@@ -1483,9 +1502,12 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 
 ---
 
-### Bloque 12 — Módulo Verifactu
+### Bloque 12 — Módulo Verifactu y primer despliegue
 
-**Objetivo:** que el sistema de facturación cumpla el reglamento en modalidad VERI*FACTU. Puede dejarse para el final porque el Bloque 2 ya aporta la base: inmutabilidad, numeración sin huecos y cadena de registros.
+**Objetivo:** que el sistema de facturación cumpla el reglamento en modalidad VERI*FACTU, y el primer despliegue en producción. Puede dejarse para el final porque el Bloque 2 ya aporta la base: inmutabilidad, numeración sin huecos y cadena de registros.
+
+- [ ] **Primer despliegue en producción** en `https://kapataz.kodigolab.es`, en el VPS de la UE, detrás del proxy nginx existente y conectado a la red `kronoqr-app`. No hay staging: producción solo tiene cuentas de demostración y datos sintéticos (RN-13, §1.5) y en ella se ejecuta la Parte II (ADR-014). Despliegue manual por imagen etiquetada con el commit, con vuelta atrás a la etiqueta anterior y procedimiento en `docs/operacion/`. Comprobar las condiciones de ADR-014 en producción: redirección a HTTPS, IP real del cliente, SSE sin búfer, tamaño de subida y que `kapataz-db` no es accesible desde `kronoqr-app`. Activar las copias fuera del servidor y el monitor externo. **Cerrar ADR-014.**
+  - 🤖 `plataforma-entrega` · Opus 5.5
 
 - [ ] **Contrastar la normativa vigente:** Real Decreto 1007/2023, Orden HAC/1177/2024 y especificaciones técnicas de la AEAT. Incluye tres comprobaciones: comparar los esquemas de producción con los de preproducción que se usaron para el modelo (en noviembre de 2026, la lista de exenciones llegaba a E8 en preproducción y a E6 en la orden); confirmar en el documento de validaciones que `ImporteTotal` es base más cuota, sin restar la retención de IRPF ni la garantía; y revisar si la modificación técnica anunciada por Hacienda el 5 de octubre de 2026 ha cambiado el registro.
   - 🤖 `arquitecto-python` · Opus 5.5 + `seguridad-ia` · Opus 5.5
@@ -1504,12 +1526,12 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 - [ ] **Exportación de registros** para la Administración (RF-VF-05).
   - 🤖 `backend-fastapi` · Opus 5.5
 - [ ] **Declaración responsable** por versión (RF-VF-06): generada en cada release con el contenido del art. 15 de la Orden HAC/1177/2024, visible en la app, publicada en la web con las anteriores y conservada en el repositorio.
-  - 🤖 `arquitecto-python` · Opus 5.5 (redacta) + 👤 firmas como productor
-- [ ] 👤 **Validación fiscal** de las facturas y del módulo con un asesor.
+  - 🤖 `arquitecto-python` · Opus 5.5 (redacta) + 👤 firmas como productor. La firma es un pendiente legal (§1.5).
+- [ ] 👤 **Validación fiscal** de las facturas y del módulo con un asesor. Pendiente legal (§1.5).
 - [ ] **Cerrar ADR-012.**
   - 🤖 `arquitecto-python` · Opus 5.5
 
-**Criterio de terminado:** registros, huella y QR verificados; envío aceptado en el entorno de pruebas de la AEAT; autorización de clientes resuelta; declaración responsable firmada y validación del asesor hecha. Hasta este punto ningún cliente real emite facturas.
+**Criterio de terminado:** registros, huella y QR verificados; envío aceptado en el entorno de pruebas de la AEAT; flujo de autorización de clientes construido; producción desplegada con las condiciones de ADR-014 comprobadas. La declaración responsable firmada, la validación del asesor y la autorización real de los clientes son pendientes legales (§1.5): hasta cerrarlos, ningún cliente real emite facturas.
 
 ---
 

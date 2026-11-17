@@ -1,0 +1,12 @@
+# Normaliza los finales de línea en el repositorio.
+* text=auto
+
+# Los scripts y ficheros que lee Linux dentro de los contenedores deben llegar con LF,
+# también en un checkout de Windows con core.autocrlf=true: con CRLF fallan
+# el init de PostgreSQL y los scripts de despliegue.
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+.env*.example text eol=lf
+*.conf text eol=lf

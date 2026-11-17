@@ -7,9 +7,9 @@
 
 ## Contexto
 
-Kapataz tiene registro abierto con email y contraseña (RF-AC-01), con la excepción del registro cerrado hasta la 1.0.0 (RN-13). El usuario abre sesión en el portátil y en el móvil, quiere ver esas sesiones y cerrarlas (RF-AC-02), recuperar la contraseña (RF-AC-03) y activar TOTP (RF-AC-04). El superadministrador tiene TOTP obligatorio (RF-SA-01).
+Kapataz tiene registro abierto con email y contraseña (RF-AC-01), con la excepción del registro cerrado mientras queden pendientes legales (RN-13). El usuario abre sesión en el portátil y en el móvil, quiere ver esas sesiones y cerrarlas (RF-AC-02), recuperar la contraseña (RF-AC-03) y activar TOTP (RF-AC-04). El superadministrador tiene TOTP obligatorio (RF-SA-01).
 
-La app y la API se sirven desde el mismo origen detrás de Caddy (ADR-013), así que no hace falta CORS. Lo que hay detrás de la sesión son datos fiscales y la capacidad de emitir facturas: una sesión robada es grave. La PWA corre en navegadores móviles, donde un token guardado en JavaScript queda expuesto a cualquier XSS.
+La app y la API se sirven desde el mismo origen detrás del proxy del proveedor (ADR-013, ADR-014), así que no hace falta CORS. Lo que hay detrás de la sesión son datos fiscales y la capacidad de emitir facturas: una sesión robada es grave. La PWA corre en navegadores móviles, donde un token guardado en JavaScript queda expuesto a cualquier XSS.
 
 ## Opciones consideradas
 

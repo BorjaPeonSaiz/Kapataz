@@ -61,7 +61,24 @@ Un asistente disponible en el portátil y en el móvil, al que se le habla como 
 | Facturas simplificadas (tipos F2, F3 y R5 del registro de la AEAT) | `invoice_type` ya admite esos valores. La v1 solo emite facturas completas con destinatario identificado (RN-F-06), porque el tipo de IVA de la obra depende de quién es el destinatario (RN-F-13) |
 | Clientes sin NIF español (bloque `IDOtro` del registro de la AEAT) | `customers` guarda `tax_id_type` y `tax_id_country`. La v1 solo valida y admite NIF español, que incluye el NIE |
 
-> ⚠️ **Condición legal de lanzamiento:** los productores de software solo pueden ofrecer sistemas adaptados desde el 29 de julio de 2025. Las sociedades deben usarlos antes del 1 de enero de 2027, y el resto, autónomos incluidos, antes del 1 de julio de 2027 (Real Decreto-ley 15/2025). El 5 de octubre de 2026, Hacienda publicó la previsión de aplazar las obligaciones pendientes de empresarios y profesionales a octubre de 2028, pero a 11 de noviembre de 2026 no hay norma en el BOE y la AEAT sigue citando las fechas de 2027. Entendemos que ese aplazamiento no afecta a los productores, cuya obligación ya es exigible; la nota no lo dice de forma expresa y está pendiente de confirmar con el asesor fiscal. La misma nota anuncia una segunda modificación de los ámbitos de aplicación y de ciertos aspectos técnicos, para converger con la factura electrónica y con ViDA, que mantendrá las garantías de integridad, conservación, trazabilidad e inalterabilidad en términos sustancialmente equivalentes: hay que revisar las especificaciones técnicas de la AEAT antes de empezar los bloques de Verifactu. Por eso Verifactu se construye al final, pero ningún cliente real emite facturas hasta cerrar el Bloque 12, con la declaración responsable firmada y la validación de un asesor fiscal. Para garantizarlo, el registro está cerrado hasta publicar la 1.0.0 (RN-13). Revisar el BOE antes de lanzar.
+> ⚠️ **Condición legal de lanzamiento:** los productores de software solo pueden ofrecer sistemas adaptados desde el 29 de julio de 2025. Las sociedades deben usarlos antes del 1 de enero de 2027, y el resto, autónomos incluidos, antes del 1 de julio de 2027 (Real Decreto-ley 15/2025). El 5 de octubre de 2026, Hacienda publicó la previsión de aplazar las obligaciones pendientes de empresarios y profesionales a octubre de 2028, pero a 11 de noviembre de 2026 no hay norma en el BOE y la AEAT sigue citando las fechas de 2027. Entendemos que ese aplazamiento no afecta a los productores, cuya obligación ya es exigible; la nota no lo dice de forma expresa y está pendiente de confirmar con el asesor fiscal. La misma nota anuncia una segunda modificación de los ámbitos de aplicación y de ciertos aspectos técnicos, para converger con la factura electrónica y con ViDA, que mantendrá las garantías de integridad, conservación, trazabilidad e inalterabilidad en términos sustancialmente equivalentes: hay que revisar las especificaciones técnicas de la AEAT antes de empezar los bloques de Verifactu. Por eso Verifactu se construye al final, pero ningún cliente real emite facturas hasta cerrar el Bloque 12, con la declaración responsable firmada y la validación de un asesor fiscal. Para garantizarlo, el registro está cerrado mientras quede algún pendiente legal (§1.5, RN-13). Revisar el BOE antes de lanzar.
+
+### 1.5 Demo de portafolio y pendientes legales
+
+Por ahora, Kapataz es una **demo para el portafolio** de KodigoLab, no un producto con clientes (Borja, 17/11/2026):
+
+- **Todo se construye y se prueba en local** hasta cerrar el Bloque 12, con el mismo Compose que en el servidor. El primer despliegue en `https://kapataz.kodigolab.es` se hace entonces, para ejecutar la Parte II (ADR-014).
+- **La 1.0.0 es la demo que supera la Parte II.** Publicarla no abre el registro ni hace reales las facturas (RN-13).
+- **Pendientes legales:** lo que depende de un asesor, un abogado o un tercero queda marcado como pendiente legal. No bloquea ningún bloque ni la 1.0.0. Mientras quede alguno abierto, el registro sigue cerrado, solo hay cuentas de demostración y solo se usan datos sintéticos.
+
+| Pendiente legal | Dónde se marca |
+|---|---|
+| Validación fiscal de un asesor: IVA de la facturación por fases (ADR-033), aplazamiento de VERI*FACTU para el productor, `ImporteTotal` del registro y validación del módulo | Bloques 8 y 12 |
+| Declaración responsable firmada como productor (RF-VF-06) | Bloque 12 |
+| Contrato con el proveedor de envío y autorización real de cada cliente (RF-VF-07) | Bloque 12 |
+| Condiciones de uso, contrato de encargo, política de privacidad, aviso de IA y plazos de conservación, revisados por un abogado | Bloque 10 |
+| Retención cero, evaluación de la transferencia y lista de subencargados de Anthropic (ADR-029) | Bloque 6 |
+| Pago real con tarjeta y con PayPal (Stripe en modo real) | Bloque 10 |
 
 ---
 
@@ -268,7 +285,7 @@ Un asistente disponible en el portátil y en el móvil, al que se le habla como 
 | RN-10 | Ninguna consulta, herramienta ni tarea en segundo plano accede a datos de otra cuenta. |
 | RN-11 | Antes de enviar nada a Claude, el servidor sustituye por seudónimos los nombres, NIF, direcciones y datos de contacto de clientes, proveedores y del propio profesional. A Claude nunca llega un PDF, una imagen ni un audio. Si la seudonimización falla, la petición no se envía. |
 | RN-12 | Sin suscripción activa, la cuenta queda 90 días en solo lectura: se puede consultar y exportar lo propio, pero no crear documentos ni usar la IA. Se pueden corregir y reenviar los registros rechazados de facturas ya emitidas, aunque la ley no lo exige: la subsanación no tiene plazo máximo y puede hacerse desde otro sistema. Pasado ese plazo, la cuenta se borra: la exportación cuenta como devolución de los datos (art. 28.3.g del RGPD), y el contrato lo dice de forma expresa. Antes de borrar, se avisa al usuario de que conservar sus facturas es obligación suya (art. 29.2.e de la Ley General Tributaria y art. 19 del RD 1619/2012). Los registros de Verifactu ya los tiene la AEAT. KodigoLab conserva bloqueada solo la autorización firmada mientras puedan exigirse responsabilidades (arts. 32 y 33.4 de la LOPDGDD). La baja voluntaria sigue el mismo camino que el impago. |
-| RN-13 | Hasta publicar la 1.0.0, el registro está cerrado, como excepción a RF-AC-01: solo existen las cuentas de cortesía que crea el superadministrador (RF-SA-04) y las que habilita para probar el pago (RF-SA-07). Esas cuentas trabajan solo en el espacio de demostración, así que sus facturas llevan la marca de RN-F-09 y ninguna es una factura real. El superadministrador abre el registro al publicar la 1.0.0. |
+| RN-13 | Mientras quede algún pendiente legal abierto (§1.5), el registro está cerrado, como excepción a RF-AC-01: solo existen las cuentas de cortesía que crea el superadministrador (RF-SA-04) y las que habilita para probar el pago (RF-SA-07). Esas cuentas trabajan solo en el espacio de demostración, así que sus facturas llevan la marca de RN-F-09 y ninguna es una factura real. Publicar la 1.0.0 no abre el registro: el superadministrador lo abre cuando se han cerrado todos los pendientes legales. |
 | RN-F-01 | La numeración de facturas es correlativa por cuenta, serie y año, sin huecos ni duplicados, incluso con emisiones concurrentes. |
 | RN-F-02 | Una factura emitida es inmutable: ningún camino del código permite `UPDATE` ni `DELETE` sobre sus datos fiscales. |
 | RN-F-03 | Una rectificativa referencia siempre a la factura o facturas que rectifica e indica el motivo. Guarda su clase (R1 a R4 del registro de la AEAT, según el motivo) y si es por sustitución o por diferencias; la de sustitución guarda además la base y la cuota rectificadas. |
@@ -477,7 +494,7 @@ Escenario: Material cerca del límite del 40 %
   Entonces la app avisa de que el material es el 36 % de la base y el límite es el 40 %
   Y mantiene el 10 %
 
-Escenario: Registro cerrado antes de la 1.0.0
+Escenario: Registro cerrado con pendientes legales
   Dado que el registro está cerrado
   Cuando intento registrarme con un email que el superadministrador no ha habilitado
   Entonces no puedo crear la cuenta

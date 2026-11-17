@@ -1,0 +1,28 @@
+# Lista blanca: al contexto de construcción solo entra lo que necesita el Dockerfile.
+# Así nunca acaban en la imagen .env, copias, node_modules ni la caché local.
+*
+
+!backend/pyproject.toml
+!backend/uv.lock
+!backend/alembic.ini
+!backend/alembic/
+!backend/src/
+
+!frontend/
+
+# Dentro de lo permitido, fuera lo generado en local.
+**/__pycache__/
+**/*.pyc
+**/.mypy_cache/
+**/.ruff_cache/
+**/.pytest_cache/
+backend/src/kapataz/static/
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+frontend/.vite/
+**/.env
+**/.env.*
+
+# Certificados del HTTPS local: nunca en la imagen
+.local-tls/

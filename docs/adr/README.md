@@ -19,7 +19,7 @@ Ningún ADR aceptado cambia sin que `arquitecto-python` lo proponga y Borja lo a
 | [ADR-011](ADR-011-voz-faster-whisper.md) | Voz con faster-whisper en nuestro servidor | Aceptado | Bloque 0 |
 | [ADR-012](ADR-012-facturacion-verifactu.md) | Facturación conforme a Verifactu | Propuesto | Bloque 12 |
 | [ADR-013](ADR-013-vue-servido-por-fastapi.md) | Vue 3 servido por FastAPI detrás de un proxy TLS | Aceptado | Bloque 0 |
-| [ADR-014](ADR-014-despliegue-docker-compose-vps-ue.md) | Despliegue con Docker Compose en un VPS de la UE | Aceptado | Bloque 10 |
+| [ADR-014](ADR-014-despliegue-docker-compose-vps-ue.md) | Despliegue con Docker Compose en un VPS de la UE | Aceptado | Bloque 12 |
 | [ADR-015](ADR-015-logs-estructurados-sin-datos-personales.md) | Logs estructurados sin datos personales | Aceptado | Bloque 0 |
 | [ADR-016](ADR-016-suscripcion-stripe.md) | Suscripción con Stripe | Aceptado | Bloque 10 |
 | [ADR-017](ADR-017-historico-separado-de-emitidas.md) | Separación entre histórico importado y facturas emitidas | Aceptado | Bloque 2 |

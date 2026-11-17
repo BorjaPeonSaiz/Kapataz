@@ -62,6 +62,6 @@ Se elige la opción 3.
 - `test_a01_admin_404_para_clientes` (`owasp("A01")`) y prueba de que sin TOTP no se entra.
 - Prueba de que ninguna ruta de la zona devuelve facturas, clientes ni documentos (`req("RF-SA-05")`).
 - Prueba de que el cambio de modelo afecta a toda la plataforma, queda registrado y rechaza un modelo no permitido (`req("RF-SA-02")`, `req("RF-SA-06")`); `test_llm03_cambio_de_modelo_registrado`.
-- Escenario «Registro cerrado antes de la 1.0.0» (`req("RN-13")`, `req("RF-SA-07")`).
+- Escenario «Registro cerrado con pendientes legales» (`req("RN-13")`, `req("RF-SA-07")`).
 - Prueba de que el registro y la API no permiten obtener el rol `PlatformAdmin`.
 - Revisión de arquitectura: ningún nombre de modelo fijado en el código.

@@ -1,0 +1,112 @@
+/* Tokens de diseño de Kapataz (docs/02-arquitectura.md, Diseño > Paleta).
+   Única fuente de colores: los componentes y Tailwind solo referencian estas variables. */
+
+:root {
+  color-scheme: light;
+  --color-bg: #FFF7ED;
+  --color-surface: #FFFDFA;
+  --color-surface-alt: #FBEEE0;
+  --color-text: #3A2E28;
+  --color-text-muted: #6B5D54;
+  --color-border: #EADDCF;
+  --color-border-strong: #8C7A6E;
+  --color-brand: #D66C3A;
+  --color-accent: #7A9B76;
+  --color-primary: #B04E24;
+  --color-primary-hover: #8F3E1C;
+  --color-on-primary: #FFFFFF;
+  --color-info-bg: #FFF0E5;
+  --color-danger: #B3261E;
+  --color-on-danger: #FFFFFF;
+  --color-danger-bg: #FCE9E7;
+  --color-warning: #7A4A00;
+  --color-warning-bg: #FCEBC4;
+  --color-success: #3F6B3B;
+  --color-success-bg: #EAF1E8;
+  --color-draft: #5E534C;
+  --color-draft-bg: #F1EAE3;
+  --color-issued: #3A2E28;
+  --color-on-issued: #FFFFFF;
+  --color-issued-bg: #F3E6D8;
+  --color-focus: #B04E24;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
+
+  --shadow-1: 0 1px 2px rgb(58 46 40 / 0.06);
+  --shadow-2: 0 8px 24px rgb(58 46 40 / 0.08);
+  --shadow-3: 0 16px 40px rgb(58 46 40 / 0.18);
+
+  --touch-target: 44px;
+  --touch-target-primary: 48px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --color-bg: #1A1512;
+    --color-surface: #241D19;
+    --color-surface-alt: #2E2520;
+    --color-text: #F7EDE3;
+    --color-text-muted: #C2B2A6;
+    --color-border: #3D332D;
+    --color-border-strong: #8F7F74;
+    --color-brand: #E58A5C;
+    --color-accent: #9CB998;
+    --color-primary: #F0956A;
+    --color-primary-hover: #F5AD8A;
+    --color-on-primary: #1A1512;
+    --color-info-bg: #3A2418;
+    --color-danger: #FF9A92;
+    --color-on-danger: #2B0A07;
+    --color-danger-bg: #3A1613;
+    --color-warning: #F5C95C;
+    --color-warning-bg: #3A2C0A;
+    --color-success: #9CC495;
+    --color-success-bg: #1F2D1D;
+    --color-draft: #CFC3B9;
+    --color-draft-bg: #2E2722;
+    --color-issued: #F2E6D9;
+    --color-on-issued: #1A1512;
+    --color-issued-bg: #33291F;
+    --color-focus: #F0956A;
+    --shadow-1: none;
+    --shadow-2: none;
+    --shadow-3: none;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg: #1A1512;
+  --color-surface: #241D19;
+  --color-surface-alt: #2E2520;
+  --color-text: #F7EDE3;
+  --color-text-muted: #C2B2A6;
+  --color-border: #3D332D;
+  --color-border-strong: #8F7F74;
+  --color-brand: #E58A5C;
+  --color-accent: #9CB998;
+  --color-primary: #F0956A;
+  --color-primary-hover: #F5AD8A;
+  --color-on-primary: #1A1512;
+  --color-info-bg: #3A2418;
+  --color-danger: #FF9A92;
+  --color-on-danger: #2B0A07;
+  --color-danger-bg: #3A1613;
+  --color-warning: #F5C95C;
+  --color-warning-bg: #3A2C0A;
+  --color-success: #9CC495;
+  --color-success-bg: #1F2D1D;
+  --color-draft: #CFC3B9;
+  --color-draft-bg: #2E2722;
+  --color-issued: #F2E6D9;
+  --color-on-issued: #1A1512;
+  --color-issued-bg: #33291F;
+  --color-focus: #F0956A;
+  --shadow-1: none;
+  --shadow-2: none;
+  --shadow-3: none;
+}

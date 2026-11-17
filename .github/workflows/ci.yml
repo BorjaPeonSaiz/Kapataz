@@ -1,0 +1,369 @@
+# CI de Kapataz (plan maestro §7, plataforma-entrega, ADR-022).
+#
+# Etapas: lint -> seguridad -> pruebas de backend y frontend -> imagen.
+# El job «ci» resume todas: es el check que exige la protección de main.
+#
+# Cadena de suministro (ADR-022):
+# - Acciones de terceros fijadas por SHA de commit completo, con su etiqueta
+#   en comentario.
+# - Herramientas que corren en contenedor (Trivy, gitleaks, Semgrep,
+#   actionlint) fijadas por digest.
+# - Para actualizar una acción: gh api repos/<owner>/<repo>/git/ref/tags/<tag>
+#   (si el objeto es un tag anotado, desreferenciarlo con git/tags/<sha>).
+#
+# Nunca llama a la API de Claude ni a la de Stripe: pytest -m "not llm" y
+# LLM_BACKEND=fake.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  UV_VERSION: "0.11.21"
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "24"
+  TRIVY_IMAGE: aquasec/trivy:0.76.1@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c
+  GITLEAKS_IMAGE: zricethezav/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f
+  SEMGREP_IMAGE: semgrep/semgrep:1.182.0@sha256:4a34048c04fef049f71665047f074cffb00cc3d89482f965a5cd151d589237af
+  ACTIONLINT_IMAGE: rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+
+jobs:
+  # ------------------------------------------------------------ lint
+  lint-backend:
+    name: lint · backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - name: Dependencias (uv sync --locked)
+        run: uv sync --locked
+      - name: ruff check
+        run: uv run --frozen ruff check --output-format=github .
+      - name: ruff format --check
+        run: uv run --frozen ruff format --check .
+      - name: mypy --strict
+        run: uv run --frozen mypy --strict
+      - name: import-linter
+        run: uv run --frozen lint-imports
+
+  lint-frontend:
+    name: lint · frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Dependencias (npm ci)
+        run: npm ci --no-audit --no-fund
+      - name: vue-tsc
+        run: npm run type-check
+      - name: eslint y prettier
+        run: npm run lint
+
+  lint-plataforma:
+    name: lint · plataforma
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: ShellCheck de deploy/
+        run: shellcheck --version && shellcheck -x deploy/*.sh deploy/postgres-init/*.sh
+      - name: kapataz_owner solo en kapataz-db y kapataz-tools (ADR-024)
+        # docker compose config en modo local y producción, con las plantillas:
+        # kapataz y kapataz-worker sin DATABASE_MIGRATION_URL ni contraseñas
+        # de PostgreSQL; kapataz-tools con la URL del propietario.
+        run: jq --version && sh deploy/check-compose-env.sh
+      - name: actionlint
+        run: docker run --rm -v "$PWD:/repo" -w /repo "$ACTIONLINT_IMAGE" -color
+      - name: Imágenes y acciones fijadas (ADR-022)
+        run: |
+          status=0
+          # Toda acción de terceros, por SHA de commit completo.
+          if grep -nE '^[[:space:]-]*uses:' .github/workflows/*.yml \
+              | grep -vE 'uses:[[:space:]]*\./' \
+              | grep -vE 'uses:[[:space:]]*[^@[:space:]]+@[0-9a-f]{40}([[:space:]]|$)'; then
+            echo "::error::Hay acciones sin fijar por SHA de commit completo"
+            status=1
+          fi
+          # Todo FROM del Dockerfile, por digest.
+          if grep -nE '^[[:space:]]*FROM[[:space:]]' Dockerfile \
+              | grep -vE '@sha256:[0-9a-f]{64}'; then
+            echo "::error::Hay imágenes base sin digest en el Dockerfile"
+            status=1
+          fi
+          # Toda imagen de Compose, por digest, salvo la propia (se construye en el servidor).
+          if grep -nE '^[[:space:]]*image:' docker-compose*.yml \
+              | grep -vE 'image:[[:space:]]*"?kapataz:' \
+              | grep -vE '@sha256:[0-9a-f]{64}'; then
+            echo "::error::Hay imágenes de Compose sin digest"
+            status=1
+          fi
+          # Ninguna etiqueta latest.
+          if grep -nE '(:latest\b|image:[[:space:]]*"?[a-z0-9./-]+"?[[:space:]]*$)' docker-compose*.yml Dockerfile; then
+            echo "::error::Nunca latest ni imágenes sin etiqueta (ADR-014)"
+            status=1
+          fi
+          exit "$status"
+
+  # ------------------------------------------------------------ seguridad
+  seguridad:
+    name: seguridad
+    needs: [lint-backend, lint-frontend, lint-plataforma]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # gitleaks revisa todo el historial.
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      # Los escáneres en contenedor van antes de instalar dependencias, para
+      # que no recorran .venv ni node_modules.
+      - name: gitleaks (historial completo)
+        run: >-
+          docker run --rm -v "$PWD:/repo" "$GITLEAKS_IMAGE"
+          git /repo --redact --no-banner --verbose
+      - name: Trivy sobre el repositorio
+        run: >-
+          docker run --rm -v "$PWD:/src:ro" "$TRIVY_IMAGE"
+          fs --scanners vuln,secret,misconfig
+          --severity HIGH,CRITICAL --exit-code 1
+          --skip-dirs /src/backend/.venv --skip-dirs /src/frontend/node_modules
+          --no-progress --skip-version-check /src
+      - name: Semgrep
+        # Reglas de la comunidad; solo bloquean las de severidad ERROR.
+        run: >-
+          docker run --rm -v "$PWD:/src" -w /src "$SEMGREP_IMAGE"
+          semgrep scan --metrics=off --error --severity ERROR
+          --config p/python --config p/fastapi
+          --config p/typescript --config p/javascript
+          --config p/dockerfile --config p/github-actions --config p/secrets
+          --exclude backend/src/kapataz/static
+          --exclude backend/.venv --exclude frontend/node_modules
+      - name: Dependencias de backend (uv sync --locked)
+        working-directory: backend
+        run: uv sync --locked
+      - name: pip-audit
+        # Falla con cualquier vulnerabilidad conocida (pip-audit no filtra por
+        # severidad). El propio paquete kapataz no está en PyPI y se omite.
+        working-directory: backend
+        run: uv run --frozen pip-audit --skip-editable --progress-spinner off
+      - name: bandit
+        working-directory: backend
+        run: uv run --frozen bandit -c pyproject.toml -r src --severity-level high
+      - name: npm audit
+        working-directory: frontend
+        run: npm audit --audit-level=high
+  # ------------------------------------------------------------ pruebas
+  pruebas-backend:
+    name: pruebas · backend
+    needs: [seguridad]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16@sha256:0dd3149a06e4579a0d70d8fef9945636cd514005e7237deb27f9b67886f8dc4f
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres-ci
+          POSTGRES_DB: kapataz_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready --host=127.0.0.1 --username=postgres --dbname=kapataz_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Mismos roles que en producción (deploy/postgres-init/10-roles.sh).
+      TEST_DATABASE_URL: postgresql+asyncpg://kapataz_app:app-ci@localhost:5432/kapataz_test
+      TEST_DATABASE_MIGRATION_URL: postgresql+asyncpg://kapataz_owner:owner-ci@localhost:5432/kapataz_test
+      LLM_BACKEND: fake
+      EMAIL_BACKEND: fake
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - name: Roles de PostgreSQL (kapataz_owner y kapataz_app)
+        env:
+          PGHOST: localhost
+          PGPORT: "5432"
+          PGPASSWORD: postgres-ci
+          POSTGRES_USER: postgres
+          POSTGRES_DB: kapataz_test
+          KAPATAZ_OWNER_DB_PASSWORD: owner-ci
+          KAPATAZ_APP_DB_PASSWORD: app-ci
+        run: sh deploy/postgres-init/10-roles.sh
+      - name: Dependencias (uv sync --locked)
+        working-directory: backend
+        run: uv sync --locked
+      - name: pytest (sin evaluaciones con la API real)
+        working-directory: backend
+        run: uv run --frozen pytest -m "not llm"
+      - name: Trazabilidad
+        working-directory: backend
+        run: uv run --frozen python tools/traceability.py --check
+
+  frontend:
+    name: pruebas y build · frontend
+    needs: [seguridad]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Dependencias (npm ci)
+        run: npm ci --no-audit --no-fund
+      - name: Pruebas unitarias
+        run: npm run test:unit
+      - name: Build
+        run: npm run build
+
+  # ------------------------------------------------------------ imagen
+  imagen:
+    name: imagen
+    needs: [pruebas-backend, frontend]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      IMAGE_TAG: ci-${{ github.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Construir kapataz:${{ env.IMAGE_TAG }}
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          push: false
+          load: true
+          tags: kapataz:${{ env.IMAGE_TAG }}
+          build-args: GIT_COMMIT=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Sin root
+        run: |
+          user=$(docker image inspect --format '{{.Config.User}}' "kapataz:$IMAGE_TAG")
+          echo "Usuario de la imagen: ${user:-<vacío>}"
+          case "$user" in
+            "" | root | 0 | 0:* | root:*) echo "::error::La imagen corre como root"; exit 1 ;;
+          esac
+      - name: Trivy sobre la imagen
+        # --ignore-unfixed: un CVE sin arreglo publicado no se puede corregir
+        # en la imagen; se revisa en la Parte II (Fase 7).
+        run: >-
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE"
+          image --scanners vuln,secret --severity HIGH,CRITICAL
+          --ignore-unfixed --exit-code 1
+          --no-progress --skip-version-check "kapataz:$IMAGE_TAG"
+      - name: Arranque con Compose y /api/health
+        env:
+          KAPATAZ_IMAGE_TAG: ${{ env.IMAGE_TAG }}
+          KAPATAZ_SKIP_BUILD: "1"
+        run: |
+          cp .env.local.example .env.local
+          sh deploy/local-up.sh
+          curl --fail --silent --show-error --max-time 10 http://127.0.0.1:8000/api/health
+      - name: Contenedores en marcha sin credenciales del propietario (ADR-024)
+        # Entorno real de kapataz y kapataz-worker; nunca imprime valores.
+        # Sin -i: KAPATAZ_OWNER_DB_PASSWORD= (vacía) es válida; el rol va en
+        # minúsculas en las URL.
+        run: |
+          status=0
+          for svc in kapataz kapataz-worker; do
+            id=$(docker compose --env-file .env.local \
+              -f docker-compose.yml -f docker-compose.local.yml ps -q "$svc")
+            [ -n "$id" ] || { echo "::error::$svc no está en marcha"; status=1; continue; }
+            if docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$id" \
+                | grep -qE '^(DATABASE_MIGRATION_URL|KAPATAZ_OWNER_DB_PASSWORD|POSTGRES_PASSWORD)=.|kapataz_owner'; then
+              echo "::error::$svc recibe credenciales del propietario o del superusuario de PostgreSQL"
+              status=1
+            fi
+          done
+          exit "$status"
+      - name: Logs de Compose si algo falla
+        if: failure()
+        run: >-
+          docker compose --env-file .env.local
+          -f docker-compose.yml -f docker-compose.local.yml
+          logs --no-color --tail=200
+      - name: Parar Compose
+        if: always()
+        run: >-
+          docker compose --env-file .env.local
+          -f docker-compose.yml -f docker-compose.local.yml
+          down --volumes --remove-orphans || true
+
+  # ------------------------------------------------------------ resumen
+  ci:
+    name: ci
+    if: always()
+    needs: [lint-backend, lint-frontend, lint-plataforma, seguridad, pruebas-backend, frontend, imagen]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Todas las etapas en verde
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Resultados: $RESULTS"
+          for result in $RESULTS; do
+            [ "$result" = success ] || { echo "::error::Alguna etapa no ha pasado"; exit 1; }
+          done
