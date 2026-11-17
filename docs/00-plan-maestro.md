@@ -1238,7 +1238,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `plataforma-entrega` · Opus 5.5
 - [x] **CI** en cada PR con las etapas de lint, seguridad (`pip-audit`, `npm audit`, bandit, Semgrep, gitleaks y Trivy), unitarias con PostgreSQL real y build.
   - 🤖 `plataforma-entrega` · Opus 5.5
-- [ ] **Protección de `main`:** solo se integra por PR y con las comprobaciones de CI y seguridad en verde como requisito.
+- [x] **Protección de `main`:** solo se integra por PR y con las comprobaciones de CI y seguridad en verde como requisito.
   - 🤖 `plataforma-entrega` · Opus 5.5
 - [x] **Cerrar ADR-022.**
   - 🤖 `plataforma-entrega` · Opus 5.5

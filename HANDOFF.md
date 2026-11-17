@@ -5,7 +5,10 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 ## Estado y objetivo actual
 
 - **Bloque 0:** cerrado. PR #3 integrado en `main` el 12/11/2026 (commit `12e5edb`).
-- **Bloque en curso:** 1 — Esqueleto ejecutable, en la rama `bloque-01-esqueleto`, sin commit. Código, Docker y CI hechos y probados en local el 12/11/2026. Faltan el HTTPS local con mkcert para el móvil, el PR y la protección de `main`.
+- **Bloque en curso:** 1 — Esqueleto ejecutable, en la rama `bloque-01-esqueleto`.
+  - **PR:** el #4, abierto el 17/11/2026 (commit `e1f22a5`).
+  - **`main`:** protegida desde el 17/11/2026, con el check `ci` obligatorio, la rama al día, conversaciones resueltas y también para administradores; sin force push.
+  - **Para integrar faltan:** el CI en verde en GitHub y la prueba con un móvil real, que es la excepción aprobada por Borja y anotada en el PR.
 - **Demo de portafolio y sin despliegue hasta el Bloque 12** (Borja, 17/11/2026; plan maestro §1.5, ADR-014 modificado):
   - Todo se construye y se prueba en local. El primer despliegue en `kapataz.kodigolab.es` se hace en el Bloque 12, y después la Parte II en producción.
   - La 1.0.0 es la demo que supera la Parte II. Publicarla no abre el registro: RN-13 lo mantiene cerrado mientras quede algún pendiente legal (escenario renombrado a «Registro cerrado con pendientes legales»).
@@ -61,18 +64,10 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 
 ## Siguiente acción
 
-1. **HTTPS en local con mkcert:** montado y probado el 17/11/2026 con un certificado autofirmado: cookies `Secure`, HSTS, SSE sin búfer y redirección de HTTP a HTTPS. Comprende:
-   - `sh deploy/local-up.sh --https <IP>`;
-   - el servicio `kapataz-local-tls` (perfil `https` de `docker-compose.local.yml`), un nginx sin root con la misma configuración que el de producción (`deploy/local-tls/kapataz.conf`);
-   - la guía `docs/operacion/https-local.md`.
-
-   **Falta que Borja:**
-   - instale mkcert (`winget install FiloSottile.mkcert`) y ejecute `mkcert -install`;
-   - ponga la red como Privada y cree la regla del cortafuegos para el 8443;
-   - instale `rootCA.crt` en el móvil.
-
-   Los pasos están en la guía. `.env.local` no existe: hay que copiarlo de `.env.local.example`.
-2. **Comprobar el criterio de terminado:** iniciar sesión en `https://<IP>:8443` desde el portátil y desde un móvil real, y que el chat responda con `FakeLlm`. Anotar en el PR el móvil, el navegador y el resultado. Después, marcar la casilla de mkcert del Bloque 1 en el plan maestro.
+1. **CI del PR #4:** en verde a la primera el 17/11/2026, en los ocho jobs. Hay que volver a pasarlo con cada commit nuevo.
+2. **Comprobar el criterio de terminado con el móvil:** iniciar sesión en `https://<IP>:8443` desde un móvil real y comprobar que el chat responde con `FakeLlm`.
+   - Para arrancar: `sh deploy/local-up.sh --https <IP>`; la guía es `docs/operacion/https-local.md`.
+   - Anotar en el PR el móvil, el navegador y el resultado, y marcar la casilla de mkcert del Bloque 1 en el plan maestro.
    - **Estado a 17/11/2026:**
      - En el portátil funciona: mkcert instalado, certificado generado y `https://192.168.4.37:8443` responde con un certificado de confianza.
      - **Desde el móvil no abre.** Borja lo deja para más adelante.
@@ -85,8 +80,7 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
      - el error exacto que da el móvil: tiempo agotado o certificado;
      - probar desactivando un momento el cortafuegos de Bitdefender para confirmar que es él.
    - El portátil también tiene la Wi-Fi conectada, con la IP `192.168.4.33`.
-3. **Visto bueno de Borja; después, commit y PR del Bloque 1.** El CI corre por primera vez en GitHub.
-4. **Activar la protección de `main`**, exigiendo el check `ci` (necesita permiso de Borja).
+3. **Integrar el PR #4** cuando se cumplan los puntos 1 y 2, con el visto bueno de Borja. Después, empezar el Bloque 2 (dominio y persistencia) en la rama `bloque-02-dominio`, creada desde `main`.
 
 ## Pendiente
 
