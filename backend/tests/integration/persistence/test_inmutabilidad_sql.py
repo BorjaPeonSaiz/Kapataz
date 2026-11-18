@@ -8,11 +8,12 @@ import asyncio
 from uuid import uuid4
 
 import pytest
+from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 
-from tests.billing_support import add_customer, add_draft, create_account
+from tests.billing_support import add_corrective_draft, add_customer, add_draft, create_account
 from tests.integration.conftest import APP_ROLE, OWNER_ROLE
-from tests.integration.persistence.conftest import issue_new, run_sql
+from tests.integration.persistence.conftest import issue_new, issue_use_case, run_sql
 
 ROLES = pytest.mark.parametrize("role", [APP_ROLE, OWNER_ROLE])
 
@@ -243,3 +244,228 @@ def test_el_rol_de_la_app_no_borra_lo_que_no_debe(database):
         "invoices": True,
         "invoice_lines": True,
     }
+
+
+# ------------------------------------------- columna a columna, por el catálogo
+
+# Columnas de billing_records que el envío puede cambiar (migración 0003).
+SUBMISSION_COLUMNS = frozenset(
+    {
+        "submission_status",
+        "error_code",
+        "error_description",
+        "submission_csv",
+        "submitted_at",
+        "sent_with_incident",
+    }
+)
+
+# Un valor distinto del actual para cada tipo, también si es NULL. Los textos,
+# de una sola letra: un valor más largo que la columna fallaría antes de llegar
+# al trigger y la prueba no comprobaría nada.
+_DIFFERENT = {
+    "uuid": "gen_random_uuid()",
+    "character varying": "CASE WHEN {c} = 'x' THEN 'y' ELSE 'x' END",
+    "text": "CASE WHEN {c} = 'x' THEN 'y' ELSE 'x' END",
+    "integer": "COALESCE({c}, 0) + 1",
+    "smallint": "COALESCE({c}, 0) + 1",
+    "numeric": "COALESCE({c}, 0) + 1",
+    "boolean": "NOT COALESCE({c}, false)",
+    "date": "COALESCE({c}, DATE '2026-01-01') + 1",
+    "timestamp with time zone": "COALESCE({c}, now()) + interval '1 day'",
+}
+
+
+def _probe_columns(database, role, table, where, params, *, tenant_id, code):
+    """Intenta cambiar cada columna de una fila, una a una, y al final lo deshace todo.
+
+    Devuelve, por columna, ``"trigger"`` si la rechazó el trigger con ``code``,
+    ``"cambia"`` si el trigger la dejó pasar, o el error si falló por otra cosa.
+    Las columnas salen del catálogo: una columna nueva queda cubierta sin tocar
+    la prueba. Los triggers BEFORE se ejecutan antes que RLS (WITH CHECK) y que
+    las restricciones, así que el veredicto es el del trigger.
+    """
+    columns = run_sql(
+        database,
+        OWNER_ROLE,
+        "SELECT column_name, data_type FROM information_schema.columns "
+        "WHERE table_schema = 'public' AND table_name = :table ORDER BY ordinal_position",
+        {"table": table},
+    )
+    assert columns, table
+
+    async def probe() -> dict[str, str]:
+        engine = database.engine(role)
+        verdicts: dict[str, str] = {}
+        try:
+            async with engine.connect() as conn:
+                transaction = await conn.begin()
+                if tenant_id is not None:
+                    await conn.execute(
+                        text("SELECT set_config('app.tenant_id', :t, true)"), {"t": str(tenant_id)}
+                    )
+                for column, data_type in columns:
+                    value = _DIFFERENT[data_type].format(c=column)
+                    statement = text(f"UPDATE {table} SET {column} = {value} WHERE {where}")
+                    try:
+                        async with conn.begin_nested():
+                            result = await conn.execute(statement, dict(params))
+                            assert result.rowcount == 1, (column, result.rowcount)
+                            verdicts[column] = "cambia"
+                    except DBAPIError as error:
+                        verdicts[column] = "trigger" if code in str(error) else str(error.orig)
+                await transaction.rollback()
+        finally:
+            await engine.dispose()
+        return verdicts
+
+    return asyncio.run(probe())
+
+
+@pytest.mark.req("RN-F-02")
+@pytest.mark.owasp("A08")
+@ROLES
+def test_ninguna_columna_de_una_factura_emitida_cambia(app_factory, database, role):
+    tenant_id, [issued] = issue_new(app_factory)
+
+    verdicts = _probe_columns(
+        database,
+        role,
+        "invoices",
+        "id = :id",
+        {"id": issued.invoice.id},
+        tenant_id=tenant_id,
+        code="RN-F-02",
+    )
+
+    assert verdicts == dict.fromkeys(verdicts, "trigger")
+
+
+@pytest.mark.req("RN-F-02")
+@ROLES
+def test_ninguna_columna_de_una_linea_emitida_cambia(app_factory, database, role):
+    tenant_id, [issued] = issue_new(app_factory)
+
+    verdicts = _probe_columns(
+        database,
+        role,
+        "invoice_lines",
+        "invoice_id = :id AND position = 1",
+        {"id": issued.invoice.id},
+        tenant_id=tenant_id,
+        code="RN-F-02",
+    )
+
+    assert verdicts == dict.fromkeys(verdicts, "trigger")
+
+
+@pytest.mark.req("RN-F-07")
+@ROLES
+def test_de_un_registro_solo_cambian_las_columnas_de_envio(app_factory, database, role):
+    tenant_id, [_, issued] = issue_new(app_factory, 2)  # El segundo, enlazado al primero.
+
+    verdicts = _probe_columns(
+        database,
+        role,
+        "billing_records",
+        "id = :id",
+        {"id": issued.record.id},
+        tenant_id=tenant_id,
+        code="RN-F-07",
+    )
+
+    # Las de envío pasan el trigger; que después una restricción CHECK rechace
+    # un valor de prueba como 'x' no es asunto de RN-F-07.
+    passed = {column for column, verdict in verdicts.items() if verdict != "trigger"}
+    assert passed == SUBMISSION_COLUMNS
+
+
+@pytest.mark.req("RN-F-02")
+@pytest.mark.req("RN-F-03")
+def test_lo_rectificado_por_una_rectificativa_emitida_no_cambia(app_factory, database):
+    tenant_id, [original] = issue_new(app_factory)
+    corrective_id = asyncio.run(
+        add_corrective_draft(app_factory, tenant_id, original.invoice.customer_id, original.invoice)
+    )
+    asyncio.run(issue_use_case(app_factory).execute(tenant_id, corrective_id))
+    where = "corrective_invoice_id = :id"
+    params = {"id": corrective_id}
+
+    # Al propietario lo para el trigger, columna a columna y al borrar.
+    verdicts = _probe_columns(
+        database, OWNER_ROLE, "invoice_corrections", where, params, tenant_id=None, code="RN-F-02"
+    )
+    assert verdicts == dict.fromkeys(verdicts, "trigger")
+    with pytest.raises(DBAPIError, match="RN-F-02"):
+        run_sql(database, OWNER_ROLE, f"DELETE FROM invoice_corrections WHERE {where}", params)
+    # La app ni siquiera tiene permiso.
+    for statement in (
+        f"UPDATE invoice_corrections SET position = 2 WHERE {where}",
+        f"DELETE FROM invoice_corrections WHERE {where}",
+    ):
+        with pytest.raises(DBAPIError, match="permission denied"):
+            run_sql(database, APP_ROLE, statement, params, tenant_id=tenant_id)
+    assert run_sql(
+        database, OWNER_ROLE, f"SELECT count(*) FROM invoice_corrections WHERE {where}", params
+    ) == [(1,)]
+
+
+@pytest.mark.req("RN-F-02")
+@pytest.mark.owasp("A01")
+def test_el_rol_de_la_app_no_vacia_ninguna_tabla(database):
+    rows = run_sql(
+        database,
+        APP_ROLE,
+        "SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace "
+        "WHERE n.nspname = 'public' AND c.relkind IN ('r', 'p') "
+        "AND has_table_privilege(current_user, c.oid, 'TRUNCATE')",
+    )
+    assert rows == []
+    with pytest.raises(DBAPIError, match="permission denied"):
+        run_sql(database, APP_ROLE, "TRUNCATE invoices CASCADE")
+
+
+@pytest.mark.req("RN-F-01")
+@pytest.mark.req("RN-F-07")
+def test_sin_contador_ni_cabeza_la_base_de_datos_no_duplica_ni_bifurca(app_factory, database):
+    # series_counters y billing_chain_heads no tienen el trigger de TRUNCATE. Si
+    # el propietario los vaciara, la base de datos seguiría sin admitir un número
+    # repetido ni un segundo primer registro: no depende solo de ellos. Todo
+    # ocurre en una transacción que se deshace al final.
+    tenant_id, [issued] = issue_new(app_factory)
+    duplicate = (
+        "INSERT INTO {table} SELECT (jsonb_populate_record(NULL::{table}, "
+        "to_jsonb(t) || jsonb_build_object('id', gen_random_uuid()))).* "
+        "FROM {table} t WHERE id = :id"
+    )
+
+    async def scenario() -> list[str]:
+        engine = database.engine(OWNER_ROLE)
+        errors: list[str] = []
+        try:
+            async with engine.connect() as conn:
+                transaction = await conn.begin()
+                await conn.execute(text("TRUNCATE series_counters, billing_chain_heads"))
+                for table, row_id in (
+                    ("invoices", issued.invoice.id),
+                    ("billing_records", issued.record.id),
+                ):
+                    try:
+                        async with conn.begin_nested():
+                            await conn.execute(text(duplicate.format(table=table)), {"id": row_id})
+                    except DBAPIError as error:
+                        errors.append(str(error.orig))
+                await transaction.rollback()
+        finally:
+            await engine.dispose()
+        return errors
+
+    numbers, records = asyncio.run(scenario())
+    assert "uq_invoices_number" in numbers
+    assert "uq_billing_records_previous" in records
+    assert run_sql(
+        database,
+        OWNER_ROLE,
+        "SELECT last_number FROM series_counters WHERE tenant_id = :t",
+        {"t": tenant_id},
+    ) == [(1,)]

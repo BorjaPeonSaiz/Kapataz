@@ -16,9 +16,9 @@ from uuid import uuid4
 from kapataz.application.ports.persistence import UnitOfWorkFactory
 from kapataz.domain.accounts.model import Tenant, TenantId, TenantKind
 from kapataz.domain.billing.billing_record import SystemInfo
-from kapataz.domain.billing.codes import RecipientType
+from kapataz.domain.billing.codes import CorrectionType, InvoiceType, RecipientType
 from kapataz.domain.billing.ids import InvoiceId
-from kapataz.domain.billing.invoice import Invoice
+from kapataz.domain.billing.invoice import CorrectiveInvoice, Invoice, RectifiedInvoice
 from kapataz.domain.billing.line_item import LineItem
 from kapataz.domain.billing.money import Money
 from kapataz.domain.billing.numbering import Series
@@ -172,3 +172,44 @@ async def issuable_drafts(
     customer_id = await add_customer(factory, tenant_id)
     drafts = [await add_draft(factory, tenant_id, customer_id, series=series) for _ in range(count)]
     return tenant_id, drafts
+
+
+def corrective_of(
+    tenant_id: TenantId, customer_id: CustomerId, rectified: Invoice
+) -> CorrectiveInvoice:
+    """Borrador de rectificativa por diferencias (serie R, R1) de una factura emitida."""
+    if rectified.number is None or rectified.issue_date is None:
+        msg = "Solo se rectifica una factura emitida."
+        raise ValueError(msg)
+    return CorrectiveInvoice(
+        id=InvoiceId(uuid4()),
+        tenant_id=tenant_id,
+        customer_id=customer_id,
+        series=Series.correctives(),
+        treatment=GENERAL,
+        lines=two_lines(),
+        created_at=SEED_AT,
+        description="Rectificación del precio",
+        recipient_type=RecipientType.BUSINESS,
+        invoice_type=InvoiceType.R1,
+        correction_type=CorrectionType.DIFFERENCE,
+        rectified=(
+            RectifiedInvoice(
+                invoice_id=rectified.id,
+                number=rectified.number,
+                issue_date=rectified.issue_date,
+            ),
+        ),
+        reason="Precio unitario equivocado",
+    )
+
+
+async def add_corrective_draft(
+    factory: UnitOfWorkFactory, tenant_id: TenantId, customer_id: CustomerId, rectified: Invoice
+) -> InvoiceId:
+    draft = corrective_of(tenant_id, customer_id, rectified)
+    async with factory() as uow:
+        await uow.set_tenant(tenant_id)
+        await uow.invoices.add_draft(draft)
+        await uow.commit()
+    return draft.id

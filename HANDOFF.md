@@ -28,7 +28,11 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
     - triggers `KZF02` (factura emitida, sus líneas y correcciones inmutables) y `KZF07` (registros solo actualizables en las columnas de envío; la cabeza solo avanza al registro siguiente; `UNIQUE (tenant_id, previous_record_id) NULLS NOT DISTINCT` impide bifurcar la cadena);
     - repositorios, unidad de trabajo ampliada, `Professional` en `domain/settings` e `IssueInvoice` (factura → cabeza → contador, en una transacción) con `NullBillingRecordSubmission`;
     - datos de partida para pruebas en `tests/billing_support.py` y fixtures en `tests/integration/persistence/conftest.py`.
-  - 660 pruebas con PostgreSQL (590 sin él) y cobertura de `domain/` del 99 %.
+  - **Concurrencia, inmutabilidad y aislamiento** (`qa-testing`; commit de la fase 4):
+    - 20 emisiones en procesos separados (`spawn` y barrera) con una y con tres cuentas, F y R a la vez, la misma factura desde 10 procesos y relojes desfasados para RN-F-04; 10 de 10 repeticiones con cada configuración de roles;
+    - inmutabilidad columna a columna con los dos roles;
+    - recorrido del catálogo: toda tabla fuera de la lista cerrada tiene RLS y la política `tenant_isolation`, y toda FK entre tablas de negocio es compuesta. Una tabla de negocio nueva también hay que añadirla a `_seed_every_table`.
+  - 668 pruebas con PostgreSQL (590 sin él) y cobertura de `domain/` del 99 %.
 
 ### Bloque 0 (histórico)
 
@@ -61,7 +65,11 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 
 ## Siguiente acción
 
-1. **Pruebas de concurrencia, inmutabilidad y aislamiento** (`qa-testing`), cierre de ADR-017 y revisiones de seguridad y de código.
+1. **Cierre del Bloque 2:**
+   - cerrar ADR-017 (`arquitecto-python`) y revisar la revalidación de facturas emitidas al leerlas;
+   - recoger en §4.5 y la arquitectura §5.2 las columnas añadidas;
+   - decidir si `payments`, `series_counters` y `billing_chain_heads` también rechazan `TRUNCATE`;
+   - revisiones de `seguridad-ia` y `revisor-codigo`.
 2. Un solo PR del bloque, con commits separados por fase.
 
 ## Pendiente
@@ -173,6 +181,7 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
   - corregir un cobro mal apuntado (hoy `payments` no admite UPDATE ni DELETE).
 - **RF-FA-08:** la emisión aún no escribe en `audit_events` (tabla de otro bloque).
 - **Espacio de demostración (RN-13):** los triggers impiden borrar sus facturas emitidas; la función de mantenimiento necesitará una excepción controlada.
+- **Pruebas:** `tests/integration/test_rls.py::test_toda_tabla_sin_rls_esta_en_la_lista_cerrada` queda cubierta por la prueba nueva del catálogo; se puede retirar.
 - **Zona horaria:** la fecha de expedición es la de hoy en Europe/Madrid. En Windows, `zoneinfo` depende del paquete `tzdata`, que solo llega como dependencia de desarrollo; la imagen trae el tzdata del sistema. Valorar declararlo como dependencia de la app.
 
 ### Por decidir en su bloque
