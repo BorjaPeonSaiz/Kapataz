@@ -24,10 +24,13 @@ class TenantKind(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class Tenant:
-    """Cuenta. Un espacio de demostración pertenece a otra cuenta (RF-CF-04, RN-13)."""
+    """Cuenta. Un espacio de demostración pertenece a otra cuenta (RF-CF-04, RN-13).
+
+    ``name`` es None hasta que el profesional da sus datos; nunca es el email.
+    """
 
     id: TenantId
-    name: str
+    name: str | None
     kind: TenantKind
     parent_tenant_id: TenantId | None
     created_at: datetime

@@ -422,6 +422,7 @@ erDiagram
     }
     billing_chain_heads {
         fk tenant_id PK "una fila por cuenta"
+        fk last_record_id FK "nulo con la cadena vacía"
     }
     billing_records {
         id id PK
@@ -451,7 +452,7 @@ erDiagram
 
 - `invoices` tiene un trigger que impide `UPDATE` y `DELETE` de los campos fiscales con `status='issued'` (RN-F-02).
 - `series_counters` es un contador por cuenta, serie y año. Se bloquea con `SELECT … FOR UPDATE` en la misma transacción que la emisión (RN-F-01).
-- `billing_chain_heads` tiene una fila por cuenta con el último registro de la cadena. Toda operación que añade un registro la bloquea con `SELECT … FOR UPDATE` antes que el contador de la serie, siempre en ese orden y en la misma transacción (RN-F-07). Así, dos emisiones simultáneas no enlazan con el mismo registro anterior aunque sean de series distintas (F y R).
+- `billing_chain_heads` tiene una fila por cuenta con el último registro de la cadena. Guarda solo el enlace (`last_record_id`, nulo mientras la cadena está vacía), sin copiar datos del registro: el encadenamiento se lee de `billing_records`, que no cambia, y así la cabeza no puede desfasarse. La clave foránea compuesta `(tenant_id, last_record_id)` impide apuntar a un registro de otra cuenta. Toda operación que añade un registro la bloquea con `SELECT … FOR UPDATE` antes que el contador de la serie, siempre en ese orden y en la misma transacción (RN-F-07). Así, dos emisiones simultáneas no enlazan con el mismo registro anterior aunque sean de series distintas (F y R).
 - `billing_records` forma una sola cadena por cuenta con altas, subsanaciones y anulaciones. Una factura puede tener varios registros. La anulación se deduce de la cadena, sin tocar la factura (RN-F-07). El contenido canónico JSON usa los campos de `RegistroAlta` y `RegistroAnulacion` desde el Bloque 2. El encadenamiento guarda también `prev_issuer_tax_id`, `prev_series_number` y `prev_issue_date`, y el sistema que lo generó (`system_name`, `system_id`, `system_version`, `installation_number`).
 - `invoices` guarda además la garantía (`guarantee_pct`, `guarantee_amount`, `guarantee_due_date`), separada de la retención de IRPF, y los datos del registro de la AEAT: `operation_date`, `description`, `regime_key`, `operation_class` y `exemption_cause`.
 - `invoices.status` es el estado fiscal. El estado de cobro sale de `payments` (RF-FA-06, RN-F-10).

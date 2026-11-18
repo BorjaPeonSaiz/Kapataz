@@ -164,3 +164,53 @@ def test_cli_crea_cuenta_de_cortesia_en_postgresql(database, monkeypatch, capsys
 
     with _app_harness(database, settings=settings) as h:
         assert h.log_in("cortesia-pg@ejemplo.es").status_code == 204
+
+
+@pytest.mark.req("RF-AC-01")
+@pytest.mark.req("RNF-01")
+def test_email_largo_no_llega_al_nombre_de_la_cuenta(database):
+    # 250 caracteres: antes se copiaba en tenants.name, de 200, y el registro fallaba (F-05).
+    email = "c" * 64 + "@" + ("d" * 60 + ".") * 3 + "es"
+    with _app_harness(database) as h:
+        h.register_and_verify(email)
+        assert h.log_in(email).status_code == 204
+        tenant_id = h.client.get("/api/auth/me").json()["tenant_id"]
+
+    async def name():
+        engine = database.engine(OWNER_ROLE)
+        async with engine.connect() as conn:
+            value = await conn.scalar(
+                text("SELECT name FROM tenants WHERE id = :t"), {"t": tenant_id}
+            )
+        await engine.dispose()
+        return value
+
+    assert asyncio.run(name()) is None
+
+
+@pytest.mark.req("RNF-01")
+@pytest.mark.owasp("A09")
+def test_error_de_base_de_datos_no_deja_datos_personales_en_logs(database, captured_logs):
+    # PostgreSQL detalla la fila rechazada («Failing row contains …», con el email) y
+    # SQLAlchemy añade los parámetros de la consulta. Ninguno de los dos debe llegar al log.
+    email = "integracion-error-bd@ejemplo.es"
+
+    async def owner(sql):
+        engine = database.engine(OWNER_ROLE)
+        async with engine.begin() as conn:
+            await conn.execute(text(sql))
+        await engine.dispose()
+
+    asyncio.run(owner("ALTER TABLE users ADD CONSTRAINT ck_prueba_a09 CHECK (false) NOT VALID"))
+    try:
+        with _app_harness(database) as h:
+            response = h.post("/api/auth/register", {"email": email, "password": STRONG_PASSWORD})
+    finally:
+        asyncio.run(owner("ALTER TABLE users DROP CONSTRAINT ck_prueba_a09"))
+
+    assert response.status_code == 500
+    output = captured_logs.getvalue()
+    lines = [json.loads(line) for line in output.splitlines() if line.strip()]
+    assert any(line["event"] == "peticion_fallida" for line in lines)
+    assert email not in output
+    assert STRONG_PASSWORD not in output

@@ -1,9 +1,14 @@
 """Configuración común de pytest."""
 
+import io
+import logging
 import os
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+
+from kapataz.infrastructure.logging.setup import configure_logging
 
 INTEGRATION_DIR = Path(__file__).parent / "integration"
 SKIP_WITHOUT_DB = (
@@ -27,3 +32,16 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 @pytest.fixture
 def anyio_backend() -> str:
     return "asyncio"
+
+
+@pytest.fixture
+def captured_logs() -> Iterator[io.StringIO]:
+    """Logs JSON de la app, tal como saldrían en producción."""
+    configure_logging()
+    stream = io.StringIO()
+    root = logging.getLogger()
+    [handler] = root.handlers
+    assert isinstance(handler, logging.StreamHandler)
+    handler.setStream(stream)
+    yield stream
+    root.handlers = []

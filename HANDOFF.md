@@ -4,34 +4,16 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 
 ## Estado y objetivo actual
 
-- **Bloque 0:** cerrado. PR #3 integrado en `main` el 12/11/2026 (commit `12e5edb`).
-- **Bloque en curso:** 1 — Esqueleto ejecutable, en la rama `bloque-01-esqueleto`.
-  - **PR:** el #4, abierto el 17/11/2026 (commit `e1f22a5`).
-  - **`main`:** protegida desde el 17/11/2026, con el check `ci` obligatorio, la rama al día, conversaciones resueltas y también para administradores; sin force push.
-  - **Para integrar faltan:** el CI en verde en GitHub y la prueba con un móvil real, que es la excepción aprobada por Borja y anotada en el PR.
-- **Demo de portafolio y sin despliegue hasta el Bloque 12** (Borja, 17/11/2026; plan maestro §1.5, ADR-014 modificado):
-  - Todo se construye y se prueba en local. El primer despliegue en `kapataz.kodigolab.es` se hace en el Bloque 12, y después la Parte II en producción.
-  - La 1.0.0 es la demo que supera la Parte II. Publicarla no abre el registro: RN-13 lo mantiene cerrado mientras quede algún pendiente legal (escenario renombrado a «Registro cerrado con pendientes legales»).
-  - Los pendientes legales están listados en §1.5 y en «Pendientes legales (demo)», más abajo. No bloquean ningún bloque.
-  - Actualizados el plan maestro (§1.5, RN-13 y Bloques 1, 10 y 12), la especificación, ADR-014 y ADR-012, 016, 020, 025 y 031, el índice de ADR, el modelo de amenazas (S-08), el plan de verificación, `despliegue.md`, los agentes `plataforma-entrega` y `qa-testing`, dos docstrings de RN-13 en `domain/accounts` y un comentario de `deploy/deploy.sh`.
-- **Hecho en el Bloque 1:**
-  - **Backend:** FastAPI 0.162.5 y uvicorn 0.54.0, con las cuatro capas e import-linter. Incluye cuentas, sesiones en cookie y CSRF firmado, registro cerrado por defecto con lista de emails (RN-13), verificación de email, chat SSE con `FakeLlm`, cabeceras de seguridad y HSTS, migración inicial con RLS en `tenants` y roles `kapataz_owner` y `kapataz_app`, CLI `kapataz-admin create-user` y contrato en `docs/api/openapi.json`.
-  - **Pruebas del backend:** 174, también con PostgreSQL real.
-  - **`backend/tools/traceability.py`:** con `--check` en CI; `--strict` queda para la Parte II.
-  - **Frontend:** Vue 3, Vite y Tailwind con los tokens de kodigolab.es, componentes base, acceso, verificación de email y chat SSE, y cliente generado desde OpenAPI. 35 pruebas; JS inicial de 63,5 KB gzip. Manifiesto PWA estático, sin service worker hasta el Bloque 10.
-  - **Plataforma:**
-    - `Dockerfile` sin root y fijado por digest;
-    - `docker-compose.yml` con `kapataz`, `kapataz-worker` y `kapataz-db`, y las redes `kapataz-internal` (sin salida), `kapataz-egress` y `kronoqr-app` (solo `kapataz`);
-    - `docker-compose.local.yml`;
-    - scripts de `deploy/` (despliegue, vuelta atrás y copia cifrada con age);
-    - `docs/operacion/despliegue.md`, con el bloque de nginx para el administrador;
-    - `.github/workflows/ci.yml`: acciones por SHA, herramientas por digest y un job final `ci`.
-  - ADR-022 cerrado.
-- **Decisiones del día sobre el despliegue** (Borja, 12/11/2026; en ADR-014 y en el resto de documentos):
-  - sin Caddy, detrás del nginx de KronoQR;
-  - sin staging: solo local y producción en `https://kapataz.kodigolab.es`;
-  - el servicio `kapataz` escucha en `0.0.0.0:8000`;
-  - HSTS y cabeceras de seguridad en la app.
+- **Bloques 0 y 1:** cerrados. PR #3 integrado el 12/11/2026 (`12e5edb`) y PR #4 el 17/11/2026 (`c4a95c0`). La prueba del Bloque 1 con un móvil real queda pendiente como excepción aprobada (ver «Pendiente»).
+- **Bloque en curso:** 2 — Dominio y persistencia, en la rama `bloque-02-dominio` (plan maestro, §Bloque 2).
+- **`main`:** protegida desde el 17/11/2026, con el check `ci` obligatorio, la rama al día, conversaciones resueltas y también para administradores; sin force push.
+- **Demo de portafolio y sin despliegue hasta el Bloque 12** (Borja, 17/11/2026; plan maestro §1.5, ADR-014): todo se construye y se prueba en local. La 1.0.0 es la demo que supera la Parte II, y publicarla no abre el registro mientras quede algún pendiente legal (RN-13).
+- **Decisiones de Borja del 18/11/2026:**
+  - `billing_chain_heads` guarda solo el enlace al último registro (`last_record_id`, nulo con la cadena vacía), con la clave foránea compuesta `(tenant_id, last_record_id)`. Recogido en §4.5 del plan y en la arquitectura §5.2.
+  - La cuenta no lleva el email como nombre: `tenants.name` admite nulos y se rellena con los datos del profesional.
+- **Hecho en el Bloque 2:**
+  - F-05 y M-03 de las revisiones del Bloque 1: fábrica común `add_account` para el registro y la cortesía, migración `0002_nombre_de_cuenta` (vacía los nombres existentes) y prueba A09 con un error de base de datos forzado contra PostgreSQL.
+  - El fixture `captured_logs` pasa a `tests/conftest.py`.
 
 ### Bloque 0 (histórico)
 
@@ -64,23 +46,10 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 
 ## Siguiente acción
 
-1. **CI del PR #4:** en verde a la primera el 17/11/2026, en los ocho jobs. Hay que volver a pasarlo con cada commit nuevo.
-2. **Comprobar el criterio de terminado con el móvil:** iniciar sesión en `https://<IP>:8443` desde un móvil real y comprobar que el chat responde con `FakeLlm`.
-   - Para arrancar: `sh deploy/local-up.sh --https <IP>`; la guía es `docs/operacion/https-local.md`.
-   - Anotar en el PR el móvil, el navegador y el resultado, y marcar la casilla de mkcert del Bloque 1 en el plan maestro.
-   - **Estado a 17/11/2026:**
-     - En el portátil funciona: mkcert instalado, certificado generado y `https://192.168.4.37:8443` responde con un certificado de confianza.
-     - **Desde el móvil no abre.** Borja lo deja para más adelante.
-   - **Diagnóstico:**
-     - el cortafuegos activo es el de **Bitdefender**, que sustituye al de Windows (la regla de Windows para el 8443 existe, pero no sirve);
-     - se intentó una regla de Bitdefender para `com.docker.backend.exe` con el puerto local 8443, sin éxito.
-   - **Por revisar al retomar:**
-     - el tipo de red de la Ethernet en Bitdefender (Hogar/Oficina) y el modo oculto;
-     - que el móvil esté en la misma red (`192.168.4.0/22`) y no en una red de invitados;
-     - el error exacto que da el móvil: tiempo agotado o certificado;
-     - probar desactivando un momento el cortafuegos de Bitdefender para confirmar que es él.
-   - El portátil también tiene la Wi-Fi conectada, con la IP `192.168.4.33`.
-3. **Integrar el PR #4** cuando se cumplan los puntos 1 y 2, con el visto bueno de Borja. Después, empezar el Bloque 2 (dominio y persistencia) en la rama `bloque-02-dominio`, creada desde `main`.
+1. **Dominio puro** (`arquitecto-python`): objetos de valor (`Money`, `TaxRate`, `Quantity`, `TaxId`, `Series`, `DocumentNumber`), entidades y cálculo de importes, con pruebas de propiedades (hypothesis, `qa-testing`). Sin base de datos; se revisa antes de seguir.
+2. **Persistencia** (`backend-fastapi`): puertos con sus `FakeX`, migraciones del modelo de §4.5 con RLS, triggers de inmutabilidad y contadores, repositorios, unidad de trabajo e `IssueInvoice`.
+3. **Pruebas de concurrencia, inmutabilidad y aislamiento** (`qa-testing`), cierre de ADR-017 y revisiones de seguridad y de código.
+4. Un solo PR del bloque, con commits separados por fase.
 
 ## Pendiente
 
@@ -108,6 +77,12 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
   - la clave es `ANTHROPIC_API_KEY`, no `OPENAI_API_KEY`;
   - hasta la 1.0.0 las imágenes se etiquetan por commit, no `0.1.0` (ADR-032);
   - solo el servicio `kapataz` entra en `kronoqr-app`, y la base de datos queda en una red interna.
+
+### Prueba del Bloque 1 con un móvil real (excepción aprobada)
+
+- Iniciar sesión en `https://<IP>:8443` desde un móvil real y comprobar que el chat responde con `FakeLlm` (`sh deploy/local-up.sh --https <IP>`; guía en `docs/operacion/https-local.md`). Anotar móvil, navegador y resultado, y marcar la casilla de mkcert del Bloque 1 en el plan maestro.
+- En el portátil funciona (`https://192.168.4.37:8443`); desde el móvil no abre. El cortafuegos activo es el de Bitdefender, que sustituye al de Windows, y la regla para `com.docker.backend.exe` con el puerto 8443 no bastó.
+- Por revisar: tipo de red de la Ethernet en Bitdefender (Hogar/Oficina) y modo oculto; que el móvil esté en `192.168.4.0/22` y no en una red de invitados; el error exacto del móvil; probar con el cortafuegos desactivado un momento. El portátil también tiene la Wi-Fi conectada (`192.168.4.33`).
 
 ### Pendiente técnico del Bloque 1
 
@@ -142,7 +117,6 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
   - F-06: `vue/no-v-html` es error y el lint falla con avisos.
 
   Pendientes:
-  - **antes del Bloque 2 (F-05):** igualar la longitud de `tenants.name` con la del email, o no usar el email como nombre de la cuenta, y probar `test_a09` con un error de base de datos forzado;
   - **Bloque 4 o 10 (F-03):** el registro enumera cuentas por el tiempo de respuesta, porque el SMTP es síncrono y solo se envía si el email es nuevo; y con el registro cerrado, el 403 revela la lista de emails habilitados. O se aplica la solución, o Borja acepta el riesgo;
   - **Bloque 10, antes del Bloque 12:**
     - F-02: secuestro previo de cuenta; guardar el hash de la contraseña en `email_verifications` y aplicarlo al verificar;
@@ -162,7 +136,6 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
   - M-07: `access_log off` en el bloque de nginx de producción.
 
   Pendientes:
-  - M-03: la creación de `Tenant` y `User` está duplicada en `register_account` y `create_courtesy_account`; sacar una función de fábrica antes de las cuentas de demostración;
   - M-04: los mensajes repiten constantes (`MIN_PASSWORD_LENGTH`, 4000); `InvalidChatMessageError` está en `application`, pero hereda de `DomainError`;
   - M-05: `FakeLlm` y `FakeEmail` acumulan mensajes y tokens en memoria en la app real; la captura debería existir solo en las pruebas;
   - M-06: el CI no comprueba que `schema.d.ts` esté al día, y `problem.ts` no cubre todos los tipos de error del backend;
@@ -178,7 +151,6 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 
 ### Por decidir en su bloque
 
-- **Bloque 2:** columnas de `billing_chain_heads` (enlace al último registro o copia de sus datos de encadenamiento).
 - **Bloque 4 (ADR-026):** las tablas de la cola (`procrastinate`) no tienen RLS ni están en la lista cerrada de tablas globales. Hay que meterlas en la lista o limitar la prueba al esquema de la aplicación.
 - **Bloque 6 (ADR-028):** límite de uso de IA para las cuentas de cortesía y de demostración.
 - **Bloque 8:** vivienda alquilada en `recipient_type`, según el RDL 29/2026 (depende del asesor).
