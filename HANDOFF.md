@@ -11,9 +11,19 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 - **Decisiones de Borja del 18/11/2026:**
   - `billing_chain_heads` guarda solo el enlace al último registro (`last_record_id`, nulo con la cadena vacía), con la clave foránea compuesta `(tenant_id, last_record_id)`. Recogido en §4.5 del plan y en la arquitectura §5.2.
   - La cuenta no lleva el email como nombre: `tenants.name` admite nulos y se rellena con los datos del profesional.
+  - La factura guarda una copia de nombre, NIF y domicilio del emisor y del destinatario (§4.5 y arquitectura §5.2).
+  - La huella del `BillingRecord` sigue desde ya el algoritmo oficial de la AEAT (especificación v0.1.2; ADR-012 modificado).
+  - ADR-009 recoge el cálculo con `Fraction` y un solo redondeo, y el tope de `Money` (21.474.836,47 €), comprobado al crear el borrador.
+  - RN-F-06 exige el domicilio del emisor y del destinatario (art. 6 del RD 1619/2012), en el plan y en la especificación.
+  - Las dudas fiscales del cálculo quedan provisionales y van a la lista del asesor (más abajo).
 - **Hecho en el Bloque 2:**
   - F-05 y M-03 de las revisiones del Bloque 1: fábrica común `add_account` para el registro y la cortesía, migración `0002_nombre_de_cuenta` (vacía los nombres existentes) y prueba A09 con un error de base de datos forzado contra PostgreSQL.
   - El fixture `captured_logs` pasa a `tests/conftest.py`.
+  - **Dominio puro** (`arquitecto-python`; commit de la fase 2):
+    - objetos de valor, `TaxId` con dígito de control, clientes, catálogo, presupuestos con versiones, facturas, rectificativas, cobros y `BillingRecord` con la huella oficial (los tres ejemplos de la AEAT como pruebas);
+    - cálculo de importes, IVA de la obra, regla del 40 %, fases y rectificativa por exceso, en `domain/billing`.
+  - **Pruebas de propiedades** (`qa-testing`): `test_totales_propiedades.py` y `test_fases_propiedades.py`, con un perfil de hypothesis `ci` (200 ejemplos, se activa con `CI`) y otro `exhaustivo` para lanzarlo a mano.
+  - 538 pruebas y cobertura de `domain/` del 99 %.
 
 ### Bloque 0 (histórico)
 
@@ -46,10 +56,9 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 
 ## Siguiente acción
 
-1. **Dominio puro** (`arquitecto-python`): objetos de valor (`Money`, `TaxRate`, `Quantity`, `TaxId`, `Series`, `DocumentNumber`), entidades y cálculo de importes, con pruebas de propiedades (hypothesis, `qa-testing`). Sin base de datos; se revisa antes de seguir.
-2. **Persistencia** (`backend-fastapi`): puertos con sus `FakeX`, migraciones del modelo de §4.5 con RLS, triggers de inmutabilidad y contadores, repositorios, unidad de trabajo e `IssueInvoice`.
-3. **Pruebas de concurrencia, inmutabilidad y aislamiento** (`qa-testing`), cierre de ADR-017 y revisiones de seguridad y de código.
-4. Un solo PR del bloque, con commits separados por fase.
+1. **Persistencia** (`backend-fastapi`): puertos con sus `FakeX`, migraciones del modelo de §4.5 con RLS, triggers de inmutabilidad y contadores, repositorios, unidad de trabajo e `IssueInvoice`.
+2. **Pruebas de concurrencia, inmutabilidad y aislamiento** (`qa-testing`), cierre de ADR-017 y revisiones de seguridad y de código.
+3. Un solo PR del bloque, con commits separados por fase.
 
 ## Pendiente
 
@@ -151,6 +160,11 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 
 ### Por decidir en su bloque
 
+- **Bloque 12, contraste con los esquemas de la AEAT** (interpretaciones provisionales del Bloque 2 en `billing_record.py`):
+  - con inversión del sujeto pasivo (S2), `TipoImpositivo` y `CuotaRepercutida` van a `0.00`;
+  - `RechazoPrevio` se trata como S/N (la AEAT admite también X) y `SinRegistroPrevio` siempre es N;
+  - `FechaHoraHusoGenRegistro` se genera en UTC (`+00:00`).
+
 - **Bloque 4 (ADR-026):** las tablas de la cola (`procrastinate`) no tienen RLS ni están en la lista cerrada de tablas globales. Hay que meterlas en la lista o limitar la prueba al esquema de la aplicación.
 - **Bloque 6 (ADR-028):** límite de uso de IA para las cuentas de cortesía y de demostración.
 - **Bloque 8:** vivienda alquilada en `recipient_type`, según el RDL 29/2026 (depende del asesor).
@@ -179,6 +193,11 @@ Están listados en el plan maestro, §1.5. No bloquean ningún bloque ni la 1.0.
 Son el detalle de los pendientes legales. No bloquean los bloques de la demo.
 
 - **Asesor fiscal:** reglas de IVA de la facturación por fases (ADR-033, Bloque 8), aplazamiento de VERI*FACTU para el productor, importe total del registro y validación final (Bloque 12).
+  - **Interpretaciones provisionales del Bloque 2** (aisladas en `domain/billing`; aprobadas por Borja el 18/11/2026 a la espera del asesor):
+    - base del 40 % de material: solo las líneas de la obra, sin lo que va fuera de ella ni las restas de fases (`works_vat.material_share`);
+    - si las fases que hay que rectificar van a tipos de IVA distintos, una rectificativa por tipo (`phases.plan_final_phase`); el plan habla de «una rectificativa»;
+    - sin decidir: anticipo y certificaciones al 21 % y final al 10 %; hoy el dominio no lo resuelve, decide quien llama;
+    - anticipo cobrado con retención de IRPF: el importe cobrado se trata como el total con IVA (`calculation.totals_from_gross`).
 - **Abogado:** condiciones de uso, contrato de encargo, política de privacidad, aviso de IA y plazos de conservación (antes de producción, Bloque 10). Comprobar también la lista oficial del Marco de Privacidad.
 - **Proveedores de envío VERI*FACTU:** elección del proveedor y autorización de cada cliente (Bloque 12).
 - **Anthropic:** retención cero, canal de aviso de subencargados e información para la evaluación de la transferencia (antes de usar datos reales, ADR-029). Revisar a mano la lista de subencargados, que no se pudo leer automáticamente.

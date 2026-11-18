@@ -386,6 +386,12 @@ erDiagram
         fk tenant_id FK
         fk customer_id FK
         fk quote_version_id FK "opcional"
+        text issuer_name "copia al emitir"
+        text issuer_tax_id
+        text issuer_address
+        text recipient_name "copia al emitir"
+        text recipient_tax_id
+        text recipient_address
         enum status "draft, issued"
         text series
         int number "se asigna al emitir"
@@ -455,6 +461,7 @@ erDiagram
 - `billing_chain_heads` tiene una fila por cuenta con el último registro de la cadena. Guarda solo el enlace (`last_record_id`, nulo mientras la cadena está vacía), sin copiar datos del registro: el encadenamiento se lee de `billing_records`, que no cambia, y así la cabeza no puede desfasarse. La clave foránea compuesta `(tenant_id, last_record_id)` impide apuntar a un registro de otra cuenta. Toda operación que añade un registro la bloquea con `SELECT … FOR UPDATE` antes que el contador de la serie, siempre en ese orden y en la misma transacción (RN-F-07). Así, dos emisiones simultáneas no enlazan con el mismo registro anterior aunque sean de series distintas (F y R).
 - `billing_records` forma una sola cadena por cuenta con altas, subsanaciones y anulaciones. Una factura puede tener varios registros. La anulación se deduce de la cadena, sin tocar la factura (RN-F-07). El contenido canónico JSON usa los campos de `RegistroAlta` y `RegistroAnulacion` desde el Bloque 2. El encadenamiento guarda también `prev_issuer_tax_id`, `prev_series_number` y `prev_issue_date`, y el sistema que lo generó (`system_name`, `system_id`, `system_version`, `installation_number`).
 - `invoices` guarda además la garantía (`guarantee_pct`, `guarantee_amount`, `guarantee_due_date`), separada de la retención de IRPF, y los datos del registro de la AEAT: `operation_date`, `description`, `regime_key`, `operation_class` y `exemption_cause`.
+- `invoices` guarda una copia del nombre, el NIF y el domicilio del emisor y del destinatario tal como figuran en la factura (RN-F-02, RN-F-06). Si después cambian los datos del cliente o del profesional, la factura emitida no cambia.
 - `invoices.status` es el estado fiscal. El estado de cobro sale de `payments` (RF-FA-06, RN-F-10).
 - `submission_authorizations` guarda la autorización de cada cuenta para enviar sus registros (RF-VF-07): a favor de quién, tipo de firma, documento firmado guardado con `FileStoragePort`, fecha de firma, revocación y fecha hasta la que se conserva bloqueada (RN-12). Se crea en el Bloque 12.
 
@@ -667,7 +674,7 @@ Notas:
 - RN-F-04 se comprueba con el contador ya bloqueado, para que una emisión simultánea no pueda colarse entre la comprobación y el número.
 - Las emisiones concurrentes de la misma cuenta esperan a esos bloqueos. La prueba del Bloque 2 lanza 20 emisiones en paralelo, en una cuenta y en varias, y exige cero huecos y cero duplicados. También lanza emisiones simultáneas de las series F y R en la misma cuenta y exige que la cadena no se bifurque.
 - Tras el `COMMIT`, el trigger impide cualquier `UPDATE` o `DELETE` de los campos fiscales (RN-F-02). Corregir una factura es emitir una rectificativa (RN-F-03).
-- El `BillingRecord` usa desde el Bloque 2 los campos de `RegistroAlta`. El Bloque 12 lo convierte a XML, calcula la huella con el algoritmo oficial y lo envía. `kapataz verify-billing-chain` (Bloque 8) comprueba la cadena.
+- El `BillingRecord` usa desde el Bloque 2 los campos de `RegistroAlta`. La huella sigue desde el Bloque 2 el algoritmo oficial de la AEAT (ADR-012). El Bloque 12 lo convierte a XML y lo envía. `kapataz verify-billing-chain` (Bloque 8) comprueba la cadena.
 - Los importes del borrador ya vienen calculados por el dominio (RN-01 a RN-03). La emisión no recalcula con el LLM ni acepta totales externos.
 
 ---

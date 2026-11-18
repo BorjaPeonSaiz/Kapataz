@@ -7,8 +7,19 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from hypothesis import settings
 
 from kapataz.infrastructure.logging.setup import configure_logging
+
+# Perfiles de hypothesis. En local, los valores de la biblioteca. En CI (GitHub
+# Actions define CI=true), sin límite de tiempo por ejemplo: en una máquina
+# compartida un ejemplo lento daría un DeadlineExceeded intermitente que no es
+# un fallo del código. El número de ejemplos no baja: sube. «exhaustivo» es
+# para lanzarlo a mano: pytest --hypothesis-profile=exhaustivo.
+settings.register_profile("ci", max_examples=200, deadline=None, print_blob=True)
+settings.register_profile("exhaustivo", max_examples=2000, deadline=None, print_blob=True)
+if os.environ.get("CI"):
+    settings.load_profile("ci")
 
 INTEGRATION_DIR = Path(__file__).parent / "integration"
 SKIP_WITHOUT_DB = (
