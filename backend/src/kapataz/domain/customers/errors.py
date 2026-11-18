@@ -11,3 +11,9 @@ class InvalidTaxIdError(DomainError):
 
 class InvalidCustomerError(DomainError):
     slug = "cliente-no-valido"
+
+
+class DuplicateCustomerTaxIdError(DomainError):
+    """Ya hay un cliente con ese NIF en la cuenta: el NIF es único por cuenta (plan §4.5)."""
+
+    slug = "cliente-con-nif-repetido"

@@ -23,7 +23,12 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
     - objetos de valor, `TaxId` con dígito de control, clientes, catálogo, presupuestos con versiones, facturas, rectificativas, cobros y `BillingRecord` con la huella oficial (los tres ejemplos de la AEAT como pruebas);
     - cálculo de importes, IVA de la obra, regla del 40 %, fases y rectificativa por exceso, en `domain/billing`.
   - **Pruebas de propiedades** (`qa-testing`): `test_totales_propiedades.py` y `test_fases_propiedades.py`, con un perfil de hypothesis `ci` (200 ejemplos, se activa con `CI`) y otro `exhaustivo` para lanzarlo a mano.
-  - 538 pruebas y cobertura de `domain/` del 99 %.
+  - **Persistencia** (`backend-fastapi`; commit de la fase 3):
+    - migración `0003_facturacion` con 13 tablas, RLS en todas, FK compuestas `(tenant_id, …)`, céntimos `INTEGER` con un único conversor (`persistence/money.py`) y permisos mínimos;
+    - triggers `KZF02` (factura emitida, sus líneas y correcciones inmutables) y `KZF07` (registros solo actualizables en las columnas de envío; la cabeza solo avanza al registro siguiente; `UNIQUE (tenant_id, previous_record_id) NULLS NOT DISTINCT` impide bifurcar la cadena);
+    - repositorios, unidad de trabajo ampliada, `Professional` en `domain/settings` e `IssueInvoice` (factura → cabeza → contador, en una transacción) con `NullBillingRecordSubmission`;
+    - datos de partida para pruebas en `tests/billing_support.py` y fixtures en `tests/integration/persistence/conftest.py`.
+  - 660 pruebas con PostgreSQL (590 sin él) y cobertura de `domain/` del 99 %.
 
 ### Bloque 0 (histórico)
 
@@ -56,9 +61,8 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 
 ## Siguiente acción
 
-1. **Persistencia** (`backend-fastapi`): puertos con sus `FakeX`, migraciones del modelo de §4.5 con RLS, triggers de inmutabilidad y contadores, repositorios, unidad de trabajo e `IssueInvoice`.
-2. **Pruebas de concurrencia, inmutabilidad y aislamiento** (`qa-testing`), cierre de ADR-017 y revisiones de seguridad y de código.
-3. Un solo PR del bloque, con commits separados por fase.
+1. **Pruebas de concurrencia, inmutabilidad y aislamiento** (`qa-testing`), cierre de ADR-017 y revisiones de seguridad y de código.
+2. Un solo PR del bloque, con commits separados por fase.
 
 ## Pendiente
 
@@ -157,6 +161,19 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 - **Texto del frontend:** `frontend/src/i18n/es-ES.ts` dice «El registro está cerrado hasta el lanzamiento». Sigue siendo válido, pero conviene revisarlo con RN-13 nueva.
 - **npm:** 14 vulnerabilidades moderadas en herramientas de desarrollo (`minimatch` y `glob`), sin arreglo compatible. Ninguna alta, ninguna en producción.
 - **Restos del build:** `backend/src/kapataz/static/` tiene restos del build del frontend. La carpeta está en `.gitignore`, pero conviene vaciarla; el comprobador de seguridad impidió a un agente borrarlos.
+
+### Huecos de la persistencia del Bloque 2 (`backend-fastapi`, 18/11/2026)
+
+- **Al cerrar el Bloque 2:** recoger en §4.5 y en la arquitectura §5.2 las columnas añadidas: `issue_year`, `correction_reason`, `previous_record_id`, `base_total`, `withholding_pct`, `withholding_amount`, `gross_amount` y `position`. Además, `professional` usa `tenant_id` como PK. Las rutas de las pruebas de ADR-012 están en `tests/integration/persistence/`.
+- **Revisar con `arquitecto-python`:** al leer una factura emitida, el dominio la vuelve a validar. Si una regla se endurece, una factura antigua podría dejar de cargarse.
+- **Bloque 8:**
+  - conectar `IssueInvoice` a `bootstrap` con `SystemInfo` configurable (NIF de KodigoLab y número de instalación);
+  - actualizar el estado del presupuesto al emitir;
+  - traducir `KZF02` y `KZF07` en la API;
+  - corregir un cobro mal apuntado (hoy `payments` no admite UPDATE ni DELETE).
+- **RF-FA-08:** la emisión aún no escribe en `audit_events` (tabla de otro bloque).
+- **Espacio de demostración (RN-13):** los triggers impiden borrar sus facturas emitidas; la función de mantenimiento necesitará una excepción controlada.
+- **Zona horaria:** la fecha de expedición es la de hoy en Europe/Madrid. En Windows, `zoneinfo` depende del paquete `tzdata`, que solo llega como dependencia de desarrollo; la imagen trae el tzdata del sistema. Valorar declararlo como dependencia de la app.
 
 ### Por decidir en su bloque
 

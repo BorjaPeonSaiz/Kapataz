@@ -14,6 +14,7 @@ from kapataz.domain.aeat_limits import MAX_PARTY_NAME_LENGTH
 from kapataz.domain.billing.errors import InvalidInvoiceError, MissingIssueDataError
 from kapataz.domain.customers.model import MAX_ADDRESS_LENGTH, Customer, is_valid_address
 from kapataz.domain.customers.tax_id import TaxId
+from kapataz.domain.settings.professional import Professional
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,11 +45,35 @@ class Party:
     @classmethod
     def recipient_from(cls, customer: Customer) -> Self:
         """Destinatario de una factura completa: exige NIF español y domicilio (RN-F-06)."""
-        missing = []
-        if customer.tax_id is None:
-            missing.append("recipient_tax_id")
-        if customer.address is None:
-            missing.append("recipient_address")
         if customer.tax_id is None or customer.address is None:
-            raise MissingIssueDataError(missing)
+            raise MissingIssueDataError(missing_recipient_data(customer))
         return cls(customer.name, customer.tax_id, customer.address)
+
+    @classmethod
+    def issuer_from(cls, professional: Professional | None) -> Self:
+        """Emisor de la factura: los datos del profesional con NIF y domicilio (RN-F-06)."""
+        if professional is None or professional.tax_id is None or professional.address is None:
+            raise MissingIssueDataError(missing_issuer_data(professional))
+        return cls(professional.name, professional.tax_id, professional.address)
+
+
+def missing_recipient_data(customer: Customer) -> tuple[str, ...]:
+    """Datos del destinatario que faltan para emitir (códigos de ``MissingIssueDataError``)."""
+    missing: list[str] = []
+    if customer.tax_id is None:
+        missing.append("recipient_tax_id")
+    if customer.address is None:
+        missing.append("recipient_address")
+    return tuple(missing)
+
+
+def missing_issuer_data(professional: Professional | None) -> tuple[str, ...]:
+    """Datos del emisor que faltan para emitir. Sin datos del profesional, faltan todos."""
+    if professional is None:
+        return ("issuer_name", "issuer_tax_id", "issuer_address")
+    missing: list[str] = []
+    if professional.tax_id is None:
+        missing.append("issuer_tax_id")
+    if professional.address is None:
+        missing.append("issuer_address")
+    return tuple(missing)

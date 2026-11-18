@@ -110,3 +110,9 @@ class InvalidPhaseError(DomainError):
     """Datos de una fase de facturación que no cuadran (RN-F-12)."""
 
     slug = "fase-no-valida"
+
+
+class InvoiceNotFoundError(DomainError):
+    """La factura no existe en la cuenta. Una de otra cuenta tampoco existe: 404, nunca 403."""
+
+    slug = "factura-no-encontrada"

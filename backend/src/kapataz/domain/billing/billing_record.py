@@ -136,6 +136,26 @@ class SystemInfo:
             "IndicadorMultiplesOT": _yes_no(self.has_multiple_taxpayers),
         }
 
+    @classmethod
+    def from_canonical(cls, block: CanonicalValue) -> Self:
+        """Reconstruye el bloque SistemaInformatico de un contenido canónico guardado.
+
+        Es la inversa exacta de ``canonical``: la persistencia guarda el
+        contenido tal como lo produjo el dominio y lo vuelve a leer de él.
+        """
+        data = _as_mapping(block)
+        return cls(
+            producer_name=_text(data, "NombreRazon"),
+            producer_tax_id=TaxId(_text(data, "NIF")),
+            system_name=_text(data, "NombreSistemaInformatico"),
+            system_id=_text(data, "IdSistemaInformatico"),
+            version=_text(data, "Version"),
+            installation_number=_text(data, "NumeroInstalacion"),
+            only_verifactu=_from_yes_no(_text(data, "TipoUsoPosibleSoloVerifactu")),
+            multi_taxpayer=_from_yes_no(_text(data, "TipoUsoPosibleMultiOT")),
+            has_multiple_taxpayers=_from_yes_no(_text(data, "IndicadorMultiplesOT")),
+        )
+
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ChainLink:
@@ -657,6 +677,12 @@ def _text(content: CanonicalContent, key: str) -> str:
 
 def _yes_no(value: bool) -> str:  # noqa: FBT001
     return "S" if value else "N"
+
+
+def _from_yes_no(value: str) -> bool:
+    if value not in {"S", "N"}:
+        raise InvalidBillingRecordError("Indicador S/N mal formado.")
+    return value == "S"
 
 
 def _aeat_date(value: date) -> str:
