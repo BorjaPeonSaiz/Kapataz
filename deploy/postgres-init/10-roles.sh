@@ -55,7 +55,11 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 ALTER DATABASE :"db_name" OWNER TO kapataz_owner;
 REVOKE ALL ON DATABASE :"db_name" FROM PUBLIC;
-GRANT CONNECT, TEMPORARY ON DATABASE :"db_name" TO kapataz_app;
+-- Sin TEMPORARY: una tabla temporal con el nombre de una tabla de negocio
+-- podría suplantarla en una consulta sin esquema (S2-01). La app no usa
+-- tablas temporales; la migración 0003 lo retira también en bases creadas
+-- de otra forma.
+GRANT CONNECT ON DATABASE :"db_name" TO kapataz_app;
 
 -- Solo kapataz_owner crea objetos en public.
 ALTER SCHEMA public OWNER TO kapataz_owner;

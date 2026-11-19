@@ -6,6 +6,10 @@ que usa la vivienda para fines particulares o una comunidad de propietarios,
 la vivienda se terminó al menos dos años antes y el material que aporta el
 autónomo no supera el 40 % de la base. Si no, al 21 %.
 
+Las reglas del destinatario y la vivienda (quién puede ir al 10 % y a quién se
+le invierte el sujeto pasivo) viven solo aquí: el presupuesto (``quote``) y la
+factura (``invoice``) las consultan, así no pueden divergir.
+
 Decisión provisional (ADR-033, «Pendiente para cerrar»): el 40 % se calcula
 sobre la base de las líneas de la obra, sin las que van fuera de ella
 (``outside_works``) ni las que restan facturas anteriores. Si el asesor fiscal
@@ -29,7 +33,8 @@ from kapataz.domain.billing.tax import TaxRate, VatTreatment
 MATERIAL_LIMIT = Fraction(40, 100)
 # Desde aquí se avisa antes de facturar al 10 % (RN-F-13).
 MATERIAL_WARNING_THRESHOLD = Fraction(35, 100)
-_ELIGIBLE_RECIPIENTS = frozenset({RecipientType.PRIVATE, RecipientType.COMMUNITY})
+# Art. 91.Uno.2.10º: persona física para uso particular o comunidad de propietarios.
+_REDUCED_RATE_RECIPIENTS = frozenset({RecipientType.PRIVATE, RecipientType.COMMUNITY})
 
 
 class WorksLine(Protocol):
@@ -133,6 +138,38 @@ class WorksVatDecision:
         return self.is_reduced and self.material.near_limit
 
 
+def requires_dwelling_age(recipient_type: RecipientType) -> bool:
+    """Si hay que saber la antigüedad de la vivienda para decidir el tipo (RN-F-13).
+
+    Solo con un destinatario que puede ir al 10 %: con un empresario la obra va
+    al 21 % o con inversión del sujeto pasivo, sea cual sea la vivienda.
+    """
+    return recipient_type in _REDUCED_RATE_RECIPIENTS
+
+
+def allows_reverse_charge(recipient_type: RecipientType) -> bool:
+    """A un particular o a una comunidad nunca se le invierte el sujeto pasivo (RF-FA-05)."""
+    return recipient_type is RecipientType.BUSINESS
+
+
+def recipient_obstacles(
+    recipient_type: RecipientType,
+    dwelling_over_two_years: bool | None,  # noqa: FBT001
+) -> tuple[VatRateReason, ...]:
+    """Motivos, por el destinatario y la vivienda, por los que la obra no va al 10 %.
+
+    ``None`` en la vivienda es un dato que aún falta, no un «no»: un borrador
+    puede no tenerlo todavía y la emisión lo exige aparte (RN-F-06). El 40 %
+    del material no entra aquí porque depende de las líneas.
+    """
+    reasons: list[VatRateReason] = []
+    if recipient_type not in _REDUCED_RATE_RECIPIENTS:
+        reasons.append(VatRateReason.RECIPIENT_NOT_ELIGIBLE)
+    if dwelling_over_two_years is False:
+        reasons.append(VatRateReason.DWELLING_TOO_RECENT)
+    return tuple(reasons)
+
+
 def decide_works_vat(
     recipient_type: RecipientType,
     dwelling_over_two_years: bool,  # noqa: FBT001
@@ -145,11 +182,7 @@ def decide_works_vat(
     factura completa. Si el material supera el 40 % al final, toda la obra
     pasa al 21 % (ver ``phases.extra_vat_on_prior_phases``).
     """
-    reasons: list[VatRateReason] = []
-    if recipient_type not in _ELIGIBLE_RECIPIENTS:
-        reasons.append(VatRateReason.RECIPIENT_NOT_ELIGIBLE)
-    if not dwelling_over_two_years:
-        reasons.append(VatRateReason.DWELLING_TOO_RECENT)
+    reasons = list(recipient_obstacles(recipient_type, dwelling_over_two_years))
     if material.exceeds_limit:
         reasons.append(VatRateReason.MATERIAL_OVER_LIMIT)
     rate = TaxRate.general() if reasons else TaxRate.reduced()
@@ -170,7 +203,7 @@ def works_treatment(
     """
     if not reverse_charge:
         return VatTreatment.taxed(decision.rate)
-    if recipient_type is not RecipientType.BUSINESS:
+    if not allows_reverse_charge(recipient_type):
         msg = "La inversión del sujeto pasivo solo cabe con un empresario como destinatario."
         raise InvalidTaxRateError(msg)
     return VatTreatment.reverse_charge()

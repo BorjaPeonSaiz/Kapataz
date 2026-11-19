@@ -24,6 +24,7 @@ from kapataz.domain.billing.money import Money
 from kapataz.domain.billing.numbering import DocumentNumber, Series
 from kapataz.domain.billing.party import Party
 from kapataz.domain.billing.quantity import Quantity
+from kapataz.domain.billing.quote import QuoteVersion
 from kapataz.domain.billing.tax import TaxRate, VatTreatment
 from kapataz.domain.customers.model import CustomerId
 from kapataz.domain.customers.tax_id import TaxId
@@ -105,7 +106,39 @@ def draft(
     )
 
 
-def issue(invoice: Invoice, sequence: int = 1, issue_date: date = TODAY) -> Invoice:
+def quote_version(
+    version_id: QuoteVersionId | None = None,
+    *,
+    recipient_type: RecipientType = RecipientType.PRIVATE,
+    dwelling_over_two_years: bool | None = True,
+) -> QuoteVersion:
+    """Versión sin líneas: para emitir solo cuentan su id, el destinatario y la vivienda."""
+    return QuoteVersion(
+        id=version_id or QuoteVersionId(uuid4()),
+        version=1,
+        lines=(),
+        recipient_type=recipient_type,
+        dwelling_over_two_years=dwelling_over_two_years,
+        valid_until=None,
+        created_at=NOW,
+    )
+
+
+def issue(
+    invoice: Invoice,
+    sequence: int = 1,
+    issue_date: date = TODAY,
+    *,
+    version: QuoteVersion | None = None,
+) -> Invoice:
+    """Emite con las partes de prueba.
+
+    Si la factura sale de un presupuesto y no se da ``version``, se emite con
+    una de un particular con vivienda de más de dos años, que admite el 10 % y
+    el 21 %. Las pruebas que miran el destinatario pasan su versión.
+    """
+    if version is None and invoice.quote_version_id is not None:
+        version = quote_version(invoice.quote_version_id)
     return invoice.issue(
         number=DocumentNumber(invoice.series, issue_date.year, sequence),
         issue_date=issue_date,
@@ -113,6 +146,7 @@ def issue(invoice: Invoice, sequence: int = 1, issue_date: date = TODAY) -> Invo
         issuer=ISSUER,
         recipient=RECIPIENT,
         last_issue_date=None,
+        quote_version=version,
     )
 
 

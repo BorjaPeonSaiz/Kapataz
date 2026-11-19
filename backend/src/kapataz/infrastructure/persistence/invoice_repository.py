@@ -2,7 +2,9 @@
 
 Las columnas de importe son una copia de lo que calcula el dominio
 (``Invoice.totals``) para poder consultarlas; al leer, la factura vuelve a
-calcularlos de sus líneas. Una factura emitida solo se escribe una vez, al
+calcularlos de sus líneas. El CHECK ``ck_invoices_amounts`` impide además
+guardar una copia que no cuadre (defensa en profundidad, ADR-009); no calcula
+nada por su cuenta. Una factura emitida solo se escribe una vez, al
 pasar de borrador a emitida; después, los triggers de la base de datos
 impiden cualquier cambio (RN-F-02).
 

@@ -735,7 +735,7 @@ kapataz/
 | `customers` | `tax_id` único por cuenta cuando existe. `tax_id_type` y `tax_id_country` quedan preparados para identificadores extranjeros; la v1 solo admite NIF español (§1.4) |
 | `catalog_items` | Concepto, unidad, precio de referencia, origen |
 | `quotes`, `quote_versions`, `quote_lines` | Versionado al modificar un enviado. Datos para decidir el tipo de IVA de la obra: `recipient_type` (`private`, `community`, `business`) y `dwelling_over_two_years` (RN-F-13). En las líneas, `is_material` para calcular el límite del 40 % y `outside_works` para lo que no forma parte de la obra y va en una segunda factura al 21 % (RN-F-13) |
-| `invoices`, `invoice_lines` | `status` (`draft`, `issued`), `series`, `number`, `issued_at`, `quote_version_id`, `phase_type` (`full`, `advance`, `progress`, `final`); en las líneas, `origin` (`quote`, `additional`, `prior_invoice`, esta última para restar una factura anterior); trigger que impide `UPDATE`/`DELETE` de campos fiscales con `status='issued'`. También `due_date` (RF-FA-14) y la garantía: `guarantee_pct`, `guarantee_amount` y `guarantee_due_date` (RF-FA-15), con nombre distinto de la retención de IRPF. En las líneas, `is_material` y `outside_works`, como en el presupuesto (RN-F-13). Una factura que no sale de un presupuesto guarda también `recipient_type` y `dwelling_over_two_years` (RN-F-13). Datos que pide el registro de la AEAT (RN-F-07): `invoice_type` (`F1` y `R1` a `R4` en la v1; `F2`, `F3` y `R5` reservados), `correction_type` (`substitution`, `difference`), `operation_date` cuando difiere de la de expedición, `description` (descripción general, 500 caracteres), `regime_key`, `operation_class` (`S1`, `S2`, `N1`, `N2`) y `exemption_cause`. Importes: `tax_total` y `total_amount` (base más cuota, sin restar la retención de IRPF ni la garantía) se guardan aparte de `amount_due`, el importe a cobrar. Copia de las partes tal como figuran en la factura (RN-F-02, RN-F-06): `issuer_name`, `issuer_tax_id`, `issuer_address`, `recipient_name`, `recipient_tax_id` y `recipient_address`; si después cambian los datos del cliente o del profesional, la factura emitida no cambia. También guarda `base_total`, `withholding_pct` y `withholding_amount` (retención de IRPF), `gross_amount` (importe cobrado con IVA incluido de un anticipo, RN-F-12), `correction_reason` (motivo de la rectificación, RN-F-03) e `issue_year`, que forma con `series` y `number` la clave única de la numeración. Las líneas y las correcciones llevan `position` para conservar su orden |
+| `invoices`, `invoice_lines` | `status` (`draft`, `issued`), `series`, `number`, `issued_at`, `quote_version_id`, `phase_type` (`full`, `advance`, `progress`, `final`); en las líneas, `origin` (`quote`, `additional`, `prior_invoice`, esta última para restar una factura anterior); trigger que impide `UPDATE`/`DELETE` de campos fiscales con `status='issued'`. También `due_date` (RF-FA-14) y la garantía: `guarantee_pct`, `guarantee_amount` y `guarantee_due_date` (RF-FA-15), con nombre distinto de la retención de IRPF. En las líneas, `is_material` y `outside_works`, como en el presupuesto (RN-F-13). También `recipient_type` y `dwelling_over_two_years` (RN-F-13): en el borrador solo si la factura no sale de un presupuesto, porque si sale están en la versión; al emitir se copian de la versión, como las partes, y una emitida los guarda siempre (la vivienda, si el destinatario es un particular o una comunidad). Datos que pide el registro de la AEAT (RN-F-07): `invoice_type` (`F1` y `R1` a `R4` en la v1; `F2`, `F3` y `R5` reservados), `correction_type` (`substitution`, `difference`), `operation_date` cuando difiere de la de expedición, `description` (descripción general, 500 caracteres), `regime_key`, `operation_class` (`S1`, `S2`, `N1`, `N2`) y `exemption_cause`. Importes: `tax_total` y `total_amount` (base más cuota, sin restar la retención de IRPF ni la garantía) se guardan aparte de `amount_due`, el importe a cobrar. Copia de las partes tal como figuran en la factura (RN-F-02, RN-F-06): `issuer_name`, `issuer_tax_id`, `issuer_address`, `recipient_name`, `recipient_tax_id` y `recipient_address`; si después cambian los datos del cliente o del profesional, la factura emitida no cambia. También guarda `base_total`, `withholding_pct` y `withholding_amount` (retención de IRPF), `gross_amount` (importe cobrado con IVA incluido de un anticipo, RN-F-12), `correction_reason` (motivo de la rectificación, RN-F-03) e `issue_year`, que forma con `series` y `number` la clave única de la numeración. Las líneas y las correcciones llevan `position` para conservar su orden |
 | `invoice_corrections` | Relación entre una rectificativa y cada factura que rectifica (RN-F-03, RN-F-12), con `rectified_base` y `rectified_tax` en las de sustitución |
 | `series_counters` | Contador por cuenta, serie y año (`last_number` y `last_issue_date`), bloqueado con `SELECT … FOR UPDATE` en la misma transacción que la emisión |
 | `billing_chain_heads` | Una fila por cuenta con el último registro de la cadena: `tenant_id` y `last_record_id`, nulo mientras la cadena está vacía. Solo guarda el enlace, sin copiar datos del registro, que se leen de `billing_records`; la clave foránea compuesta `(tenant_id, last_record_id)` impide apuntar a un registro de otra cuenta. Toda operación que añade un registro la bloquea con `SELECT … FOR UPDATE` antes que el contador de la serie (RN-F-07) |
@@ -1005,7 +1005,7 @@ Responsabilidades:
 - Dockerfile multietapa sin root e imágenes fijadas por digest; Compose con api, worker y PostgreSQL.
 - Dos entornos: local y producción en un VPS de la UE, sin staging. Todo se construye y se prueba en local hasta cerrar el Bloque 12; el primer despliegue se hace entonces (§1.5 del plan). Solo el proxy nginx existente se expone a internet; enruta a `kapataz:8000` por la red `kronoqr-app` (ADR-014).
 - Secretos fuera del repo y de las imágenes, incluida la clave de la API de Claude.
-- CI en GitHub Actions sobre ubuntu-latest con PostgreSQL real, caché de uv y npm, etapas lint → seguridad (pip-audit, npm audit, bandit, Semgrep, gitleaks, Trivy) → unitarias → integración/contrato → build frontend → E2E → imagen. Se ejecuta en cada PR y sus comprobaciones son requisito para integrar en main.
+- CI en GitHub Actions sobre ubuntu-latest con PostgreSQL real, caché de uv y npm, etapas lint → seguridad (pip-audit, npm audit, bandit, Semgrep, gitleaks, Trivy) → unitarias → integración/contrato → build frontend → E2E → imagen. Se ejecuta en cada PR y sus comprobaciones son requisito para integrar en main. La mutación con mutmut sobre `domain/billing` no va en cada PR, porque tarda demasiado: es un job manual de CI (`mutacion.yml`, con `workflow_dispatch`) (Borja, 19/11/2026).
 - Despliegue con migraciones controladas, health checks reales y vuelta atrás probada.
 - Copias cifradas fuera del servidor con archivado de WAL y simulacros de restauración (RNF-15).
 - Observabilidad: logs JSON, métricas básicas, monitor externo de disponibilidad, alertas de errores y de gasto de IA. Cada alerta tiene su runbook en docs/operacion/.
@@ -1259,7 +1259,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `arquitecto-python` · Opus 5.5
 - [ ] **Pruebas de propiedades** con hypothesis sobre el cálculo: la suma de bases y cuotas cuadra con el total para cualquier combinación de líneas, y, sin trabajos adicionales, la suma de las fases cuadra al céntimo con el presupuesto para cualquier reparto.
   - 🤖 `qa-testing` · Opus 5.5
-- [ ] **Puertos** de §4.3 definidos en el dominio y la aplicación, con `FakeX` en pruebas.
+- [ ] **Puertos** que usa este bloque (`Clock`, repositorios y unidad de trabajo, `BillingRecordSubmissionPort`), con su `FakeX` o su gemelo en memoria en pruebas. Los demás puertos de §4.3 no se crean por adelantado: cada uno llega con el bloque que lo usa, anotado en ese bloque (Borja, 19/11/2026).
   - 🤖 `arquitecto-python` · Opus 5.5
 - [ ] **Migraciones Alembic** del modelo de §4.5, políticas RLS (ADR-024), triggers de inmutabilidad (RN-F-02) y tabla de contadores.
   - 🤖 `backend-fastapi` · Opus 5.5
@@ -1275,7 +1275,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `qa-testing` · Opus 5.5
 - [ ] **Pruebas de aislamiento:** con el rol de la aplicación, una consulta sin cuenta fijada no devuelve filas y una consulta de la cuenta A no ve datos de la B. Una prueba comprueba que toda tabla de negocio tiene política RLS.
   - 🤖 `qa-testing` · Opus 5.5
-- [ ] **Cerrar ADR-017** (histórico separado de emitidas).
+- [ ] **ADR-017, lado de las emitidas:** la serie y la cadena no se enlazan con ninguna tabla ajena (`test_historico_separado.py`). El cierre del ADR pasa al Bloque 4, que crea el histórico (Borja, 19/11/2026).
   - 🤖 `arquitecto-python` · Opus 5.5
 
 **Criterio de terminado:** cobertura de `domain/` ≥ 90 %, pruebas de concurrencia, inmutabilidad y aislamiento en verde, mypy `--strict` limpio.
@@ -1310,9 +1310,9 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 
 ### Bloque 4 — Ingesta de documentos
 
-- [ ] **Lectura de PDF** en nuestro servidor con pdfplumber, y con Tesseract para los escaneados; rechazo de PDFs cifrados o enormes con motivo claro.
+- [ ] **Lectura de PDF** en nuestro servidor con pdfplumber, y con Tesseract para los escaneados; rechazo de PDFs cifrados o enormes con motivo claro. Puertos nuevos `PdfTextPort` y `OcrPort`, con `FakePdfText` y `FakeOcr`.
   - 🤖 `ingeniero-ia` · Opus 5.5
-- [ ] **Seudonimización** (RN-11, ADR-030): diccionario de la cuenta, patrones (NIF, IBAN, email, teléfono), Presidio para nombres y direcciones no registrados, y restitución de los datos reales.
+- [ ] **Seudonimización** (RN-11, ADR-030): diccionario de la cuenta, patrones (NIF, IBAN, email, teléfono), Presidio para nombres y direcciones no registrados, y restitución de los datos reales. Puerto nuevo `PseudonymizerPort`, con `FakePseudonymizer`.
   - 🤖 `ingeniero-ia` · Opus 5.5
 - [ ] **Clasificación** del documento (RF-IN-02) con salida estructurada.
   - 🤖 `ingeniero-ia` · Opus 5.5
@@ -1322,7 +1322,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `ingeniero-ia` · Opus 5.5
 - [ ] **Deduplicación** por hash y de clientes por NIF o similitud (RF-IN-07, RF-IN-08).
   - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Casos de uso y endpoints:** subir, listar, revisar, corregir y aprobar; ficheros por `FileStoragePort`, separados por cuenta.
+- [ ] **Casos de uso y endpoints:** subir, listar, revisar, corregir y aprobar; ficheros por `FileStoragePort` (puerto nuevo de este bloque), separados por cuenta.
   - 🤖 `backend-fastapi` · Opus 5.5
 - [ ] **Cola de ingesta** en el worker (ADR-026) con progreso por SSE; un PDF que falla no detiene los demás y una cuenta no acapara la cola. **Cerrar ADR-026.**
   - 🤖 `backend-fastapi` · Opus 5.5
@@ -1330,6 +1330,8 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `arquitecto-vue` · Sonnet 5.5 + `ui-ux` · Sonnet 5.5
 - [ ] **Evaluación de extracción** con Claude real, informe en `docs/04-evaluacion-ia.md`: precisión sobre texto seudonimizado (RNF-06), fugas (RNF-17) y coste por documento. Primera medición del ADR-030, que se cierra en el Bloque 6.
   - 🤖 `ingeniero-ia` · Opus 5.5
+- [ ] **Cerrar ADR-017** (histórico separado de emitidas): `historical_invoices` y `historical_lines` al aprobar una extracción, sin contador ni registros de facturación, y las pruebas del Bloque 4 de su verificación. El Bloque 2 ya verificó el lado de las emitidas.
+  - 🤖 `arquitecto-python` · Opus 5.5
 
 **Criterio de terminado:** RNF-06 y RNF-17 medidos; las facturas con errores sembrados quedan en revisión con el motivo correcto.
 
@@ -1339,9 +1341,9 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 
 - [ ] **Troceado** por documento y por línea significativa, con metadatos (cliente, fecha, tipo, importe).
   - 🤖 `ingeniero-ia` · Opus 5.5
-- [ ] **Embeddings** con `EmbeddingPort` y un modelo abierto multilingüe elegido por evaluación; indexación incremental al aprobar documentos.
+- [ ] **Embeddings** con `EmbeddingPort` (puerto nuevo de este bloque, con `FakeEmbeddings`) y un modelo abierto multilingüe elegido por evaluación; indexación incremental al aprobar documentos.
   - 🤖 `ingeniero-ia` · Opus 5.5
-- [ ] **Búsqueda de texto** de PostgreSQL con configuración en español y `unaccent`, y **pgvector**; fusión con RRF; filtros por cuenta y metadatos en SQL.
+- [ ] **Búsqueda de texto** de PostgreSQL con configuración en español y `unaccent`, y **pgvector**; fusión con RRF; filtros por cuenta y metadatos en SQL. Detrás del puerto nuevo `SearchPort`.
   - 🤖 `ingeniero-ia` · Opus 5.5
 - [ ] **Evaluación de recuperación:** recall@5 y MRR sobre consultas de referencia («baño completo», «cuadro eléctrico comunidad»).
   - 🤖 `ingeniero-ia` · Opus 5.5
@@ -1391,7 +1393,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `backend-fastapi` · Opus 5.5
 - [ ] **Propuesta de líneas** desde el histórico con origen de cada precio (RF-PR-02, RN-06).
   - 🤖 `ingeniero-ia` · Opus 5.5
-- [ ] **PDF del presupuesto** con ReportLab y el sistema visual (RF-PR-06).
+- [ ] **PDF del presupuesto** con ReportLab y el sistema visual (RF-PR-06). Puerto nuevo `PdfRenderPort`, con `FakePdfRender`; el PDF de factura del Bloque 8 lo reutiliza.
   - 🤖 `backend-fastapi` · Opus 5.5 + `ui-ux` · Sonnet 5.5
 - [ ] **Compartir el PDF** con el menú de compartir del móvil y descarga en el portátil (RF-PR-08).
   - 🤖 `arquitecto-vue` · Sonnet 5.5
@@ -1440,7 +1442,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 
 ### Bloque 9 — Voz
 
-- [ ] **Endpoint de transcripción** con faster-whisper en el worker, prompt inicial con vocabulario de oficio (RF-VO-02, RF-VO-04).
+- [ ] **Endpoint de transcripción** con faster-whisper en el worker, prompt inicial con vocabulario de oficio (RF-VO-02, RF-VO-04). Puerto nuevo `TranscriptionPort`, con `FakeTranscription`.
   - 🤖 `ingeniero-ia` · Opus 5.5
 - [ ] **Modelo de Whisper** incluido en la imagen o en un volumen, nunca descargado en ejecución; concurrencia limitada para no agotar la CPU del servidor (RNF-14).
   - 🤖 `ingeniero-ia` · Opus 5.5

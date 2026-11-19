@@ -12,7 +12,8 @@ Las comprobaciones van en dos grupos:
 
 - **Estructura:** lo que una factura necesita para tener sentido y para que
   sus importes se puedan calcular (estado coherente, fase y anticipo, citas de
-  la rectificativa, importes dentro de ``Money``). Vale siempre.
+  la rectificativa, importes dentro de ``Money``, destinatario y vivienda en
+  la emitida). Vale siempre.
 - **Reglas de emisión:** lo que la normativa o la política vigente exige para
   emitir (RN-F-06, RN-F-13, RF-FA-15 y los límites de longitud). Se aplican al
   crear y editar el borrador y otra vez al emitir, pero no al leer una factura
@@ -54,11 +55,16 @@ from kapataz.domain.billing.money import Money
 from kapataz.domain.billing.numbering import DocumentNumber, Series, check_issue_date
 from kapataz.domain.billing.party import Party
 from kapataz.domain.billing.quantity import Percentage, Quantity
+from kapataz.domain.billing.quote import QuoteVersion
 from kapataz.domain.billing.tax import RegimeKey, TaxRate, VatTreatment
-from kapataz.domain.billing.works_vat import material_share
+from kapataz.domain.billing.works_vat import (
+    allows_reverse_charge,
+    material_share,
+    recipient_obstacles,
+    requires_dwelling_age,
+)
 from kapataz.domain.customers.model import CustomerId
 
-_REDUCED_ELIGIBLE = frozenset({RecipientType.PRIVATE, RecipientType.COMMUNITY})
 # RF-FA-15: la garantía solo en la factura completa o en la fase final.
 _GUARANTEE_PHASES = frozenset({PhaseType.FULL, PhaseType.FINAL})
 # Fases en las que las líneas son la obra entera y el 40 % se puede comprobar.
@@ -117,9 +123,12 @@ class Invoice:
     son ``CorrectiveInvoice``) y ``regime_key`` 01. La calificación (S1 o S2)
     va en ``treatment``.
 
-    ``recipient_type`` y ``dwelling_over_two_years`` solo se guardan si la
-    factura no sale de un presupuesto (RN-F-13); si sale, se leen de la versión
-    del presupuesto.
+    ``recipient_type`` y ``dwelling_over_two_years`` deciden el IVA de la obra
+    (RN-F-13). En el borrador de una factura que no sale de un presupuesto los
+    da el profesional; en el de una que sale de un presupuesto van vacíos,
+    porque están en la versión del presupuesto. Al emitir, ``issue`` los copia
+    de esa versión, igual que copia las partes, y comprueba con ellos el tipo:
+    una emitida los lleva siempre y no depende de que el presupuesto siga ahí.
 
     ``gross_amount`` es el importe con IVA incluido del anticipo (RN-F-12): con
     él, la base sale del importe y no de las líneas.
@@ -234,14 +243,14 @@ class Invoice:
             missing.append("description")
         if not self.lines:
             missing.append("lines")
-        if self.quote_version_id is None and self.recipient_type is None:
-            missing.append("recipient_type")
-        if (
-            self.quote_version_id is None
-            and self.recipient_type in _REDUCED_ELIGIBLE
-            and self.dwelling_over_two_years is None
-        ):
-            missing.append("dwelling_over_two_years")
+        # Si sale de un presupuesto, la versión ya los exige (QuoteVersion).
+        if self.quote_version_id is None:
+            if self.recipient_type is None:
+                missing.append("recipient_type")
+            elif requires_dwelling_age(self.recipient_type) and (
+                self.dwelling_over_two_years is None
+            ):
+                missing.append("dwelling_over_two_years")
         return tuple(missing)
 
     def issue(
@@ -253,14 +262,20 @@ class Invoice:
         issuer: Party,
         recipient: Party,
         last_issue_date: date | None,
+        quote_version: QuoteVersion | None = None,
     ) -> Self:
         """Emite el borrador con el número que da el contador ya bloqueado (RN-F-01).
 
         Comprueba los datos obligatorios (RN-F-06), domicilios de las dos partes
         incluidos, y la fecha frente a la última de la serie (RN-F-04).
         ``issued_at`` sale del ``Clock``, en el caso de uso.
+
+        ``quote_version`` es la versión de la que sale la factura, y solo ella:
+        de ahí se copian el tipo de destinatario y la vivienda, y con ellos se
+        comprueba el tipo de IVA (RN-F-13). Sin presupuesto, va ``None``.
         """
         self._ensure_draft()
+        recipient_type, dwelling_over_two_years = self._works_recipient(quote_version)
         missing = list(self.missing_issue_data())
         if issuer.address is None:
             missing.append("issuer_address")
@@ -274,6 +289,9 @@ class Invoice:
         if self._forbids_negative_base() and self.totals.base.is_negative():
             msg = "La base no puede ser negativa: lo facturado de más se rectifica."
             raise NegativeInvoiceBaseError(msg)
+        # ``replace`` vuelve a validar la factura entera con las reglas vigentes:
+        # ahí se comprueba el tipo de IVA con el destinatario y la vivienda ya
+        # copiados, también los de una factura que sale de un presupuesto.
         return replace(
             self,
             status=InvoiceStatus.ISSUED,
@@ -282,7 +300,24 @@ class Invoice:
             issued_at=issued_at,
             issuer=issuer,
             recipient=recipient,
+            recipient_type=recipient_type,
+            dwelling_over_two_years=dwelling_over_two_years,
         )
+
+    def _works_recipient(
+        self, quote_version: QuoteVersion | None
+    ) -> tuple[RecipientType | None, bool | None]:
+        """Destinatario y vivienda con los que se emite: los propios o los del presupuesto."""
+        if self.quote_version_id is None:
+            if quote_version is not None:
+                msg = "Una factura que no sale de un presupuesto no se emite con uno."
+                raise InvalidInvoiceError(msg)
+            return self.recipient_type, self.dwelling_over_two_years
+        if quote_version is None or quote_version.id != self.quote_version_id:
+            # Sin la versión, el 10 % o la inversión se emitirían sin comprobar.
+            msg = "La factura se emite con la versión del presupuesto del que sale (RN-F-13)."
+            raise InvalidInvoiceError(msg)
+        return quote_version.recipient_type, quote_version.dwelling_over_two_years
 
     def _ensure_draft(self) -> None:
         if self.is_issued:
@@ -385,6 +420,12 @@ class CorrectiveInvoice(Invoice):
     R4) y si es por sustitución o por diferencias. Por diferencias, sus líneas
     son la diferencia y la base puede ser negativa. Por sustitución, sus líneas
     son el contenido correcto y guarda además la base y la cuota rectificadas.
+
+    El destinatario y la vivienda siguen las reglas de ``Invoice``: si cita la
+    versión del presupuesto (la que corrige fases de una obra), los copia de
+    ella al emitir; si no, lleva los suyos, que quien la crea toma de la
+    factura rectificada (toda emitida los guarda). Así su tipo de IVA se
+    comprueba igual que el de cualquier factura (RN-F-13).
     """
 
     # Se redefinen sin el valor por defecto de Invoice: una rectificativa
@@ -456,10 +497,30 @@ def _check_structure(invoice: Invoice) -> None:
     if invoice.quote_version_id is None and any(line.origin is not None for line in invoice.lines):
         msg = "Sin presupuesto no hay líneas presupuestadas, adicionales ni restas de fases."
         raise InvalidInvoiceError(msg)
-    if invoice.quote_version_id is not None and (
-        invoice.recipient_type is not None or invoice.dwelling_over_two_years is not None
+    _check_works_recipient(invoice)
+
+
+def _check_works_recipient(invoice: Invoice) -> None:
+    """Presencia del destinatario y la vivienda (RN-F-13), como estructura.
+
+    Es estructura y no regla de emisión: sin ellos no se puede saber si el
+    tipo de una emitida era correcto, y se comprueba también al leerla. Que el
+    tipo encaje con ellos sí es regla de emisión (``_check_treatment``).
+    """
+    recipient_type = invoice.recipient_type
+    if not invoice.is_issued:
+        # El borrador que sale de un presupuesto no los duplica: si los
+        # guardara, podrían discrepar de la versión mientras se edita.
+        if invoice.quote_version_id is not None and (
+            recipient_type is not None or invoice.dwelling_over_two_years is not None
+        ):
+            msg = "Si la factura sale de un presupuesto, el destinatario y la vivienda están en él."
+            raise InvalidInvoiceError(msg)
+        return
+    if recipient_type is None or (
+        requires_dwelling_age(recipient_type) and invoice.dwelling_over_two_years is None
     ):
-        msg = "Si la factura sale de un presupuesto, el destinatario y la vivienda están en él."
+        msg = "Una emitida guarda el tipo de destinatario y, si cabe el 10 %, la vivienda."
         raise InvalidInvoiceError(msg)
 
 
@@ -492,13 +553,16 @@ def _check_treatment(invoice: Invoice) -> None:
     if any(line.outside_works for line in invoice.lines) and invoice.treatment != general:
         msg = "Lo que no forma parte de la obra va al 21 % en su propia factura (RN-F-13)."
         raise InvalidInvoiceError(msg)
-    if invoice.recipient_type is None:
+    recipient_type = invoice.recipient_type
+    if recipient_type is None:
+        # Borrador que sale de un presupuesto o al que aún le falta el dato: se
+        # comprueba al emitir, cuando ``issue`` ya los ha copiado o exigido.
         return
-    if invoice.treatment.is_reverse_charge and invoice.recipient_type is not RecipientType.BUSINESS:
+    if invoice.treatment.is_reverse_charge and not allows_reverse_charge(recipient_type):
         msg = "La inversión del sujeto pasivo solo cabe con un empresario como destinatario."
         raise InvalidInvoiceError(msg)
-    if invoice.treatment.rate == TaxRate.reduced() and (
-        invoice.recipient_type not in _REDUCED_ELIGIBLE or invoice.dwelling_over_two_years is False
+    if invoice.treatment.rate == TaxRate.reduced() and recipient_obstacles(
+        recipient_type, invoice.dwelling_over_two_years
     ):
         msg = "El 10 % exige un particular o una comunidad y una vivienda de más de dos años."
         raise InvalidInvoiceError(msg)

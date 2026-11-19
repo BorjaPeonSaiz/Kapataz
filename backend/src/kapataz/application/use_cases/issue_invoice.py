@@ -1,4 +1,4 @@
-"""Emisión de una factura (RF-FA-02, RN-F-01, RN-F-04, RN-F-06, RN-F-07; arquitectura §7).
+"""Emisión de una factura (RF-FA-02, RN-F-01, RN-F-04, RN-F-06, RN-F-07, RN-F-13; arquitectura §7).
 
 Todo ocurre en una sola transacción. Si algo falla, se deshace entero y no se
 consume ningún número, así que no quedan huecos (RN-F-01). Los bloqueos van
@@ -32,12 +32,14 @@ from kapataz.domain.billing.ids import BillingRecordId, InvoiceId
 from kapataz.domain.billing.invoice import Invoice
 from kapataz.domain.billing.numbering import check_issue_date, next_number
 from kapataz.domain.billing.party import Party, missing_issuer_data, missing_recipient_data
+from kapataz.domain.billing.quote import QuoteVersion
 from kapataz.domain.clock import Clock
 
 # La fecha de expedición es la del calendario español, no la de UTC: una factura
 # emitida a las 00:30 en Madrid es de ese día, aunque en UTC sea el anterior.
 # Provisional: Canarias va una hora por detrás y solo cambiaría la fecha entre
-# las 23:00 y las 00:00 de Canarias; se revisa con el perfil fiscal (RF-CF-01).
+# las 23:00 y las 00:00 de Canarias; pendiente del asesor fiscal y, si hace
+# falta, del perfil fiscal (RF-CF-01). Decisión documentada en ADR-012.
 FISCAL_TIMEZONE = ZoneInfo("Europe/Madrid")
 
 
@@ -89,8 +91,11 @@ class IssueInvoice:
             last_issue_date = await uow.series_counters.last_issue_date(draft.series)
             check_issue_date(issue_date, last_issue_date)
 
-            # 4. RN-F-06, numeración sin huecos y emisión en el dominio.
+            # 4. RN-F-06, numeración sin huecos y emisión en el dominio, que
+            #    copia de la versión del presupuesto el destinatario y la
+            #    vivienda y comprueba con ellos el tipo de IVA (RN-F-13).
             issuer, recipient = await self._parties(uow, draft)
+            quote_version = await self._quote_version(uow, draft)
             number = next_number(draft.series, issue_date.year, counter.last_number)
             issued = draft.issue(
                 number=number,
@@ -99,6 +104,7 @@ class IssueInvoice:
                 issuer=issuer,
                 recipient=recipient,
                 last_issue_date=last_issue_date,
+                quote_version=quote_version,
             )
             await uow.invoices.mark_issued(issued)
             await uow.series_counters.save(
@@ -143,6 +149,23 @@ class IssueInvoice:
         if missing:
             raise MissingIssueDataError(missing)
         return Party.issuer_from(professional), Party.recipient_from(customer)
+
+    @staticmethod
+    async def _quote_version(uow: UnitOfWork, draft: Invoice) -> QuoteVersion | None:
+        """La versión de la que sale el borrador, o None si no sale de un presupuesto.
+
+        No se bloquea: la versión de un presupuesto aceptado ya no cambia
+        (``Quote.revise``) y la clave foránea impide borrarla mientras una
+        factura la cite.
+        """
+        if draft.quote_version_id is None:
+            return None
+        version = await uow.quotes.get_version(draft.quote_version_id)
+        if version is None:
+            # Las claves foráneas compuestas impiden un borrador sin su versión.
+            msg = "El borrador cita una versión de presupuesto que no existe en la cuenta."
+            raise RuntimeError(msg)
+        return version
 
 
 def fiscal_date(instant: datetime) -> date:

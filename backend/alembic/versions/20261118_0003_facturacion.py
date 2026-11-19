@@ -28,19 +28,49 @@ Permisos mínimos de ``kapataz_app``:
 - ``DELETE`` en ``invoices`` e ``invoice_lines`` solo para borradores: lo
   impide el trigger con una factura emitida.
 
-Triggers, que actúan también para el propietario (RN-F-02, RN-F-07):
+Triggers, que actúan también para el propietario (RN-F-01 a RN-F-04, RN-F-07,
+RN-F-12):
 
-- ``invoices``: con ``status = 'issued'``, ni ``UPDATE`` ni ``DELETE``.
+- ``invoices``: nace en borrador; con ``status = 'issued'``, ni ``UPDATE`` ni
+  ``DELETE``. Al pasar a emitida, un trigger diferido (se comprueba al
+  confirmar la transacción) exige que el contador de su serie y año haya
+  avanzado justo hasta su número y su fecha, y que exista su registro de alta.
 - ``invoice_lines`` e ``invoice_corrections``: ni altas, ni cambios, ni
   bajas si su factura está emitida. Bloquean la fila de la factura con
-  ``FOR SHARE``, así que no pueden cruzarse con una emisión en curso.
-- ``billing_records``: sin ``DELETE`` y sin ``UPDATE`` salvo en las columnas
-  de envío. Al insertar, el enlace (``prev_*``) tiene que copiar el registro
-  anterior.
+  ``FOR SHARE``, así que no pueden cruzarse con una emisión en curso. La
+  factura que citan (la rectificada, o la fase anterior que se descuenta)
+  tiene que estar emitida.
+- ``series_counters``: nace a cero y solo avanza de uno en uno, sin que la
+  fecha retroceda ni salga de su año. Cada avance, diferido, exige la factura
+  emitida con ese número y esa fecha: no se dejan huecos sin emitir.
+- ``billing_records``: solo de facturas emitidas, con el emisor, el número y
+  la fecha de su factura, y un solo alta por factura que no sea subsanación
+  (índice único parcial). Sin ``DELETE`` y sin ``UPDATE`` salvo en las
+  columnas de envío. Al insertar, el enlace (``prev_*``) tiene que copiar el
+  registro anterior y, al confirmar, la cabeza de la cadena tiene que haber
+  llegado hasta él. La huella no se comprueba: la calcula el dominio.
 - ``billing_chain_heads``: nace vacía y solo avanza al registro que sigue al
   actual.
 - ``TRUNCATE`` rechazado en las cuatro tablas fiscales, en los contadores, en la
   cabeza de la cadena y en los cobros: vaciarlas nunca es una operación normal.
+
+Las comprobaciones nuevas son triggers ``AFTER``: RLS (``WITH CHECK``), las
+restricciones y las claves foráneas se evalúan antes, así que un intento desde
+otra cuenta sigue fallando por RLS o por la clave foránea, no por el trigger.
+
+Códigos de error (SQLSTATE, clase propia ``KZ``): ``KZF01`` numeración,
+``KZF02`` factura emitida inmutable, ``KZF03`` rectificada no emitida,
+``KZF04`` fecha del contador, ``KZF07`` cadena de registros, ``KZF12`` fase
+anterior no emitida y ``KZF00`` para ``TRUNCATE``, que no es de ninguna regla
+de facturación.
+
+``search_path`` (S2-01): toda función del esquema fija
+``pg_catalog, public, pg_temp`` (``pg_temp`` al final, explícito: si no, se
+busca primero) y nombra sus tablas con el esquema. Una tabla temporal con el
+nombre de una tabla de negocio no puede suplantarla dentro del trigger. Además
+se retira ``TEMPORARY`` sobre la base de datos a ``PUBLIC`` y a
+``kapataz_app`` (la migración falla si no lo consigue): la app no crea tablas
+temporales.
 """
 
 from collections.abc import Sequence
@@ -92,19 +122,47 @@ _SUBMISSION_COLUMNS = (
 
 _FUNCTIONS = (
     "invoices_immutable_when_issued()",
+    "invoices_insert_as_draft()",
+    "invoices_check_issue()",
     "invoice_children_immutable_when_issued()",
+    "invoice_reference_is_issued()",
+    "series_counters_advance()",
+    "series_counters_check_issued()",
     "billing_records_append_only()",
     "billing_records_check_link()",
+    "billing_records_invoice_issued()",
+    "billing_records_check_in_chain()",
     "billing_chain_heads_advance()",
     "reject_truncate_of_fiscal_table()",
+    "invoice_series_number(text, integer, integer)",
 )
+
+# Cabecera común de las funciones de trigger (S2-01). Con pg_temp al final y
+# las tablas con su esquema, una tabla temporal de la sesión no suplanta a una
+# de negocio dentro del trigger.
+_HEADER = "RETURNS trigger LANGUAGE plpgsql SET search_path = pg_catalog, public, pg_temp AS"
+
+# Ancho mínimo de la secuencia en el número de factura: _SEQUENCE_WIDTH de
+# domain/billing/numbering.py. Con más cifras, el número no se recorta, igual
+# que el formato de Python.
+_SEQUENCE_WIDTH = 4
+
+# Número de factura tal como lo escribe DocumentNumber.__str__ («F-2026-0001»).
+# Lo usan los triggers para comprobar que un registro es de su factura.
+_SERIES_NUMBER = f"""
+CREATE FUNCTION public.invoice_series_number(series text, year integer, number integer)
+RETURNS text LANGUAGE sql IMMUTABLE STRICT
+SET search_path = pg_catalog, public, pg_temp AS $$
+    SELECT format('%s-%s-%s', series, year,
+        lpad(number::text, greatest({_SEQUENCE_WIDTH}, length(number::text)), '0'))
+$$
+"""
 
 # RN-F-02. Hoy todas las columnas de una factura son fiscales, así que cualquier
 # cambio de una emitida se rechaza. Si un día se añade una que no lo sea (la
 # ruta del PDF, por ejemplo), se resta aquí del to_jsonb.
-_INVOICES_IMMUTABLE = """
-CREATE FUNCTION invoices_immutable_when_issued() RETURNS trigger
-LANGUAGE plpgsql AS $$
+_INVOICES_IMMUTABLE = f"""
+CREATE FUNCTION public.invoices_immutable_when_issued() {_HEADER} $$
 BEGIN
     IF TG_OP = 'DELETE' THEN
         IF OLD.status = 'issued' THEN
@@ -122,12 +180,53 @@ END;
 $$
 """
 
+# RN-F-01. Una factura solo llega a emitida desde un borrador, por la emisión.
+_INVOICES_INSERT_AS_DRAFT = f"""
+CREATE FUNCTION public.invoices_insert_as_draft() {_HEADER} $$
+BEGIN
+    RAISE EXCEPTION 'RN-F-01: una factura nace en borrador; solo la emisión la numera.'
+        USING ERRCODE = 'KZF01';
+END;
+$$
+"""
+
+# RN-F-01 y RN-F-07, al confirmar la transacción que emite. Es lo que hace
+# IssueInvoice en una sola transacción: la factura toma el número siguiente
+# del contador (que queda en ese número y esa fecha) y se encadena su registro
+# de alta. Con una emisión por transacción, el contador acaba justo en ella.
+_INVOICES_CHECK_ISSUE = f"""
+CREATE FUNCTION public.invoices_check_issue() {_HEADER} $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM public.series_counters c
+        WHERE c.tenant_id = NEW.tenant_id AND c.series = NEW.series
+            AND c.year = NEW.issue_year AND c.last_number = NEW.number
+            AND c.last_issue_date = NEW.issue_date
+    ) THEN
+        RAISE EXCEPTION 'RN-F-01: la factura se emite sin tomar su número del contador.'
+            USING ERRCODE = 'KZF01';
+    END IF;
+    IF NOT EXISTS (
+        SELECT 1 FROM public.billing_records r
+        WHERE r.tenant_id = NEW.tenant_id AND r.invoice_id = NEW.id
+            AND r.record_type = 'registration' AND NOT r.is_correction
+            AND r.issue_date = NEW.issue_date AND r.issuer_tax_id = NEW.issuer_tax_id
+            AND r.series_number
+                = public.invoice_series_number(NEW.series, NEW.issue_year, NEW.number)
+    ) THEN
+        RAISE EXCEPTION 'RN-F-07: la factura se emite sin su registro de alta.'
+            USING ERRCODE = 'KZF07';
+    END IF;
+    RETURN NULL;
+END;
+$$
+"""
+
 # TG_ARGV[0] es la columna que apunta a la factura. FOR SHARE espera a una
 # emisión en curso (que bloquea la factura con FOR UPDATE) y, a la vez, impide
 # que la factura se emita mientras esta transacción cambia sus líneas.
-_CHILDREN_IMMUTABLE = """
-CREATE FUNCTION invoice_children_immutable_when_issued() RETURNS trigger
-LANGUAGE plpgsql AS $$
+_CHILDREN_IMMUTABLE = f"""
+CREATE FUNCTION public.invoice_children_immutable_when_issued() {_HEADER} $$
 DECLARE
     invoice_ids uuid[] := ARRAY[]::uuid[];
     parent_status text;
@@ -139,7 +238,8 @@ BEGIN
         invoice_ids := invoice_ids || (to_jsonb(OLD) ->> TG_ARGV[0])::uuid;
     END IF;
     FOR parent_status IN
-        SELECT status FROM invoices WHERE id = ANY (invoice_ids) ORDER BY id FOR SHARE
+        SELECT i.status FROM public.invoices i WHERE i.id = ANY (invoice_ids)
+        ORDER BY i.id FOR SHARE
     LOOP
         IF parent_status = 'issued' THEN
             RAISE EXCEPTION 'RN-F-02: % de una factura emitida no se modifica.', TG_TABLE_NAME
@@ -154,9 +254,89 @@ END;
 $$
 """
 
+# La factura citada por una referencia fiscal tiene que estar emitida (y una
+# emitida ya no vuelve a borrador). TG_ARGV[0] es la columna y TG_ARGV[1] la
+# regla: RN-F-03 para la rectificada, RN-F-12 para la fase que se descuenta.
+# Va AFTER: la clave foránea compuesta ya ha comprobado que la factura existe
+# en la cuenta de la fila, así que no encontrarla es un error, no un permiso.
+_REFERENCE_IS_ISSUED = f"""
+CREATE FUNCTION public.invoice_reference_is_issued() {_HEADER} $$
+DECLARE
+    referenced uuid := (to_jsonb(NEW) ->> TG_ARGV[0])::uuid;
+    referenced_status text;
+BEGIN
+    IF referenced IS NULL THEN
+        RETURN NULL;
+    END IF;
+    SELECT i.status INTO referenced_status FROM public.invoices i
+        WHERE i.tenant_id = NEW.tenant_id AND i.id = referenced;
+    IF referenced_status IS DISTINCT FROM 'issued' THEN
+        RAISE EXCEPTION '%: % solo cita facturas emitidas.', TG_ARGV[1], TG_TABLE_NAME
+            USING ERRCODE = 'KZF' || right(TG_ARGV[1], 2);
+    END IF;
+    RETURN NULL;
+END;
+$$
+"""
+
+# RN-F-01 y RN-F-04. El contador lo crea la emisión a cero (INSERT … ON
+# CONFLICT DO NOTHING) y cada emisión lo sube en uno con su fecha.
+_COUNTERS_ADVANCE = f"""
+CREATE FUNCTION public.series_counters_advance() {_HEADER} $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        IF NEW.last_number <> 0 THEN
+            RAISE EXCEPTION 'RN-F-01: un contador nace a cero.' USING ERRCODE = 'KZF01';
+        END IF;
+        RETURN NULL;
+    END IF;
+    IF (NEW.tenant_id, NEW.series, NEW.year) IS DISTINCT FROM (OLD.tenant_id, OLD.series, OLD.year)
+    THEN
+        RAISE EXCEPTION 'RN-F-01: un contador no cambia de cuenta, de serie ni de año.'
+            USING ERRCODE = 'KZF01';
+    END IF;
+    IF (NEW.last_number, NEW.last_issue_date) IS NOT DISTINCT FROM
+        (OLD.last_number, OLD.last_issue_date) THEN
+        RETURN NULL;
+    END IF;
+    IF NEW.last_number IS DISTINCT FROM OLD.last_number + 1 THEN
+        RAISE EXCEPTION 'RN-F-01: un contador solo avanza de uno en uno.'
+            USING ERRCODE = 'KZF01';
+    END IF;
+    IF NEW.last_issue_date < OLD.last_issue_date THEN
+        RAISE EXCEPTION 'RN-F-04: la fecha del último número no retrocede.'
+            USING ERRCODE = 'KZF04';
+    END IF;
+    IF EXTRACT(YEAR FROM NEW.last_issue_date) <> NEW.year THEN
+        RAISE EXCEPTION 'RN-F-01: la fecha del último número es de otro año.'
+            USING ERRCODE = 'KZF01';
+    END IF;
+    RETURN NULL;
+END;
+$$
+"""
+
+# RN-F-01, al confirmar: cada número que da el contador es el de una factura
+# emitida en esa serie, ese año y esa fecha. Sin ella, quedaría un hueco.
+_COUNTERS_CHECK_ISSUED = f"""
+CREATE FUNCTION public.series_counters_check_issued() {_HEADER} $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM public.invoices i
+        WHERE i.tenant_id = NEW.tenant_id AND i.series = NEW.series
+            AND i.issue_year = NEW.year AND i.number = NEW.last_number
+            AND i.issue_date = NEW.last_issue_date AND i.status = 'issued'
+    ) THEN
+        RAISE EXCEPTION 'RN-F-01: el contador avanza sin la factura emitida de ese número.'
+            USING ERRCODE = 'KZF01';
+    END IF;
+    RETURN NULL;
+END;
+$$
+"""
+
 _RECORDS_APPEND_ONLY = f"""
-CREATE FUNCTION billing_records_append_only() RETURNS trigger
-LANGUAGE plpgsql AS $$
+CREATE FUNCTION public.billing_records_append_only() {_HEADER} $$
 BEGIN
     IF TG_OP = 'DELETE' THEN
         RAISE EXCEPTION 'RN-F-07: un registro de facturación no se borra.'
@@ -175,17 +355,16 @@ $$
 
 # El enlace guardado tiene que ser copia exacta del registro anterior: así la
 # cadena de la base de datos y la de las huellas son la misma.
-_RECORDS_CHECK_LINK = """
-CREATE FUNCTION billing_records_check_link() RETURNS trigger
-LANGUAGE plpgsql AS $$
+_RECORDS_CHECK_LINK = f"""
+CREATE FUNCTION public.billing_records_check_link() {_HEADER} $$
 DECLARE
-    previous billing_records%ROWTYPE;
+    previous public.billing_records%ROWTYPE;
 BEGIN
     IF NEW.previous_record_id IS NULL THEN
         RETURN NEW;
     END IF;
-    SELECT * INTO previous FROM billing_records
-        WHERE tenant_id = NEW.tenant_id AND id = NEW.previous_record_id;
+    SELECT * INTO previous FROM public.billing_records r
+        WHERE r.tenant_id = NEW.tenant_id AND r.id = NEW.previous_record_id;
     IF NOT FOUND
         OR previous.hash IS DISTINCT FROM NEW.prev_hash
         OR previous.issuer_tax_id IS DISTINCT FROM NEW.prev_issuer_tax_id
@@ -199,9 +378,57 @@ END;
 $$
 """
 
-_HEADS_ADVANCE = """
-CREATE FUNCTION billing_chain_heads_advance() RETURNS trigger
-LANGUAGE plpgsql AS $$
+# RN-F-07. Un registro (alta, subsanación o anulación) es siempre de una
+# factura emitida y la identifica tal cual: emisor, número y fecha de esa
+# factura (IDFactura de la AEAT). AFTER, por lo mismo que las referencias
+# fiscales. La huella no se comprueba aquí: la calcula el dominio.
+_RECORDS_INVOICE_ISSUED = f"""
+CREATE FUNCTION public.billing_records_invoice_issued() {_HEADER} $$
+DECLARE
+    invoice public.invoices%ROWTYPE;
+BEGIN
+    SELECT * INTO invoice FROM public.invoices i
+        WHERE i.tenant_id = NEW.tenant_id AND i.id = NEW.invoice_id;
+    IF NOT FOUND OR invoice.status IS DISTINCT FROM 'issued' THEN
+        RAISE EXCEPTION 'RN-F-07: un registro de facturación es de una factura emitida.'
+            USING ERRCODE = 'KZF07';
+    END IF;
+    IF NEW.issuer_tax_id IS DISTINCT FROM invoice.issuer_tax_id
+        OR NEW.issue_date IS DISTINCT FROM invoice.issue_date
+        OR NEW.series_number IS DISTINCT FROM
+            public.invoice_series_number(invoice.series, invoice.issue_year, invoice.number)
+    THEN
+        RAISE EXCEPTION 'RN-F-07: el registro no identifica a su factura (emisor, número y fecha).'
+            USING ERRCODE = 'KZF07';
+    END IF;
+    RETURN NULL;
+END;
+$$
+"""
+
+# RN-F-07, al confirmar: el registro entra en la cadena. La cabeza ha llegado a
+# él o lo ha pasado (otro registro lo enlaza). Un registro suelto bloquearía la
+# cadena: el siguiente no podría enlazar con el anterior sin bifurcarla.
+_RECORDS_CHECK_IN_CHAIN = f"""
+CREATE FUNCTION public.billing_records_check_in_chain() {_HEADER} $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM public.billing_chain_heads h
+        WHERE h.tenant_id = NEW.tenant_id AND h.last_record_id = NEW.id
+    ) AND NOT EXISTS (
+        SELECT 1 FROM public.billing_records r
+        WHERE r.tenant_id = NEW.tenant_id AND r.previous_record_id = NEW.id
+    ) THEN
+        RAISE EXCEPTION 'RN-F-07: la cabeza de la cadena no llega al registro.'
+            USING ERRCODE = 'KZF07';
+    END IF;
+    RETURN NULL;
+END;
+$$
+"""
+
+_HEADS_ADVANCE = f"""
+CREATE FUNCTION public.billing_chain_heads_advance() {_HEADER} $$
 DECLARE
     linked_to uuid;
 BEGIN
@@ -218,8 +445,8 @@ BEGIN
     IF NEW.last_record_id IS NOT DISTINCT FROM OLD.last_record_id THEN
         RETURN NEW;
     END IF;
-    SELECT previous_record_id INTO linked_to FROM billing_records
-        WHERE tenant_id = NEW.tenant_id AND id = NEW.last_record_id;
+    SELECT r.previous_record_id INTO linked_to FROM public.billing_records r
+        WHERE r.tenant_id = NEW.tenant_id AND r.id = NEW.last_record_id;
     IF NOT FOUND OR linked_to IS DISTINCT FROM OLD.last_record_id THEN
         RAISE EXCEPTION 'RN-F-07: la cabeza solo avanza al registro siguiente.'
             USING ERRCODE = 'KZF07';
@@ -229,12 +456,140 @@ END;
 $$
 """
 
-_REJECT_TRUNCATE = """
-CREATE FUNCTION reject_truncate_of_fiscal_table() RETURNS trigger
-LANGUAGE plpgsql AS $$
+# Vaciar una tabla no es ninguna operación de facturación: código propio
+# (KZF00), distinto del de la factura emitida inmutable (M-10).
+_REJECT_TRUNCATE = f"""
+CREATE FUNCTION public.reject_truncate_of_fiscal_table() {_HEADER} $$
 BEGIN
-    RAISE EXCEPTION 'RN-F-02: la tabla % no se vacía.', TG_TABLE_NAME USING ERRCODE = 'KZF02';
+    RAISE EXCEPTION 'La tabla % no se vacía: TRUNCATE no está permitido.', TG_TABLE_NAME
+        USING ERRCODE = 'KZF00';
 END;
+$$
+"""
+
+# Todas las funciones: se crean antes que los triggers que las usan.
+_FUNCTION_DEFINITIONS = (
+    _SERIES_NUMBER,
+    _INVOICES_IMMUTABLE,
+    _INVOICES_INSERT_AS_DRAFT,
+    _INVOICES_CHECK_ISSUE,
+    _CHILDREN_IMMUTABLE,
+    _REFERENCE_IS_ISSUED,
+    _COUNTERS_ADVANCE,
+    _COUNTERS_CHECK_ISSUED,
+    _RECORDS_APPEND_ONLY,
+    _RECORDS_CHECK_LINK,
+    _RECORDS_INVOICE_ISSUED,
+    _RECORDS_CHECK_IN_CHAIN,
+    _HEADS_ADVANCE,
+    _REJECT_TRUNCATE,
+)
+
+# Los triggers diferidos se comprueban al confirmar la transacción: la
+# emisión cambia la factura, el contador, la cadena y la cabeza en ese orden y
+# solo al final cuadra todo.
+_DEFERRED = "DEFERRABLE INITIALLY DEFERRED"
+
+_TRIGGERS = (
+    (
+        "CREATE TRIGGER invoices_immutable_when_issued "
+        "BEFORE UPDATE OR DELETE ON public.invoices "
+        "FOR EACH ROW EXECUTE FUNCTION public.invoices_immutable_when_issued()"
+    ),
+    (
+        "CREATE TRIGGER invoices_insert_as_draft "
+        "AFTER INSERT ON public.invoices "
+        "FOR EACH ROW WHEN (NEW.status IS DISTINCT FROM 'draft') "
+        "EXECUTE FUNCTION public.invoices_insert_as_draft()"
+    ),
+    (
+        f"CREATE CONSTRAINT TRIGGER invoices_check_issue "
+        f"AFTER UPDATE ON public.invoices {_DEFERRED} "
+        f"FOR EACH ROW WHEN (OLD.status = 'draft' AND NEW.status = 'issued') "
+        f"EXECUTE FUNCTION public.invoices_check_issue()"
+    ),
+    (
+        "CREATE TRIGGER invoice_lines_immutable_when_issued "
+        "BEFORE INSERT OR UPDATE OR DELETE ON public.invoice_lines "
+        "FOR EACH ROW EXECUTE FUNCTION public.invoice_children_immutable_when_issued('invoice_id')"
+    ),
+    (
+        "CREATE TRIGGER invoice_lines_prior_invoice_issued "
+        "AFTER INSERT OR UPDATE OF prior_invoice_id ON public.invoice_lines "
+        "FOR EACH ROW EXECUTE FUNCTION "
+        "public.invoice_reference_is_issued('prior_invoice_id', 'RN-F-12')"
+    ),
+    (
+        "CREATE TRIGGER invoice_corrections_immutable_when_issued "
+        "BEFORE INSERT OR UPDATE OR DELETE ON public.invoice_corrections "
+        "FOR EACH ROW EXECUTE FUNCTION "
+        "public.invoice_children_immutable_when_issued('corrective_invoice_id')"
+    ),
+    (
+        "CREATE TRIGGER invoice_corrections_rectified_issued "
+        "AFTER INSERT OR UPDATE OF rectified_invoice_id ON public.invoice_corrections "
+        "FOR EACH ROW EXECUTE FUNCTION "
+        "public.invoice_reference_is_issued('rectified_invoice_id', 'RN-F-03')"
+    ),
+    (
+        "CREATE TRIGGER series_counters_advance "
+        "AFTER INSERT OR UPDATE ON public.series_counters "
+        "FOR EACH ROW EXECUTE FUNCTION public.series_counters_advance()"
+    ),
+    (
+        f"CREATE CONSTRAINT TRIGGER series_counters_check_issued "
+        f"AFTER UPDATE ON public.series_counters {_DEFERRED} "
+        f"FOR EACH ROW WHEN (NEW.last_number IS DISTINCT FROM OLD.last_number) "
+        f"EXECUTE FUNCTION public.series_counters_check_issued()"
+    ),
+    (
+        "CREATE TRIGGER billing_records_append_only "
+        "BEFORE UPDATE OR DELETE ON public.billing_records "
+        "FOR EACH ROW EXECUTE FUNCTION public.billing_records_append_only()"
+    ),
+    (
+        "CREATE TRIGGER billing_records_check_link "
+        "BEFORE INSERT ON public.billing_records "
+        "FOR EACH ROW EXECUTE FUNCTION public.billing_records_check_link()"
+    ),
+    (
+        "CREATE TRIGGER billing_records_invoice_issued "
+        "AFTER INSERT ON public.billing_records "
+        "FOR EACH ROW EXECUTE FUNCTION public.billing_records_invoice_issued()"
+    ),
+    (
+        f"CREATE CONSTRAINT TRIGGER billing_records_check_in_chain "
+        f"AFTER INSERT ON public.billing_records {_DEFERRED} "
+        f"FOR EACH ROW EXECUTE FUNCTION public.billing_records_check_in_chain()"
+    ),
+    (
+        "CREATE TRIGGER billing_chain_heads_advance "
+        "BEFORE INSERT OR UPDATE ON public.billing_chain_heads "
+        "FOR EACH ROW EXECUTE FUNCTION public.billing_chain_heads_advance()"
+    ),
+    *(
+        f"CREATE TRIGGER {table}_reject_truncate BEFORE TRUNCATE ON public.{table} "
+        "FOR EACH STATEMENT EXECUTE FUNCTION public.reject_truncate_of_fiscal_table()"
+        for table in _NO_TRUNCATE_TABLES
+    ),
+)
+
+# S2-01. Sin TEMPORARY, la app no crea tablas temporales que puedan hacerse
+# pasar por las de negocio. Las bases nuevas lo conceden a PUBLIC por defecto
+# (la base de pruebas, por ejemplo); 10-roles.sh ya no se lo da a kapataz_app,
+# y aquí se retira en cualquier caso: lo que concede un superusuario consta
+# como concedido por el propietario de la base de datos, que es quien migra.
+# El propietario lo conserva; no es un rol que use la app.
+_REVOKE_TEMPORARY = f"""
+DO $$
+BEGIN
+    EXECUTE format('REVOKE TEMPORARY ON DATABASE %I FROM PUBLIC, {APP_ROLE}', current_database());
+    -- REVOKE solo avisa (WARNING) si quien migra no puede retirarlo: aquí falla.
+    IF has_database_privilege('public', current_database(), 'TEMPORARY')
+        OR has_database_privilege('{APP_ROLE}', current_database(), 'TEMPORARY') THEN
+        RAISE EXCEPTION 'S2-01: PUBLIC o {APP_ROLE} siguen pudiendo crear tablas temporales.';
+    END IF;
+END
 $$
 """
 
@@ -457,6 +812,13 @@ def _create_tables() -> None:
         ),
         sa.CheckConstraint("status IN ('draft', 'issued')", name=op.f("ck_invoices_status")),
         sa.CheckConstraint(
+            "(status = 'draft' AND (quote_version_id IS NULL "
+            "OR (recipient_type IS NULL AND dwelling_over_two_years IS NULL))) "
+            "OR (status = 'issued' AND recipient_type IS NOT NULL "
+            "AND (recipient_type = 'business' OR dwelling_over_two_years IS NOT NULL))",
+            name=op.f("ck_invoices_works_recipient"),
+        ),
+        sa.CheckConstraint(
             "(guarantee_pct IS NULL) = (guarantee_due_date IS NULL)",
             name=op.f("ck_invoices_guarantee"),
         ),
@@ -609,6 +971,14 @@ def _create_tables() -> None:
         "billing_records",
         ["tenant_id", "invoice_id"],
         unique=False,
+    )
+    # RN-F-07: un solo alta por factura; las demás altas son subsanaciones.
+    op.create_index(
+        "uq_billing_records_registration",
+        "billing_records",
+        ["tenant_id", "invoice_id"],
+        unique=True,
+        postgresql_where=sa.text("record_type = 'registration' AND NOT is_correction"),
     )
     op.create_table(
         "invoice_corrections",
@@ -777,56 +1147,18 @@ def _secure_tables() -> None:
 
 
 def _create_triggers() -> None:
-    for function in (
-        _INVOICES_IMMUTABLE,
-        _CHILDREN_IMMUTABLE,
-        _RECORDS_APPEND_ONLY,
-        _RECORDS_CHECK_LINK,
-        _HEADS_ADVANCE,
-        _REJECT_TRUNCATE,
-    ):
+    for function in _FUNCTION_DEFINITIONS:
         op.execute(function)
-    op.execute(
-        "CREATE TRIGGER invoices_immutable_when_issued "
-        "BEFORE UPDATE OR DELETE ON invoices "
-        "FOR EACH ROW EXECUTE FUNCTION invoices_immutable_when_issued()"
-    )
-    op.execute(
-        "CREATE TRIGGER invoice_lines_immutable_when_issued "
-        "BEFORE INSERT OR UPDATE OR DELETE ON invoice_lines "
-        "FOR EACH ROW EXECUTE FUNCTION invoice_children_immutable_when_issued('invoice_id')"
-    )
-    op.execute(
-        "CREATE TRIGGER invoice_corrections_immutable_when_issued "
-        "BEFORE INSERT OR UPDATE OR DELETE ON invoice_corrections "
-        "FOR EACH ROW EXECUTE FUNCTION "
-        "invoice_children_immutable_when_issued('corrective_invoice_id')"
-    )
-    op.execute(
-        "CREATE TRIGGER billing_records_append_only "
-        "BEFORE UPDATE OR DELETE ON billing_records "
-        "FOR EACH ROW EXECUTE FUNCTION billing_records_append_only()"
-    )
-    op.execute(
-        "CREATE TRIGGER billing_records_check_link "
-        "BEFORE INSERT ON billing_records "
-        "FOR EACH ROW EXECUTE FUNCTION billing_records_check_link()"
-    )
-    op.execute(
-        "CREATE TRIGGER billing_chain_heads_advance "
-        "BEFORE INSERT OR UPDATE ON billing_chain_heads "
-        "FOR EACH ROW EXECUTE FUNCTION billing_chain_heads_advance()"
-    )
-    for table in _NO_TRUNCATE_TABLES:
-        op.execute(
-            f"CREATE TRIGGER {table}_reject_truncate BEFORE TRUNCATE ON {table} "
-            "FOR EACH STATEMENT EXECUTE FUNCTION reject_truncate_of_fiscal_table()"
-        )
+    for trigger in _TRIGGERS:
+        op.execute(trigger)
+    op.execute(_REVOKE_TEMPORARY)
 
 
 def downgrade() -> None:
     # Al borrar las tablas se van con ellas sus políticas y sus triggers; las
     # funciones se borran después. Los permisos se retiran antes, como en 0001.
+    # TEMPORARY no se devuelve a PUBLIC ni a la app: es un endurecimiento de la
+    # base de datos, no de estas tablas, y devolverlo reabriría S2-01.
     for table in _GRANTS:
         op.execute(f"REVOKE ALL ON {table} FROM {APP_ROLE}")
     op.drop_table("billing_chain_heads")
@@ -839,6 +1171,7 @@ def downgrade() -> None:
         "ix_invoice_corrections_tenant_id_rectified_invoice_id", table_name="invoice_corrections"
     )
     op.drop_table("invoice_corrections")
+    op.drop_index("uq_billing_records_registration", table_name="billing_records")
     op.drop_index("ix_billing_records_tenant_id_invoice_id", table_name="billing_records")
     op.drop_table("billing_records")
     op.drop_table("quote_lines")
@@ -854,4 +1187,4 @@ def downgrade() -> None:
     op.drop_index("ix_catalog_items_tenant_id", table_name="catalog_items")
     op.drop_table("catalog_items")
     for function in _FUNCTIONS:
-        op.execute(f"DROP FUNCTION IF EXISTS {function}")
+        op.execute(f"DROP FUNCTION IF EXISTS public.{function}")

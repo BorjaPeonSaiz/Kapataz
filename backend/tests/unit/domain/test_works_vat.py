@@ -10,8 +10,11 @@ from kapataz.domain.billing.tax import TaxRate, VatTreatment
 from kapataz.domain.billing.works_vat import (
     MaterialShare,
     VatRateReason,
+    allows_reverse_charge,
     decide_works_vat,
     material_share,
+    recipient_obstacles,
+    requires_dwelling_age,
     split_by_vat,
     works_treatment,
 )
@@ -98,6 +101,37 @@ def test_motivos_para_el_21(recipient, dwelling, reasons):
     assert decision.rate == TaxRate.general()
     assert decision.reasons == reasons
     assert not decision.warn_material_near_limit
+
+
+@pytest.mark.req("RN-F-13")
+@pytest.mark.parametrize(
+    ("recipient", "dwelling", "reasons"),
+    [
+        (RecipientType.PRIVATE, True, ()),
+        (RecipientType.COMMUNITY, True, ()),
+        # Un dato que aún falta no es un «no»: lo exige la emisión aparte.
+        (RecipientType.PRIVATE, None, ()),
+        (RecipientType.COMMUNITY, False, (VatRateReason.DWELLING_TOO_RECENT,)),
+        (RecipientType.BUSINESS, None, (VatRateReason.RECIPIENT_NOT_ELIGIBLE,)),
+    ],
+)
+def test_motivos_del_destinatario_y_la_vivienda(recipient, dwelling, reasons):
+    assert recipient_obstacles(recipient, dwelling) == reasons
+
+
+@pytest.mark.req("RN-F-13")
+@pytest.mark.req("RF-FA-05")
+@pytest.mark.parametrize(
+    ("recipient", "needs_dwelling", "reverse_charge"),
+    [
+        (RecipientType.PRIVATE, True, False),
+        (RecipientType.COMMUNITY, True, False),
+        (RecipientType.BUSINESS, False, True),
+    ],
+)
+def test_reglas_del_destinatario_en_un_solo_sitio(recipient, needs_dwelling, reverse_charge):
+    assert requires_dwelling_age(recipient) is needs_dwelling
+    assert allows_reverse_charge(recipient) is reverse_charge
 
 
 @pytest.mark.req("RN-F-13")

@@ -39,6 +39,7 @@ from tests.unit.domain.billing_factories import (
     issue,
     line,
     money,
+    quote_version,
 )
 
 
@@ -184,3 +185,60 @@ def test_la_emitida_leida_conserva_partes_fechas_y_estado():
     assert reloaded.recipient == RECIPIENT
     assert reloaded.issued_at == NOW
     assert reloaded.issue_date == TODAY
+
+
+@pytest.mark.req("RN-F-13")
+@pytest.mark.req("RN-F-02")
+def test_una_emitida_sin_destinatario_o_sin_vivienda_no_se_lee():
+    # Sin ellos no se sabría si su tipo de IVA era correcto: es estructura.
+    issued = issue(
+        draft(
+            line("1000.00"),
+            treatment=REDUCED,
+            recipient_type=RecipientType.PRIVATE,
+            dwelling_over_two_years=True,
+        )
+    )
+
+    with pytest.raises(InvalidInvoiceError, match="tipo de destinatario"):
+        _reload(issued, recipient_type=None, dwelling_over_two_years=None)
+    with pytest.raises(InvalidInvoiceError, match="tipo de destinatario"):
+        _reload(issued, dwelling_over_two_years=None)
+
+
+@pytest.mark.req("RN-F-13")
+@pytest.mark.req("RN-F-02")
+def test_una_emitida_desde_presupuesto_se_lee_con_los_datos_copiados():
+    version = quote_version(recipient_type=RecipientType.PRIVATE, dwelling_over_two_years=True)
+    issued = issue(
+        draft(line("1000.00"), treatment=REDUCED, quote_version_id=version.id), version=version
+    )
+
+    reloaded = _reload(issued)
+
+    assert reloaded == issued
+    assert reloaded.recipient_type is RecipientType.PRIVATE
+    assert reloaded.dwelling_over_two_years is True
+
+
+@pytest.mark.req("RN-F-13")
+@pytest.mark.req("RN-F-02")
+def test_la_lectura_solo_exige_la_presencia_no_la_regla_del_tipo():
+    # Una emitida al 10 % se sigue leyendo aunque la regla del destinatario
+    # cambiara después: la lectura no vuelve a aplicar las reglas de emisión.
+    issued = issue(
+        draft(
+            line("1000.00"),
+            treatment=REDUCED,
+            recipient_type=RecipientType.PRIVATE,
+            dwelling_over_two_years=True,
+        )
+    )
+    fields = _fields(issued) | {"recipient_type": RecipientType.BUSINESS}
+    with pytest.raises(InvalidInvoiceError, match="10 %"):
+        Invoice(**fields)
+
+    stored = Invoice(**fields, issued_amounts=_amounts(issued.totals))
+
+    assert stored.recipient_type is RecipientType.BUSINESS
+    assert stored.totals.tax == money("100.00")

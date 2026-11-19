@@ -9,7 +9,9 @@ import pytest
 from kapataz.application.ports.repositories import SeriesCounter
 from kapataz.application.use_cases.issue_invoice import IssuedInvoice, IssueInvoice, fiscal_date
 from kapataz.domain.billing.billing_record import RecordType, verify_chain
+from kapataz.domain.billing.codes import RecipientType
 from kapataz.domain.billing.errors import (
+    InvalidInvoiceError,
     InvoiceAlreadyIssuedError,
     InvoiceNotFoundError,
     IssueDateBeforeLastError,
@@ -19,14 +21,17 @@ from kapataz.domain.billing.ids import InvoiceId
 from kapataz.domain.billing.invoice import Invoice
 from kapataz.domain.billing.money import Money
 from kapataz.domain.billing.numbering import DocumentNumber, Series
+from kapataz.domain.billing.tax import TaxRate, VatTreatment
 from kapataz.infrastructure.clock import FrozenClock
 from kapataz.infrastructure.fiscal.null_submission import NullBillingRecordSubmission
 from tests.billing_support import (
     ISSUER_TAX_ID,
     RECIPIENT_TAX_ID,
     SYSTEM,
+    add_accepted_quote,
     add_customer,
     add_draft,
+    add_draft_from_quote,
     create_account,
     issuable_drafts,
 )
@@ -34,6 +39,7 @@ from tests.fakes.fiscal import FakeBillingRecordSubmission
 from tests.fakes.memory_uow import MemoryUnitOfWorkFactory
 
 NOW = datetime(2026, 11, 18, 10, 0, tzinfo=UTC)
+REDUCED = VatTreatment.taxed(TaxRate.reduced())
 
 
 class Scenario:
@@ -336,3 +342,67 @@ def test_un_id_inexistente_no_existe():
 
     with pytest.raises(InvoiceNotFoundError):
         s.issue(tenant_id, InvoiceId(uuid4()))
+
+
+# ------------------------------------------------- factura que sale de un presupuesto
+
+
+def _from_quote(s: Scenario, treatment, recipient_type, dwelling):
+    tenant_id = s.run(create_account(s.factory))
+    customer_id = s.run(add_customer(s.factory, tenant_id))
+    version = s.run(
+        add_accepted_quote(
+            s.factory,
+            tenant_id,
+            customer_id,
+            recipient_type=recipient_type,
+            dwelling_over_two_years=dwelling,
+        )
+    )
+    draft_id = s.run(
+        add_draft_from_quote(s.factory, tenant_id, customer_id, version, treatment=treatment)
+    )
+    return tenant_id, draft_id
+
+
+@pytest.mark.req("RN-F-13")
+@pytest.mark.req("RF-FA-02")
+def test_desde_presupuesto_la_emitida_copia_destinatario_y_vivienda():
+    s = Scenario()
+    tenant_id, draft_id = _from_quote(s, REDUCED, RecipientType.PRIVATE, True)
+
+    result = s.issue(tenant_id, draft_id)
+
+    stored = s.stored_invoice(tenant_id, draft_id)
+    assert stored == result.invoice
+    assert stored is not None
+    assert (stored.recipient_type, stored.dwelling_over_two_years) == (RecipientType.PRIVATE, True)
+    assert stored.totals.tax == Money.of("100.00")
+
+
+@pytest.mark.req("RN-F-13")
+@pytest.mark.req("RN-F-01")
+@pytest.mark.parametrize(
+    ("treatment", "recipient_type", "dwelling", "message"),
+    [
+        (REDUCED, RecipientType.BUSINESS, None, "10 %"),
+        (REDUCED, RecipientType.PRIVATE, False, "10 %"),
+        (VatTreatment.reverse_charge(), RecipientType.PRIVATE, True, "inversión"),
+    ],
+)
+def test_desde_presupuesto_un_tipo_que_no_admite_el_destinatario_no_se_emite(
+    treatment, recipient_type, dwelling, message
+):
+    s = Scenario()
+    tenant_id, draft_id = _from_quote(s, treatment, recipient_type, dwelling)
+
+    with pytest.raises(InvalidInvoiceError, match=message):
+        s.issue(tenant_id, draft_id)
+
+    # Se deshace entero: ni número consumido ni registro (RN-F-01).
+    stored = s.stored_invoice(tenant_id, draft_id)
+    assert stored is not None
+    assert not stored.is_issued
+    assert s.counters() == {}
+    assert s.chain(tenant_id) == ()
+    assert s.submission.submitted == []

@@ -32,8 +32,16 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
     - 20 emisiones en procesos separados (`spawn` y barrera) con una y con tres cuentas, F y R a la vez, la misma factura desde 10 procesos y relojes desfasados para RN-F-04; 10 de 10 repeticiones con cada configuración de roles;
     - inmutabilidad columna a columna con los dos roles;
     - recorrido del catálogo: toda tabla fuera de la lista cerrada tiene RLS y la política `tenant_isolation`, y toda FK entre tablas de negocio es compuesta. Una tabla de negocio nueva también hay que añadirla a `_seed_every_table`.
-  - **Cierre:** `TRUNCATE` rechazado también en `series_counters`, `billing_chain_heads` y `payments` (Borja, 19/11/2026; migración 0003, aún sin integrar). §4.5, la arquitectura §5.2 y las rutas de ADR-012 recogen lo construido.
-  - 671 pruebas con PostgreSQL (590 sin él) y cobertura de `domain/` del 99 %.
+  - **Cierre (fase 4):** `TRUNCATE` rechazado también en `series_counters`, `billing_chain_heads` y `payments` (Borja, 19/11/2026; migración 0003, aún sin integrar). §4.5, la arquitectura §5.2 y las rutas de ADR-012 recogen lo construido.
+  - **Correcciones de las revisiones de cierre** (aprobadas por Borja el 19/11/2026; commit de la fase 5):
+    - S2-01: las funciones de la migración 0003 fijan `search_path` y nombran sus tablas con esquema; TEMPORARY retirado a PUBLIC y a `kapataz_app` (la migración falla si no lo consigue);
+    - S2-02: la base de datos ata la emisión al contador y a la cadena (solo se inserta en borrador; el contador sube de uno en uno con su factura emitida; el alta coincide con emisor, número y fecha; un solo alta por factura; las rectificadas y fases anteriores citadas están emitidas); SQLSTATE nuevos KZF00, KZF01, KZF03, KZF04 y KZF12;
+    - S2-04/I-02/I-01: la factura que sale de un presupuesto copia al emitir el destinatario y la vivienda y se le aplica RN-F-13; reglas del destinatario solo en `works_vat`; CHECK `ck_invoices_works_recipient`;
+    - M-10: TRUNCATE con código neutro KZF00; I-03 e I-06 documentados en ADR-009, ADR-012 y la arquitectura §7;
+    - I-05: cada puerto de §4.3 llega con el bloque que lo usa; ADR-017 se cierra en el Bloque 4;
+    - CI: cobertura de `domain/` ≥ 90 %, regla de Semgrep contra `float` en `domain/billing` (`.semgrep/`) y `mutacion.yml` manual.
+  - Segunda revisión de `seguridad-ia`: sin bloqueantes.
+  - 787 pruebas con PostgreSQL y cobertura de `domain/` del 100 %.
 
 ### Bloque 0 (histórico)
 
@@ -66,10 +74,9 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 
 ## Siguiente acción
 
-1. **Cierre del Bloque 2:**
-   - ADR-017: Borja decide si pasa a cerrarse en el Bloque 4 (propuesta de `arquitecto-python`, 19/11/2026);
-   - revisiones de `seguridad-ia` y `revisor-codigo`.
-2. Un solo PR del bloque, con commits separados por fase.
+1. Con el visto bueno de Borja, subir `bloque-02-dominio` y abrir el PR único del Bloque 2 contra `main`; integrar con el CI en verde.
+2. Después, lanzar `mutacion.yml` sobre la rama para tener la cifra de referencia (no bloquea el Bloque 2).
+3. Bloque 3 del plan maestro.
 
 ## Pendiente
 
@@ -179,12 +186,48 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 - **Bloque 8:**
   - conectar `IssueInvoice` a `bootstrap` con `SystemInfo` configurable (NIF de KodigoLab y número de instalación);
   - actualizar el estado del presupuesto al emitir;
-  - traducir `KZF02` y `KZF07` en la API;
+  - traducir en la API los SQLSTATE de la migración 0003: `KZF00` (TRUNCATE), `KZF01` (numeración), `KZF02` (emitida inmutable), `KZF03` (rectificada no emitida), `KZF04` (fecha del contador que retrocede), `KZF07` (cadena) y `KZF12` (fase anterior no emitida);
+  - una sola emisión por transacción: el trigger diferido exige `contador = número`; si un caso de uso emite dos facturas de la misma serie juntas (reparto 10 %/21 % de RN-F-13), habrá que pasar a `last_number >= number` (igual de seguro, porque el contador ya liga cada número a su factura); requiere aprobación;
+  - decidir si `payments.invoice_id` solo admite facturas emitidas (¿se cobra un anticipo antes de emitir?);
   - corregir un cobro mal apuntado (hoy `payments` no admite UPDATE ni DELETE).
 - **RF-FA-08:** la emisión aún no escribe en `audit_events` (tabla de otro bloque).
 - **Espacio de demostración (RN-13):** los triggers impiden borrar sus facturas emitidas; la función de mantenimiento necesitará una excepción controlada.
 - **Pruebas:** `tests/integration/test_rls.py::test_toda_tabla_sin_rls_esta_en_la_lista_cerrada` queda cubierta por la prueba nueva del catálogo; se puede retirar.
 - **Zona horaria:** la fecha de expedición es la de hoy en Europe/Madrid. En Windows, `zoneinfo` depende del paquete `tzdata`, que solo llega como dependencia de desarrollo; la imagen trae el tzdata del sistema. Valorar declararlo como dependencia de la app.
+
+### Hallazgos de las revisiones de cierre del Bloque 2 que no entran en su PR (19/11/2026)
+
+Corregidos en el PR: S2-01, S2-02, S2-04/I-02/I-01, M-10, M-12 (dentro de S2-02), I-03, I-04, I-05, I-06.
+
+- **Bloque 8 (`seguridad-ia`):**
+  - S2-03: el `DETAIL` de los errores de PostgreSQL puede llevar nombres, NIF y domicilios a los logs; corregir antes de los endpoints que escriben clientes o facturas (falta confirmar si el `DETAIL` viaja en la excepción registrada);
+  - S2-05: se puede construir a mano una `Invoice` «emitida» sin pasar por `issue`;
+  - S2-09: el filtro de logs no reconoce los NIF que empiezan por K, L o M.
+- **Bloque 12 (`seguridad-ia`):**
+  - S2-06: `billing_records` no comprueba que sus columnas coinciden con el contenido de la huella; la base de datos tampoco comprueba la huella ni la fecha real de emisión, así que un rol de app comprometido aún puede montar por SQL una emisión coherente con datos falsos (ya sin huecos, duplicados, retrocesos ni bifurcaciones);
+  - S2-10: la vuelta atrás de la migración 0003 borraría facturas; bloquearla con datos fiscales.
+- **Segunda revisión de seguridad del cierre (19/11/2026), menores que no entran en el PR:**
+  - RN-F-04 entre años: con SQL directo se puede abrir el contador de un año anterior con una fecha anterior a la última emitida de la serie, o emitir con fecha futura (el dominio sí lo impide); exigir en `series_counters_advance` el máximo de la serie en todos los años y un margen sobre `current_date`;
+  - la base de datos no comprueba que el tipo de IVA encaje con el destinatario ni que la copia coincida con la versión del presupuesto (consultar al asesor antes de fijar la regla en la base de datos); `quote_versions` no tiene el CHECK de la vivienda;
+  - Bloque 8: una rectificativa sin presupuesto toma el destinatario de quien la crea; atarla al de la factura rectificada;
+  - la vuelta atrás de 0003 borra con DROP las tablas fiscales (ver S2-10); las pruebas necesitan una vía de escape;
+  - `search_path` podría ser `pg_catalog, pg_temp`;
+  - `.semgrep/` y `.github/` sin CODEOWNERS; la regla no detecta float implícito (división entre enteros);
+  - confirmar que `source_paths` y `only_mutate` son claves válidas de mutmut 3.8.1.
+- **Asesor fiscal:** S2-07 (que las rectificativas vayan obligatoriamente en su propia serie) y S2-08 (cambio de NIF del profesional con facturas emitidas).
+- **Revisión de código (`revisor-codigo`), antes o durante el Bloque 8:**
+  - I-07: las comprobaciones de RN-F-06 están en cuatro sitios (`missing_issue_data`, `issue`, `party.py`, `_parties` de `IssueInvoice`); la pantalla de confirmación y la emisión deben dar la misma lista;
+  - M-01: `check_issue_date` se llama dos veces;
+  - M-02: validaciones de texto copiadas (nombre de 120, texto sin bordes) en clientes, partes, profesional, líneas y presupuesto;
+  - M-04: `works_vat` copia el redondeo de `Money.round` para el porcentaje de material;
+  - M-05: lenguaje ubicuo (`BillingPhase` del glosario frente a `PhaseType`; `AdditionalWork` no existe como tipo); el glosario lo aprueba Borja;
+  - M-06: marcadores `req` mal asignados (`test_repositorios.py`, `test_tax_id_and_customers.py`, `test_issue_invoice.py`);
+  - M-07: higiene de pruebas (prueba de `NullBillingRecordSubmission` fuera de sitio; los campos obligatorios del XSD viven en el código que se prueba);
+  - M-08: el doble en memoria se aparta del real (excepciones, `mark_issued`, orden de cobros, rectificadas en `add_draft`);
+  - M-09: la arquitectura §7 y los comentarios de `issue_invoice.py` no describen el orden real de bloqueos ni `bootstrap`;
+  - M-11: `_locked_head` es poco legible;
+  - M-13: código sobrante y mensajes que repiten lo obvio.
+- **Mutación (`plataforma-entrega`, 19/11/2026):** primera pasada de mutmut 3.8.1 sobre `domain/billing`: 76,3 % (2392 mutantes, 566 supervivientes; sobre todo `invoice`, `billing_record` y `quote`). El umbral del 80 % es de la Fase 3 del plan de verificación y de ADR-033 (Bloque 8), no del Bloque 2: `qa-testing` debe subirla antes. El job `mutacion.yml` es manual y falla por debajo del 80 %. mutmut entra con `uv run --with` sin hash: añadirlo al grupo `dev` y al lock (ADR-022).
 
 ### Por decidir en su bloque
 
@@ -226,6 +269,7 @@ Son el detalle de los pendientes legales. No bloquean los bloques de la demo.
     - si las fases que hay que rectificar van a tipos de IVA distintos, una rectificativa por tipo (`phases.plan_final_phase`); el plan habla de «una rectificativa»;
     - sin decidir: anticipo y certificaciones al 21 % y final al 10 %; hoy el dominio no lo resuelve, decide quien llama;
     - anticipo cobrado con retención de IRPF: el importe cobrado se trata como el total con IVA (`calculation.totals_from_gross`).
+  - **Fecha de expedición en Europe/Madrid** (`issue_invoice.FISCAL_TIMEZONE`, ADR-012): en Canarias solo cambiaría la fecha entre las 23:00 y las 00:00 de allí; confirmar con el asesor.
 - **Abogado:** condiciones de uso, contrato de encargo, política de privacidad, aviso de IA y plazos de conservación (antes de producción, Bloque 10). Comprobar también la lista oficial del Marco de Privacidad.
 - **Proveedores de envío VERI*FACTU:** elección del proveedor y autorización de cada cliente (Bloque 12).
 - **Anthropic:** retención cero, canal de aviso de subencargados e información para la evaluación de la transferencia (antes de usar datos reales, ADR-029). Revisar a mano la lista de subencargados, que no se pudo leer automáticamente.

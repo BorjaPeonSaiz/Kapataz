@@ -11,11 +11,11 @@ from datetime import date
 from typing import Protocol
 
 from kapataz.domain.billing.billing_record import BillingRecord
-from kapataz.domain.billing.ids import InvoiceId, QuoteId
+from kapataz.domain.billing.ids import InvoiceId, QuoteId, QuoteVersionId
 from kapataz.domain.billing.invoice import Invoice
 from kapataz.domain.billing.numbering import DocumentNumber, Series
 from kapataz.domain.billing.payment import Payment
-from kapataz.domain.billing.quote import Quote
+from kapataz.domain.billing.quote import Quote, QuoteVersion
 from kapataz.domain.catalog.model import CatalogItem, CatalogItemId
 from kapataz.domain.customers.model import Customer, CustomerId
 from kapataz.domain.settings.professional import Professional
@@ -71,6 +71,14 @@ class QuoteRepository(Protocol):
     async def add(self, quote: Quote) -> None: ...
 
     async def get(self, quote_id: QuoteId) -> Quote | None: ...
+
+    async def get_version(self, version_id: QuoteVersionId) -> QuoteVersion | None:
+        """Una versión con sus líneas, sin el resto del presupuesto.
+
+        La emisión de una factura que sale de un presupuesto la usa para copiar
+        el tipo de destinatario y la vivienda (RN-F-13).
+        """
+        ...
 
     async def save(self, quote: Quote) -> None:
         """Guarda el estado y las versiones nuevas o la versión en borrador sustituida.

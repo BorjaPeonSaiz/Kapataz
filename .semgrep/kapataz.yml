@@ -1,0 +1,41 @@
+# Reglas propias de Semgrep para Kapataz. Las carga el job «seguridad» de
+# .github/workflows/ci.yml con --config .semgrep/ junto a las de la comunidad.
+# Solo bloquean las de severidad ERROR.
+#
+# Prueba local (desde la raíz del repositorio, con la imagen fijada en ci.yml):
+#   docker run --rm -v "$PWD:/src" -w /src <SEMGREP_IMAGE> \
+#     semgrep scan --metrics=off --error --config .semgrep/
+
+rules:
+  - id: kapataz-billing-sin-float
+    # ADR-009: el dinero va en Decimal y el LLM nunca calcula importes. En la
+    # facturación no hay sitio para float: ni conversiones, ni literales con
+    # decimales o exponente, ni anotaciones de tipo.
+    message: >-
+      float en domain/billing: el dinero, las cantidades y los tipos van en
+      Decimal (ADR-009). Usa Decimal("...") y los objetos de valor del dominio.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      adr: ADR-009
+      category: correctness
+    paths:
+      include:
+        - "/backend/src/kapataz/domain/billing/"
+    pattern-either:
+      # Cualquier uso del nombre float, también en anotaciones: float(...),
+      # isinstance(x, float), cast(float, ...), x: float, -> float,
+      # list[float], float | None.
+      - pattern: float
+      # Literales de coma flotante: 0.21, 1., .5, 1e3, 2.5E-2, 1_000.0.
+      # Las cadenas no cuentan: Decimal("0.21"), "1.0" o el formato {x:.2f}
+      # son correctos, y metavariable-regex vería su contenido sin comillas.
+      - patterns:
+          - pattern: $LIT
+          - pattern-not: '"..."'
+          - metavariable-regex:
+              metavariable: $LIT
+              regex: ^(\d[\d_]*\.[\d_]*|\.\d[\d_]*|\d[\d_]*)([eE][+-]?\d+)?$
+          - metavariable-regex:
+              metavariable: $LIT
+              regex: ^\S*[.eE]\S*$

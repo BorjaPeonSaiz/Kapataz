@@ -42,6 +42,7 @@ from tests.unit.domain.billing_factories import (
     issue,
     line,
     money,
+    quote_version,
 )
 
 QUOTE_VERSION = QuoteVersionId(uuid4())
@@ -321,6 +322,121 @@ def test_con_presupuesto_destinatario_y_vivienda_estan_en_el():
         dataclasses.replace(
             draft(quote_version_id=QUOTE_VERSION), recipient_type=RecipientType.PRIVATE
         )
+
+
+# ----------------------------------------------------------- desde un presupuesto
+
+
+def from_quote(treatment: VatTreatment, phase: PhaseType = PhaseType.FULL) -> Invoice:
+    """Borrador que sale de ``QUOTE_VERSION``: sin destinatario ni vivienda propios."""
+    if phase is PhaseType.ADVANCE:
+        return advance("1100.00", treatment)
+    return draft(
+        line("1000.00", origin=LineOrigin.QUOTE),
+        treatment=treatment,
+        phase_type=phase,
+        quote_version_id=QUOTE_VERSION,
+    )
+
+
+@pytest.mark.req("RN-F-13")
+@pytest.mark.req("RN-F-06")
+@pytest.mark.parametrize("phase", [PhaseType.FULL, PhaseType.ADVANCE, PhaseType.PROGRESS])
+@pytest.mark.parametrize(
+    ("recipient", "dwelling"),
+    [
+        (RecipientType.BUSINESS, None),
+        (RecipientType.BUSINESS, True),
+        (RecipientType.PRIVATE, False),
+        (RecipientType.COMMUNITY, False),
+    ],
+)
+def test_desde_presupuesto_no_se_emite_al_10_sin_destinatario_y_vivienda_que_lo_admitan(
+    phase, recipient, dwelling
+):
+    # El borrador no lo sabe todavía; la emisión lo comprueba con la versión.
+    invoice = from_quote(REDUCED, phase)
+    version = quote_version(
+        QUOTE_VERSION, recipient_type=recipient, dwelling_over_two_years=dwelling
+    )
+
+    with pytest.raises(InvalidInvoiceError, match="10 %"):
+        issue(invoice, version=version)
+
+
+@pytest.mark.req("RN-F-13")
+@pytest.mark.req("RF-FA-05")
+@pytest.mark.parametrize("recipient", [RecipientType.PRIVATE, RecipientType.COMMUNITY])
+def test_desde_presupuesto_no_se_invierte_el_sujeto_pasivo_a_un_particular(recipient):
+    invoice = from_quote(VatTreatment.reverse_charge())
+    version = quote_version(QUOTE_VERSION, recipient_type=recipient)
+
+    with pytest.raises(InvalidInvoiceError, match="inversión"):
+        issue(invoice, version=version)
+
+
+@pytest.mark.req("RN-F-13")
+@pytest.mark.req("RF-FA-03")
+@pytest.mark.parametrize(
+    ("treatment", "recipient", "dwelling"),
+    [
+        (REDUCED, RecipientType.PRIVATE, True),
+        (REDUCED, RecipientType.COMMUNITY, True),
+        (GENERAL, RecipientType.PRIVATE, False),
+        (VatTreatment.reverse_charge(), RecipientType.BUSINESS, None),
+    ],
+)
+def test_al_emitir_copia_destinatario_y_vivienda_de_la_version(treatment, recipient, dwelling):
+    invoice = from_quote(treatment)
+    version = quote_version(
+        QUOTE_VERSION, recipient_type=recipient, dwelling_over_two_years=dwelling
+    )
+
+    issued = issue(invoice, version=version)
+
+    assert issued.is_issued
+    assert (issued.recipient_type, issued.dwelling_over_two_years) == (recipient, dwelling)
+    assert issued.quote_version_id == QUOTE_VERSION
+    # El borrador no cambia: sigue sin duplicar lo que está en el presupuesto.
+    assert (invoice.recipient_type, invoice.dwelling_over_two_years) == (None, None)
+
+
+@pytest.mark.req("RN-F-13")
+def test_se_emite_con_la_version_de_la_que_sale_y_solo_con_ella():
+    invoice = from_quote(REDUCED)
+    other = quote_version(QuoteVersionId(uuid4()))
+
+    with pytest.raises(InvalidInvoiceError, match="versión del presupuesto"):
+        invoice.issue(
+            number=DocumentNumber(Series.invoices(), 2026, 1),
+            issue_date=TODAY,
+            issued_at=NOW,
+            issuer=ISSUER,
+            recipient=RECIPIENT,
+            last_issue_date=None,
+        )
+    with pytest.raises(InvalidInvoiceError, match="versión del presupuesto"):
+        issue(invoice, version=other)
+    # Una factura sin presupuesto no toma los datos de uno ajeno.
+    with pytest.raises(InvalidInvoiceError, match="no sale de un presupuesto"):
+        issue(draft(line("1.00")), version=other)
+
+
+@pytest.mark.req("RN-F-13")
+def test_sin_presupuesto_la_emitida_conserva_sus_propios_datos():
+    invoice = draft(
+        line("1000.00"),
+        treatment=REDUCED,
+        recipient_type=RecipientType.COMMUNITY,
+        dwelling_over_two_years=True,
+    )
+
+    issued = issue(invoice)
+
+    assert (issued.recipient_type, issued.dwelling_over_two_years) == (
+        RecipientType.COMMUNITY,
+        True,
+    )
 
 
 # ----------------------------------------------------------- IVA de la obra

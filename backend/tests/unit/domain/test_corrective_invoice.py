@@ -6,13 +6,28 @@ from uuid import uuid4
 
 import pytest
 
-from kapataz.domain.billing.codes import CorrectionType, InvoiceType, PhaseType
-from kapataz.domain.billing.errors import InvalidInvoiceError, NegativeInvoiceBaseError
-from kapataz.domain.billing.ids import InvoiceId
+from kapataz.domain.billing.codes import CorrectionType, InvoiceType, PhaseType, RecipientType
+from kapataz.domain.billing.errors import (
+    InvalidInvoiceError,
+    MissingIssueDataError,
+    NegativeInvoiceBaseError,
+)
+from kapataz.domain.billing.ids import InvoiceId, QuoteVersionId
 from kapataz.domain.billing.invoice import CorrectiveInvoice, Guarantee, Invoice, RectifiedInvoice
 from kapataz.domain.billing.numbering import DocumentNumber
 from kapataz.domain.billing.quantity import Percentage
-from tests.unit.domain.billing_factories import TODAY, corrective, issue, line, money
+from kapataz.domain.billing.tax import VatTreatment
+from tests.unit.domain.billing_factories import (
+    REDUCED,
+    TODAY,
+    corrective,
+    issue,
+    line,
+    money,
+    quote_version,
+)
+
+QUOTE_VERSION = QuoteVersionId(uuid4())
 
 
 def rectified(
@@ -122,3 +137,59 @@ def test_una_rectificativa_es_inmutable_al_emitirla():
     assert isinstance(issued, CorrectiveInvoice)
     with pytest.raises(Exception, match="rectificativa"):
         issued.add_line(line("1.00"))
+
+
+# ------------------------------------------------- destinatario y vivienda (RN-F-13)
+
+
+def _overbilling_corrective(treatment: VatTreatment) -> CorrectiveInvoice:
+    """Rectificativa de fases de una obra: cita la versión y no duplica sus datos."""
+    return dataclasses.replace(
+        corrective(line("-1000.00"), rectified=(rectified(),)),
+        treatment=treatment,
+        recipient_type=None,
+        quote_version_id=QUOTE_VERSION,
+    )
+
+
+@pytest.mark.req("RN-F-13")
+@pytest.mark.req("RN-F-12")
+def test_la_rectificativa_de_fases_copia_destinatario_y_vivienda_de_la_version():
+    version = quote_version(QUOTE_VERSION, recipient_type=RecipientType.COMMUNITY)
+
+    issued = issue(_overbilling_corrective(REDUCED), version=version)
+
+    assert isinstance(issued, CorrectiveInvoice)
+    assert (issued.recipient_type, issued.dwelling_over_two_years) == (
+        RecipientType.COMMUNITY,
+        True,
+    )
+
+
+@pytest.mark.req("RN-F-13")
+def test_la_rectificativa_de_fases_tampoco_va_al_10_con_una_empresa():
+    version = quote_version(
+        QUOTE_VERSION, recipient_type=RecipientType.BUSINESS, dwelling_over_two_years=None
+    )
+
+    with pytest.raises(InvalidInvoiceError, match="10 %"):
+        issue(_overbilling_corrective(REDUCED), version=version)
+
+
+@pytest.mark.req("RN-F-13")
+@pytest.mark.req("RN-F-03")
+def test_sin_presupuesto_la_rectificativa_lleva_los_suyos_y_se_comprueban():
+    # Quien la crea los toma de la factura rectificada, que los guarda siempre.
+    invoice = dataclasses.replace(
+        corrective(line("-10.00"), rectified=(rectified(),)), recipient_type=None
+    )
+    with pytest.raises(MissingIssueDataError) as error:
+        issue(invoice)
+    assert error.value.missing == ("recipient_type",)
+    with pytest.raises(InvalidInvoiceError, match="inversión"):
+        dataclasses.replace(
+            invoice,
+            treatment=VatTreatment.reverse_charge(),
+            recipient_type=RecipientType.PRIVATE,
+            dwelling_over_two_years=True,
+        )

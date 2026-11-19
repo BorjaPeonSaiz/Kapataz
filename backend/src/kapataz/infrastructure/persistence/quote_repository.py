@@ -88,6 +88,22 @@ class SqlQuoteRepository:
             created_at=row.created_at,
         )
 
+    async def get_version(self, version_id: QuoteVersionId) -> QuoteVersion | None:
+        tenant_id = self._scope.tenant_id
+        row = await self._session.scalar(
+            select(QuoteVersionRow).where(
+                QuoteVersionRow.tenant_id == tenant_id, QuoteVersionRow.id == version_id
+            )
+        )
+        if row is None:
+            return None
+        line_rows = await self._session.scalars(
+            select(QuoteLineRow)
+            .where(QuoteLineRow.tenant_id == tenant_id, QuoteLineRow.quote_version_id == row.id)
+            .order_by(QuoteLineRow.position)
+        )
+        return _to_version(row, [_to_line(line_row) for line_row in line_rows])
+
     async def save(self, quote: Quote) -> None:
         """Estado, versiones nuevas y, en un borrador, su versión actual reescrita."""
         self._scope.check(quote.tenant_id)

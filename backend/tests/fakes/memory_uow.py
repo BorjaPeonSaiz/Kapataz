@@ -7,7 +7,8 @@ Imita lo que importa de la real:
 - RLS: los repositorios de negocio exigen la cuenta fijada, no ven filas de
   otra cuenta y no escriben entidades de otra (``tenants`` igual, como su
   política);
-- las claves foráneas compuestas: una factura cita un cliente de su cuenta;
+- las claves foráneas compuestas: una factura cita un cliente y, si sale de
+  un presupuesto, una versión de su cuenta;
 - los triggers: una factura emitida no se toca y la cadena no se bifurca;
 - los bloqueos: no bloquea nada, pero apunta en ``lock_log`` el orden en que
   se piden, para comprobar el orden de RN-F-07.
@@ -49,11 +50,17 @@ from kapataz.domain.accounts.model import (
 )
 from kapataz.domain.billing.billing_record import BillingRecord
 from kapataz.domain.billing.errors import InvoiceAlreadyIssuedError, InvoiceNotFoundError
-from kapataz.domain.billing.ids import BillingRecordId, InvoiceId, PaymentId, QuoteId
+from kapataz.domain.billing.ids import (
+    BillingRecordId,
+    InvoiceId,
+    PaymentId,
+    QuoteId,
+    QuoteVersionId,
+)
 from kapataz.domain.billing.invoice import Invoice
 from kapataz.domain.billing.numbering import Series
 from kapataz.domain.billing.payment import Payment
-from kapataz.domain.billing.quote import Quote
+from kapataz.domain.billing.quote import Quote, QuoteVersion
 from kapataz.domain.catalog.model import CatalogItem, CatalogItemId
 from kapataz.domain.customers.errors import DuplicateCustomerTaxIdError
 from kapataz.domain.customers.model import Customer, CustomerId
@@ -115,6 +122,19 @@ class _Scoped:
         if entity is None or entity.tenant_id != self._tenant:
             return None
         return entity
+
+
+def _find_version(
+    state: MemoryState, tenant_id: TenantId, version_id: QuoteVersionId
+) -> QuoteVersion | None:
+    """Versión de un presupuesto de la cuenta, como la FK compuesta y RLS."""
+    for quote in state.quotes.values():
+        if quote.tenant_id != tenant_id:
+            continue
+        for version in quote.versions:
+            if version.id == version_id:
+                return version
+    return None
 
 
 class MemoryAccounts:
@@ -214,6 +234,9 @@ class MemoryQuotes(_Scoped):
     async def get(self, quote_id: QuoteId) -> Quote | None:
         return self._visible(self._s.quotes.get(quote_id))
 
+    async def get_version(self, version_id: QuoteVersionId) -> QuoteVersion | None:
+        return _find_version(self._s, self._tenant, version_id)
+
     async def save(self, quote: Quote) -> None:
         self._check(quote.tenant_id)
         self._s.quotes[quote.id] = quote
@@ -227,6 +250,12 @@ class MemoryInvoices(_Scoped):
         customer = self._s.customers.get(invoice.customer_id)
         if customer is None or customer.tenant_id != invoice.tenant_id:
             msg = "FK compuesta: el cliente no existe en la cuenta de la factura."
+            raise LookupError(msg)
+        if (
+            invoice.quote_version_id is not None
+            and _find_version(self._s, invoice.tenant_id, invoice.quote_version_id) is None
+        ):
+            msg = "FK compuesta: la versión del presupuesto no existe en la cuenta de la factura."
             raise LookupError(msg)
         self._s.invoices[invoice.id] = invoice
 

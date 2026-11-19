@@ -6,6 +6,7 @@ from decimal import Decimal
 from uuid import uuid4
 
 import pytest
+from sqlalchemy.exc import DBAPIError
 
 from kapataz.domain.billing.codes import CorrectionType, InvoiceType, LineOrigin, RecipientType
 from kapataz.domain.billing.errors import InvoiceAlreadyIssuedError, InvoiceNotFoundError
@@ -39,11 +40,13 @@ from tests.billing_support import (
     RECIPIENT_TAX_ID,
     SEED_AT,
     add_customer,
+    add_draft,
     create_account,
     draft_invoice,
     synthetic_dni,
 )
-from tests.integration.persistence.conftest import issue_new
+from tests.integration.conftest import OWNER_ROLE
+from tests.integration.persistence.conftest import issue_new, run_sql
 
 REDUCED = VatTreatment.taxed(TaxRate.reduced())
 
@@ -209,6 +212,22 @@ def test_presupuesto_con_versiones_ida_y_vuelta(app_factory):
     assert loaded == second
     assert [v.version for v in loaded.versions] == [1, 2]
 
+    # Cada versión se lee sola, con sus líneas en orden (la emisión, RN-F-13).
+    for version in second.versions:
+        assert (
+            _in_tenant(app_factory, tenant_id, lambda uow, v=version: uow.quotes.get_version(v.id))
+            == version
+        )
+    unknown = QuoteVersionId(uuid4())
+    assert _in_tenant(app_factory, tenant_id, lambda uow: uow.quotes.get_version(unknown)) is None
+    # Desde otra cuenta, la versión no existe (ADR-024).
+    other_tenant = asyncio.run(create_account(app_factory))
+    current = second.current_version
+    assert (
+        _in_tenant(app_factory, other_tenant, lambda uow: uow.quotes.get_version(current.id))
+        is None
+    )
+
 
 @pytest.mark.req("RF-FA-01")
 @pytest.mark.req("RN-01")
@@ -368,3 +387,26 @@ def test_draft_invoice_de_apoyo_es_un_borrador_valido():
     draft = draft_invoice(uuid4(), uuid4())
     assert not draft.is_issued
     assert draft.totals.total_amount == Money.of("1512.50")
+
+
+@pytest.mark.req("RN-03")
+@pytest.mark.req("RN-01")
+@pytest.mark.parametrize(
+    "change",
+    [
+        "total_amount = total_amount + 1",
+        "amount_due = amount_due - 1",
+        "tax_total = tax_total + 1",
+    ],
+)
+def test_ck_invoices_amounts_rechaza_importes_que_no_cuadran(app_factory, database, change):
+    # Defensa en profundidad de ADR-009: los importes los calcula el dominio,
+    # pero la base de datos tampoco guarda una copia que no cuadre.
+    tenant_id = asyncio.run(create_account(app_factory))
+    customer_id = asyncio.run(add_customer(app_factory, tenant_id))
+    draft_id = asyncio.run(add_draft(app_factory, tenant_id, customer_id))
+
+    with pytest.raises(DBAPIError, match="ck_invoices_amounts"):
+        run_sql(
+            database, OWNER_ROLE, f"UPDATE invoices SET {change} WHERE id = :id", {"id": draft_id}
+        )

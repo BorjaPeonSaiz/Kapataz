@@ -27,6 +27,7 @@ __pycache__/
 .coverage
 coverage.xml
 htmlcov/
+backend/mutants/
 
 # Node
 node_modules/

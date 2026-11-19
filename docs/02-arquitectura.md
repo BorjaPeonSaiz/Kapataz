@@ -400,7 +400,7 @@ erDiagram
         enum correction_type "substitution, difference"
         text correction_reason "RN-F-03"
         int issue_year "clave de la numeración"
-        enum recipient_type "si no sale de un presupuesto"
+        enum recipient_type "borrador sin presupuesto; emitida siempre"
         bool dwelling_over_two_years
         cents base_total
         cents tax_total
@@ -678,6 +678,8 @@ Notas:
 - El número se asigna al emitir, nunca al crear el borrador (RF-FA-02).
 - Toda operación que añade un `BillingRecord` (alta, subsanación o anulación) bloquea primero la cabeza de la cadena de la cuenta y después el contador de la serie, siempre en ese orden y en la misma transacción (RN-F-07). Así, dos emisiones simultáneas no enlazan con el mismo registro anterior aunque sean de series distintas (F y R).
 - RN-F-04 se comprueba con el contador ya bloqueado, para que una emisión simultánea no pueda colarse entre la comprobación y el número.
+- La fecha de expedición es la del calendario español: la hora del `Clock` se pasa a `Europe/Madrid` (`FISCAL_TIMEZONE` en `issue_invoice.py`) y de ahí salen el año del contador (RN-F-01) y la comparación de RN-F-04. Una factura emitida a las 00:30 en Madrid es de ese día aunque en UTC sea el anterior. Canarias queda pendiente del asesor fiscal (ADR-012).
+- Si la factura sale de un presupuesto, `IssueInvoice` lee su versión y el dominio copia de ella el tipo de destinatario y la antigüedad de la vivienda, igual que copia las partes. Con esos datos comprueba que el 10 % o la inversión del sujeto pasivo caben (RN-F-13); si no, la emisión se deshace como cualquier otro error de dominio.
 - Las emisiones concurrentes de la misma cuenta esperan a esos bloqueos. La prueba del Bloque 2 lanza 20 emisiones en paralelo, en una cuenta y en varias, y exige cero huecos y cero duplicados. También lanza emisiones simultáneas de las series F y R en la misma cuenta y exige que la cadena no se bifurque.
 - Tras el `COMMIT`, el trigger impide cualquier `UPDATE` o `DELETE` de los campos fiscales (RN-F-02). Corregir una factura es emitir una rectificativa (RN-F-03).
 - El `BillingRecord` usa desde el Bloque 2 los campos de `RegistroAlta`. La huella sigue desde el Bloque 2 el algoritmo oficial de la AEAT (ADR-012). El Bloque 12 lo convierte a XML y lo envía. `kapataz verify-billing-chain` (Bloque 8) comprueba la cadena.

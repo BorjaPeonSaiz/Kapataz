@@ -17,12 +17,13 @@ from kapataz.application.ports.persistence import UnitOfWorkFactory
 from kapataz.domain.accounts.model import Tenant, TenantId, TenantKind
 from kapataz.domain.billing.billing_record import SystemInfo
 from kapataz.domain.billing.codes import CorrectionType, InvoiceType, RecipientType
-from kapataz.domain.billing.ids import InvoiceId
+from kapataz.domain.billing.ids import InvoiceId, QuoteId, QuoteLineId, QuoteVersionId
 from kapataz.domain.billing.invoice import CorrectiveInvoice, Invoice, RectifiedInvoice
 from kapataz.domain.billing.line_item import LineItem
 from kapataz.domain.billing.money import Money
-from kapataz.domain.billing.numbering import Series
+from kapataz.domain.billing.numbering import DocumentNumber, Series
 from kapataz.domain.billing.quantity import Quantity
+from kapataz.domain.billing.quote import PriceSource, Quote, QuoteLine, QuoteStatus, QuoteVersion
 from kapataz.domain.billing.tax import TaxRate, VatTreatment
 from kapataz.domain.customers.model import Customer, CustomerId
 from kapataz.domain.customers.tax_id import TaxId
@@ -208,6 +209,76 @@ async def add_corrective_draft(
     factory: UnitOfWorkFactory, tenant_id: TenantId, customer_id: CustomerId, rectified: Invoice
 ) -> InvoiceId:
     draft = corrective_of(tenant_id, customer_id, rectified)
+    async with factory() as uow:
+        await uow.set_tenant(tenant_id)
+        await uow.invoices.add_draft(draft)
+        await uow.commit()
+    return draft.id
+
+
+async def add_accepted_quote(
+    factory: UnitOfWorkFactory,
+    tenant_id: TenantId,
+    customer_id: CustomerId,
+    *,
+    recipient_type: RecipientType,
+    dwelling_over_two_years: bool | None,
+    sequence: int = 1,
+) -> QuoteVersion:
+    """Presupuesto aceptado con una línea de 1.000 €; devuelve su versión (RN-F-13)."""
+    version = QuoteVersion(
+        id=QuoteVersionId(uuid4()),
+        version=1,
+        lines=(
+            QuoteLine(
+                id=QuoteLineId(uuid4()),
+                description="Reforma de baño",
+                quantity=Quantity.one(),
+                unit_price=Money(Decimal("1000.00")),
+                price_source=PriceSource.manual(),
+            ),
+        ),
+        recipient_type=recipient_type,
+        dwelling_over_two_years=dwelling_over_two_years,
+        valid_until=None,
+        created_at=SEED_AT,
+    )
+    quote = Quote(
+        id=QuoteId(uuid4()),
+        tenant_id=tenant_id,
+        customer_id=customer_id,
+        number=DocumentNumber(Series.quotes(), SEED_AT.year, sequence),
+        status=QuoteStatus.ACCEPTED,
+        versions=(version,),
+        created_at=SEED_AT,
+    )
+    async with factory() as uow:
+        await uow.set_tenant(tenant_id)
+        await uow.quotes.add(quote)
+        await uow.commit()
+    return version
+
+
+async def add_draft_from_quote(
+    factory: UnitOfWorkFactory,
+    tenant_id: TenantId,
+    customer_id: CustomerId,
+    version: QuoteVersion,
+    *,
+    treatment: VatTreatment,
+) -> InvoiceId:
+    """Borrador de la factura completa de ``version``: sin destinatario ni vivienda propios."""
+    draft = Invoice(
+        id=InvoiceId(uuid4()),
+        tenant_id=tenant_id,
+        customer_id=customer_id,
+        series=Series.invoices(),
+        treatment=treatment,
+        lines=tuple(line.to_invoice_line() for line in version.lines),
+        created_at=SEED_AT,
+        description="Reforma de baño",
+        quote_version_id=version.id,
+    )
     async with factory() as uow:
         await uow.set_tenant(tenant_id)
         await uow.invoices.add_draft(draft)

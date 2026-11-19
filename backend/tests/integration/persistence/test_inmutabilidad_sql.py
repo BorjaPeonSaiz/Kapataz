@@ -191,8 +191,12 @@ def test_un_registro_no_se_borra_ni_como_propietario(app_factory, database):
     ],
 )
 def test_las_tablas_fiscales_no_se_vacian(database, table):
-    with pytest.raises(DBAPIError, match="RN-F-02"):
+    # Código propio para TRUNCATE (KZF00): no es el de la factura emitida
+    # inmutable (KZF02), que la API traduce a otro problema.
+    with pytest.raises(DBAPIError, match="TRUNCATE no está permitido") as raised:
         run_sql(database, OWNER_ROLE, f"TRUNCATE {table} CASCADE")
+    assert raised.value.orig.sqlstate == "KZF00"
+    assert "RN-F-02" not in str(raised.value)
 
 
 @pytest.mark.req("RN-F-07")

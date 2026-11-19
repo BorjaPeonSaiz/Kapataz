@@ -1,0 +1,83 @@
+# Mutación con mutmut sobre domain/billing (ADR-009, ADR-033).
+#
+# Job manual, no en cada PR: tarda demasiado para el ciclo de PR (cierre del
+# Bloque 2). Se lanza desde Actions > Mutación > Run workflow o con
+#   gh workflow run mutacion.yml --ref <rama>
+# Falla si la puntuación baja del 80 % (plan de verificación, Fase 3).
+#
+# Configuración en backend/pyproject.toml ([tool.mutmut]). mutmut no está en
+# uv.lock: se añade al entorno con uv run --with y la versión fijada abajo.
+# Acciones fijadas por SHA como en ci.yml (ADR-022). Nunca llama a la API de
+# Claude: solo corre tests/unit/domain.
+
+name: Mutación
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mutacion-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_VERSION: "0.11.21"
+  PYTHON_VERSION: "3.12"
+  MUTMUT_VERSION: "3.8.1"
+  # Puntuación mínima: (muertos + timeouts) / (total - omitidos), en %.
+  MUTATION_MIN: "80"
+
+jobs:
+  mutmut:
+    name: mutación · domain/billing
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      LLM_BACKEND: fake
+      EMAIL_BACKEND: fake
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - name: Dependencias (uv sync --locked)
+        run: uv sync --locked
+      - name: mutmut run
+        run: uv run --frozen --with "mutmut==$MUTMUT_VERSION" mutmut run
+      - name: Puntuación >= ${{ env.MUTATION_MIN }} %
+        run: |
+          uv run --frozen --with "mutmut==$MUTMUT_VERSION" mutmut export-cicd-stats
+          stats=mutants/mutmut-cicd-stats.json
+          score=$(jq -r 'if .total - .skipped > 0
+            then ((.killed + .timeout) * 1000 / (.total - .skipped) | floor) / 10
+            else 0 end' "$stats")
+          {
+            echo "## Mutación sobre domain/billing"
+            echo
+            echo "Puntuación: **${score} %** (mínimo ${MUTATION_MIN} %)"
+            echo
+            echo '```json'
+            cat "$stats"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          cat "$stats"
+          echo "Puntuación: ${score} %"
+          if ! jq -e --argjson min "$MUTATION_MIN" \
+              '.total - .skipped > 0 and (.killed + .timeout) * 100 / (.total - .skipped) >= $min' \
+              "$stats" > /dev/null; then
+            echo "::error::Puntuación de mutación ${score} % por debajo del ${MUTATION_MIN} %"
+            exit 1
+          fi
+      - name: Mutantes supervivientes
+        if: always()
+        run: uv run --frozen --with "mutmut==$MUTMUT_VERSION" mutmut results

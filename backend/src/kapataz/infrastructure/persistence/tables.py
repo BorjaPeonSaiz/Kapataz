@@ -23,6 +23,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -321,7 +322,19 @@ class InvoiceRow(Base):
             f"recipient_type IS NULL OR recipient_type IN {_RECIPIENT_TYPES}",
             name="recipient_type",
         ),
+        # RN-F-13: el borrador que sale de un presupuesto toma el destinatario y
+        # la vivienda de su versión, que los copia al emitir; una emitida los
+        # lleva siempre, y la vivienda solo falta si el destinatario es empresa.
+        CheckConstraint(
+            "(status = 'draft' AND (quote_version_id IS NULL "
+            "OR (recipient_type IS NULL AND dwelling_over_two_years IS NULL))) "
+            "OR (status = 'issued' AND recipient_type IS NOT NULL "
+            "AND (recipient_type = 'business' OR dwelling_over_two_years IS NOT NULL))",
+            name="works_recipient",
+        ),
         CheckConstraint("(guarantee_pct IS NULL) = (guarantee_due_date IS NULL)", name="guarantee"),
+        # Defensa en profundidad (ADR-009): los importes los calcula el dominio
+        # con Decimal; la base de datos solo comprueba que cuadran entre sí.
         CheckConstraint(
             "total_amount = base_total + tax_total "
             "AND amount_due = total_amount - withholding_amount - guarantee_amount",
@@ -513,6 +526,15 @@ class BillingRecordRow(Base):
             name="fk_billing_records_previous",
         ),
         Index("ix_billing_records_tenant_id_invoice_id", "tenant_id", "invoice_id"),
+        # RN-F-07: un solo alta por factura; las demás altas son subsanaciones
+        # (is_correction, «Subsanacion» de la AEAT).
+        Index(
+            "uq_billing_records_registration",
+            "tenant_id",
+            "invoice_id",
+            unique=True,
+            postgresql_where=text("record_type = 'registration' AND NOT is_correction"),
+        ),
         CheckConstraint("record_type IN ('registration', 'cancellation')", name="record_type"),
         CheckConstraint(
             "submission_status IN ('pending', 'accepted', 'accepted_with_errors', 'rejected')",

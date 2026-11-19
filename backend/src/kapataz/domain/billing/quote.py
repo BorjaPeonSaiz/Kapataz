@@ -24,11 +24,11 @@ from kapataz.domain.billing.line_item import MAX_LINE_DESCRIPTION_LENGTH, LineIt
 from kapataz.domain.billing.money import Money, sum_money
 from kapataz.domain.billing.numbering import DocumentNumber
 from kapataz.domain.billing.quantity import Percentage, Quantity
+from kapataz.domain.billing.works_vat import requires_dwelling_age
 from kapataz.domain.customers.model import CustomerId
 
 # RN-07: con menos de tres muestras no se propone un precio de forma automática.
 MIN_HISTORY_SAMPLES = 3
-_REDUCED_ELIGIBLE = frozenset({RecipientType.PRIVATE, RecipientType.COMMUNITY})
 
 
 class PriceSourceKind(StrEnum):
@@ -146,7 +146,7 @@ class QuoteVersion:
     def __post_init__(self) -> None:
         if self.version < 1:
             raise InvalidQuoteError("Las versiones se numeran desde 1.")
-        if self.recipient_type in _REDUCED_ELIGIBLE and self.dwelling_over_two_years is None:
+        if requires_dwelling_age(self.recipient_type) and self.dwelling_over_two_years is None:
             msg = "Con un particular o una comunidad hay que saber si la vivienda tiene dos años."
             raise InvalidQuoteError(msg)
         ids = [line.id for line in self.lines]

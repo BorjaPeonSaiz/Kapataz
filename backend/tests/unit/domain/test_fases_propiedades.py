@@ -49,6 +49,21 @@ from tests.unit.domain.billing_factories import (
 SUPER_REDUCED = VatTreatment.taxed(TaxRate.super_reduced())
 REVERSE = VatTreatment.reverse_charge()
 TREATMENTS = (GENERAL, REDUCED, SUPER_REDUCED, REVERSE)
+# Al emitir, el tipo se comprueba con el destinatario del presupuesto (RN-F-13):
+# el 10 % solo con un particular, la inversión solo con un empresario.
+PRIVATE_TREATMENTS = (GENERAL, REDUCED, SUPER_REDUCED)
+BUSINESS_TREATMENTS = (GENERAL, SUPER_REDUCED, REVERSE)
+RECIPIENTS_FOR = {
+    treatment: tuple(
+        recipient
+        for recipient, allowed in (
+            (RecipientType.PRIVATE, PRIVATE_TREATMENTS),
+            (RecipientType.BUSINESS, BUSINESS_TREATMENTS),
+        )
+        if treatment in allowed
+    )
+    for treatment in TREATMENTS
+}
 
 MAX_QUANTITY_THOUSANDTHS = int(MAX_QUANTITY * 1000)
 MAX_QUOTE_LINES = 8
@@ -180,21 +195,24 @@ def works(
     - ``budget="quote"``: las fases no pasan de la base del presupuesto.
     - ``budget="free"``: el tope de lo facturado va de 0 al doble del presupuesto.
     - ``exceed``: una última certificación pasa lo que queda por facturar.
-    - ``mixed_treatments``: cada fase con su propio tratamiento (la obra cambió de tipo).
+    - ``mixed_treatments``: cada fase con su propio tratamiento (la obra cambió
+      de tipo), entre los que admite el destinatario del presupuesto.
     """
     treatment = draw(st.sampled_from(TREATMENTS))
+    recipient_type = draw(st.sampled_from(RECIPIENTS_FOR[treatment]))
+    private = recipient_type is RecipientType.PRIVATE
     count = draw(st.integers(1, MAX_QUOTE_LINES))
     lines = tuple(draw(quote_lines(index)) for index in range(count))
-    reduced = treatment == REDUCED
     version = QuoteVersion(
         id=QuoteVersionId(uuid4()),
         version=1,
         lines=lines,
-        recipient_type=RecipientType.PRIVATE if reduced else RecipientType.BUSINESS,
-        dwelling_over_two_years=True if reduced else None,
+        recipient_type=recipient_type,
+        dwelling_over_two_years=True if private else None,
         valid_until=None,
         created_at=NOW,
     )
+    allowed_treatments = PRIVATE_TREATMENTS if private else BUSINESS_TREATMENTS
     service_cents = _cents(version.base)
     if budget == "quote":
         remaining = service_cents
@@ -202,7 +220,7 @@ def works(
         remaining = draw(st.integers(0, 2 * service_cents + 10_000))
 
     def phase_treatment() -> VatTreatment:
-        return draw(st.sampled_from(TREATMENTS)) if mixed_treatments else treatment
+        return draw(st.sampled_from(allowed_treatments)) if mixed_treatments else treatment
 
     drafts: list[Invoice] = []
     advance_gross: Money | None = None
@@ -247,7 +265,12 @@ def works(
         drafts.append(_progress_draft([item], version.id, phase_treatment()))
 
     issued = tuple(
-        issue(invoice, sequence=index + 1, issue_date=FIRST_ISSUE_DATE + timedelta(days=index))
+        issue(
+            invoice,
+            sequence=index + 1,
+            issue_date=FIRST_ISSUE_DATE + timedelta(days=index),
+            version=version,
+        )
         for index, invoice in enumerate(drafts)
     )
     return Works(

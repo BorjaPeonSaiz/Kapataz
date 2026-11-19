@@ -7,16 +7,26 @@ from datetime import UTC, date, datetime, timedelta
 import pytest
 
 from kapataz.domain.billing.billing_record import verify_chain
-from kapataz.domain.billing.errors import IssueDateBeforeLastError, MissingIssueDataError
+from kapataz.domain.billing.codes import RecipientType
+from kapataz.domain.billing.errors import (
+    InvalidInvoiceError,
+    IssueDateBeforeLastError,
+    MissingIssueDataError,
+)
 from kapataz.domain.billing.numbering import Series
+from kapataz.domain.billing.tax import TaxRate, VatTreatment
 from tests.billing_support import (
+    add_accepted_quote,
     add_customer,
     add_draft,
+    add_draft_from_quote,
     create_account,
     issuable_drafts,
 )
 from tests.integration.conftest import OWNER_ROLE
 from tests.integration.persistence.conftest import ISSUE_AT, issue_new, issue_use_case, run_sql
+
+REDUCED = VatTreatment.taxed(TaxRate.reduced())
 
 
 def _chain(factory, tenant_id):
@@ -167,3 +177,69 @@ def test_cambio_de_ano_empieza_en_uno(app_factory):
 
     assert str(issued.invoice.number) == "F-2027-0001"
     assert issued.record.previous is not None
+
+
+def _draft_from_quote(factory, treatment, recipient_type, dwelling):
+    tenant_id = asyncio.run(create_account(factory))
+    customer_id = asyncio.run(add_customer(factory, tenant_id))
+    version = asyncio.run(
+        add_accepted_quote(
+            factory,
+            tenant_id,
+            customer_id,
+            recipient_type=recipient_type,
+            dwelling_over_two_years=dwelling,
+        )
+    )
+    draft_id = asyncio.run(
+        add_draft_from_quote(factory, tenant_id, customer_id, version, treatment=treatment)
+    )
+    return tenant_id, draft_id
+
+
+@pytest.mark.req("RN-F-13")
+@pytest.mark.req("RF-FA-02")
+def test_desde_presupuesto_la_emitida_guarda_destinatario_y_vivienda(app_factory, database):
+    tenant_id, draft_id = _draft_from_quote(app_factory, REDUCED, RecipientType.COMMUNITY, True)
+    draft_row = (
+        "SELECT status, recipient_type, dwelling_over_two_years, tax_rate FROM invoices "
+        "WHERE id = :id"
+    )
+    assert run_sql(database, OWNER_ROLE, draft_row, {"id": draft_id}) == [("draft", None, None, 10)]
+
+    result = asyncio.run(issue_use_case(app_factory).execute(tenant_id, draft_id))
+
+    assert run_sql(database, OWNER_ROLE, draft_row, {"id": draft_id}) == [
+        ("issued", "community", True, 10)
+    ]
+
+    # Se relee con los datos copiados, sin depender de la versión.
+    async def read():
+        async with app_factory() as uow:
+            await uow.set_tenant(tenant_id)
+            return await uow.invoices.get(draft_id)
+
+    assert asyncio.run(read()) == result.invoice
+
+
+@pytest.mark.req("RN-F-13")
+@pytest.mark.req("RN-F-01")
+def test_desde_presupuesto_de_empresa_el_10_no_se_emite_ni_deja_rastro(app_factory, database):
+    tenant_id, draft_id = _draft_from_quote(app_factory, REDUCED, RecipientType.BUSINESS, None)
+
+    with pytest.raises(InvalidInvoiceError, match="10 %"):
+        asyncio.run(issue_use_case(app_factory).execute(tenant_id, draft_id))
+
+    assert run_sql(
+        database,
+        OWNER_ROLE,
+        "SELECT status, recipient_type FROM invoices WHERE id = :id",
+        {"id": draft_id},
+    ) == [("draft", None)]
+    assert run_sql(
+        database,
+        OWNER_ROLE,
+        "SELECT count(*) FROM series_counters WHERE tenant_id = :t",
+        {"t": tenant_id},
+    ) == [(0,)]
+    assert _chain(app_factory, tenant_id) == ()
