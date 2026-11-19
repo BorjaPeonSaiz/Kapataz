@@ -39,7 +39,8 @@ Triggers, que actúan también para el propietario (RN-F-02, RN-F-07):
   anterior.
 - ``billing_chain_heads``: nace vacía y solo avanza al registro que sigue al
   actual.
-- ``TRUNCATE`` rechazado en las cuatro tablas fiscales.
+- ``TRUNCATE`` rechazado en las cuatro tablas fiscales, en los contadores, en la
+  cabeza de la cadena y en los cobros: vaciarlas nunca es una operación normal.
 """
 
 from collections.abc import Sequence
@@ -76,6 +77,8 @@ _GRANTS: dict[str, str] = {
 }
 
 _FISCAL_TABLES = ("invoices", "invoice_lines", "invoice_corrections", "billing_records")
+# Tablas que no se vacían: las fiscales, la numeración, la cadena y los cobros.
+_NO_TRUNCATE_TABLES = (*_FISCAL_TABLES, "series_counters", "billing_chain_heads", "payments")
 
 # Columnas de billing_records que puede cambiar el resultado del envío.
 _SUBMISSION_COLUMNS = (
@@ -814,7 +817,7 @@ def _create_triggers() -> None:
         "BEFORE INSERT OR UPDATE ON billing_chain_heads "
         "FOR EACH ROW EXECUTE FUNCTION billing_chain_heads_advance()"
     )
-    for table in _FISCAL_TABLES:
+    for table in _NO_TRUNCATE_TABLES:
         op.execute(
             f"CREATE TRIGGER {table}_reject_truncate BEFORE TRUNCATE ON {table} "
             "FOR EACH STATEMENT EXECUTE FUNCTION reject_truncate_of_fiscal_table()"

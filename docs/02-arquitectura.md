@@ -313,8 +313,7 @@ erDiagram
         id id PK
     }
     professional {
-        id id PK
-        fk tenant_id FK "una fila por cuenta"
+        fk tenant_id PK "una fila por cuenta"
     }
     ai_usage {
         id id PK
@@ -399,9 +398,14 @@ erDiagram
         enum phase_type "full, advance, progress, final"
         enum invoice_type "F1, R1 a R4"
         enum correction_type "substitution, difference"
+        text correction_reason "RN-F-03"
+        int issue_year "clave de la numeración"
         enum recipient_type "si no sale de un presupuesto"
         bool dwelling_over_two_years
+        cents base_total
         cents tax_total
+        cents withholding_amount "retención de IRPF"
+        cents gross_amount "anticipo con IVA incluido"
         cents total_amount "base más cuota"
         cents amount_due "importe a cobrar"
         date due_date
@@ -437,6 +441,7 @@ erDiagram
         enum record_type "registration, cancellation"
         bool is_correction "subsanación"
         bool is_first
+        fk previous_record_id FK "única por cuenta"
         text prev_hash
         text hash "SHA-256"
         timestamptz generated_at

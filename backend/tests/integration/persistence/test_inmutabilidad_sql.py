@@ -176,8 +176,19 @@ def test_un_registro_no_se_borra_ni_como_propietario(app_factory, database):
 
 
 @pytest.mark.req("RN-F-02")
+@pytest.mark.req("RN-F-01")
+@pytest.mark.req("RN-F-07")
 @pytest.mark.parametrize(
-    "table", ["invoices", "invoice_lines", "invoice_corrections", "billing_records"]
+    "table",
+    [
+        "invoices",
+        "invoice_lines",
+        "invoice_corrections",
+        "billing_records",
+        "series_counters",
+        "billing_chain_heads",
+        "payments",
+    ],
 )
 def test_las_tablas_fiscales_no_se_vacian(database, table):
     with pytest.raises(DBAPIError, match="RN-F-02"):
@@ -428,10 +439,10 @@ def test_el_rol_de_la_app_no_vacia_ninguna_tabla(database):
 @pytest.mark.req("RN-F-01")
 @pytest.mark.req("RN-F-07")
 def test_sin_contador_ni_cabeza_la_base_de_datos_no_duplica_ni_bifurca(app_factory, database):
-    # series_counters y billing_chain_heads no tienen el trigger de TRUNCATE. Si
-    # el propietario los vaciara, la base de datos seguiría sin admitir un número
-    # repetido ni un segundo primer registro: no depende solo de ellos. Todo
-    # ocurre en una transacción que se deshace al final.
+    # TRUNCATE está bloqueado, pero el propietario aún puede borrar las filas de
+    # series_counters y billing_chain_heads. Aun así, la base de datos sigue sin
+    # admitir un número repetido ni un segundo primer registro: no depende solo
+    # de ellos. Todo ocurre en una transacción que se deshace al final.
     tenant_id, [issued] = issue_new(app_factory)
     duplicate = (
         "INSERT INTO {table} SELECT (jsonb_populate_record(NULL::{table}, "
@@ -445,7 +456,8 @@ def test_sin_contador_ni_cabeza_la_base_de_datos_no_duplica_ni_bifurca(app_facto
         try:
             async with engine.connect() as conn:
                 transaction = await conn.begin()
-                await conn.execute(text("TRUNCATE series_counters, billing_chain_heads"))
+                await conn.execute(text("DELETE FROM series_counters"))
+                await conn.execute(text("DELETE FROM billing_chain_heads"))
                 for table, row_id in (
                     ("invoices", issued.invoice.id),
                     ("billing_records", issued.record.id),

@@ -2,7 +2,7 @@
 
 - **Estado:** Propuesto
 - **Fecha:** 2026-11-12
-- **Modificado:** 2026-11-18. Borja aprueba calcular la huella con el algoritmo oficial desde el Bloque 2, en vez de en el Bloque 12.
+- **Modificado:** 2026-11-18. Borja aprueba calcular la huella con el algoritmo oficial desde el Bloque 2, en vez de en el Bloque 12. Rutas de las pruebas actualizadas al cerrar el Bloque 2.
 - **Decide:** arquitecto-python (aprueba: Borja)
 - **Requisitos relacionados:** RF-FA-02, RF-FA-04, RF-FA-08, RF-VF-01, RF-VF-02, RF-VF-03, RF-VF-04, RF-VF-05, RF-VF-06, RF-VF-07, RN-12, RN-13, RN-F-01, RN-F-02, RN-F-03, RN-F-04, RN-F-06, RN-F-07
 - **Se cierra en:** Bloque 12
@@ -97,10 +97,10 @@ Kapataz emite facturas válidas desde la primera factura real, con el sistema VE
 
 - **import-linter:** el proveedor solo se conoce en `kapataz.infrastructure.fiscal`; dominio y aplicación solo ven `BillingRecordSubmissionPort`.
 - **Bloque 2:**
-  - `tests/integration/billing/test_numeracion_concurrente.py`, `@pytest.mark.req("RN-F-01")`. Incluye emisiones simultáneas de las series F y R en la misma cuenta: la cadena no se bifurca. `@pytest.mark.req("RN-F-07")`.
-  - `tests/integration/billing/test_inmutabilidad_sql.py`, `@pytest.mark.req("RN-F-02")`.
-  - `tests/unit/billing/test_billing_record_campos_aeat.py`: cada campo obligatorio del esquema tiene su dato. `@pytest.mark.req("RN-F-07")`.
-  - `tests/unit/billing/test_cadena_unica.py`: una subsanación y una anulación se encadenan en la misma cadena que las altas. `@pytest.mark.req("RN-F-07")`.
+  - `tests/integration/persistence/test_emision_concurrente.py`, `@pytest.mark.req("RN-F-01")`: 20 emisiones en procesos separados, con una y con varias cuentas, sin huecos ni duplicados. Incluye emisiones simultáneas de las series F y R en la misma cuenta: la cadena no se bifurca. `@pytest.mark.req("RN-F-07")`.
+  - `tests/integration/persistence/test_inmutabilidad_sql.py`, `@pytest.mark.req("RN-F-02")`.
+  - `tests/unit/domain/test_billing_record.py` (`test_cada_campo_obligatorio_del_alta_tiene_su_dato` y el de la anulación): cada campo obligatorio del esquema tiene su dato. `@pytest.mark.req("RN-F-07")`.
+  - `tests/unit/domain/test_billing_record.py` (`test_subsanacion_y_anulacion_se_encadenan_en_la_misma_cadena_que_las_altas`): una subsanación y una anulación se encadenan en la misma cadena que las altas. `@pytest.mark.req("RN-F-07")`.
   - `tests/unit/domain/test_billing_record.py`: los tres ejemplos de §6 de la especificación de la huella dan exactamente las huellas publicadas por la AEAT. `@pytest.mark.req("RN-F-07")`.
 - **Bloque 8:** `kapataz verify-billing-chain` detecta una alteración hecha por SQL.
 - **Bloque 12:**

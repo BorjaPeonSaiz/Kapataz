@@ -32,7 +32,8 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
     - 20 emisiones en procesos separados (`spawn` y barrera) con una y con tres cuentas, F y R a la vez, la misma factura desde 10 procesos y relojes desfasados para RN-F-04; 10 de 10 repeticiones con cada configuración de roles;
     - inmutabilidad columna a columna con los dos roles;
     - recorrido del catálogo: toda tabla fuera de la lista cerrada tiene RLS y la política `tenant_isolation`, y toda FK entre tablas de negocio es compuesta. Una tabla de negocio nueva también hay que añadirla a `_seed_every_table`.
-  - 668 pruebas con PostgreSQL (590 sin él) y cobertura de `domain/` del 99 %.
+  - **Cierre:** `TRUNCATE` rechazado también en `series_counters`, `billing_chain_heads` y `payments` (Borja, 19/11/2026; migración 0003, aún sin integrar). §4.5, la arquitectura §5.2 y las rutas de ADR-012 recogen lo construido.
+  - 671 pruebas con PostgreSQL (590 sin él) y cobertura de `domain/` del 99 %.
 
 ### Bloque 0 (histórico)
 
@@ -67,8 +68,6 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 
 1. **Cierre del Bloque 2:**
    - cerrar ADR-017 (`arquitecto-python`) y revisar la revalidación de facturas emitidas al leerlas;
-   - recoger en §4.5 y la arquitectura §5.2 las columnas añadidas;
-   - decidir si `payments`, `series_counters` y `billing_chain_heads` también rechazan `TRUNCATE`;
    - revisiones de `seguridad-ia` y `revisor-codigo`.
 2. Un solo PR del bloque, con commits separados por fase.
 
@@ -172,7 +171,6 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 
 ### Huecos de la persistencia del Bloque 2 (`backend-fastapi`, 18/11/2026)
 
-- **Al cerrar el Bloque 2:** recoger en §4.5 y en la arquitectura §5.2 las columnas añadidas: `issue_year`, `correction_reason`, `previous_record_id`, `base_total`, `withholding_pct`, `withholding_amount`, `gross_amount` y `position`. Además, `professional` usa `tenant_id` como PK. Las rutas de las pruebas de ADR-012 están en `tests/integration/persistence/`.
 - **Revisar con `arquitecto-python`:** al leer una factura emitida, el dominio la vuelve a validar. Si una regla se endurece, una factura antigua podría dejar de cargarse.
 - **Bloque 8:**
   - conectar `IssueInvoice` a `bootstrap` con `SystemInfo` configurable (NIF de KodigoLab y número de instalación);
