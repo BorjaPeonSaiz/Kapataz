@@ -2,6 +2,11 @@
 
 Viven en un solo módulo porque los usan a la vez clientes, facturas y registros:
 si la AEAT cambia un límite, se cambia aquí y en ningún otro sitio.
+
+Subir un límite es inocuo. Bajarlo no: la descripción general y el motivo de
+una factura emitida ya no se comprueban al leerla, pero el nombre de las
+partes, el número y el registro sí, porque sus objetos de valor validan al
+construirse. Lo emitido antes dejaría de cargarse (RN-F-02).
 """
 
 # Nombre o razón social del emisor y del destinatario (NombreRazon).

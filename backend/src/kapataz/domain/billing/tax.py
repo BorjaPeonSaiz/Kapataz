@@ -18,7 +18,10 @@ class TaxRate:
     """Tipo de IVA: general (21 %), reducido (10 %) o superreducido (4 %), RF-FA-05.
 
     Es una lista cerrada a propósito: un 18 % o un 7 % no son un tipo vigente y
-    solo pueden venir de un error. Si cambian los tipos, se cambia esta lista.
+    solo pueden venir de un error. Si cambian los tipos, se añade el nuevo, pero
+    el antiguo no se quita sin más: las facturas emitidas con él se leen con
+    esta clase y dejarían de cargarse (RN-F-02). Antes hay que separar los
+    tipos vigentes para emitir de los que solo se leen.
     """
 
     percent: Decimal

@@ -67,7 +67,7 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 ## Siguiente acción
 
 1. **Cierre del Bloque 2:**
-   - cerrar ADR-017 (`arquitecto-python`) y revisar la revalidación de facturas emitidas al leerlas;
+   - ADR-017: Borja decide si pasa a cerrarse en el Bloque 4 (propuesta de `arquitecto-python`, 19/11/2026);
    - revisiones de `seguridad-ia` y `revisor-codigo`.
 2. Un solo PR del bloque, con commits separados por fase.
 
@@ -171,7 +171,11 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 
 ### Huecos de la persistencia del Bloque 2 (`backend-fastapi`, 18/11/2026)
 
-- **Revisar con `arquitecto-python`:** al leer una factura emitida, el dominio la vuelve a validar. Si una regla se endurece, una factura antigua podría dejar de cargarse.
+- **Lectura de facturas emitidas** (resuelto el 19/11/2026: se leen con sus importes guardados, sin reglas de emisión; `IssuedAmountsMismatchError` si no cuadran). Queda:
+  - los objetos de valor se siguen validando al leer (`TaxRate`, longitudes de líneas, partes, número y `SystemInfo`, dígito de control del NIF; `BillingRecord` se reconstruye con su constructor): endurecerlos rompería la lectura de lo emitido;
+  - si cambia el cálculo de importes (ADR-009), las emitidas dejarán de cargarse; antes hará falta un ADR que haga de los importes guardados la fuente de verdad;
+  - Bloque 8: un borrador que incumpla una regla endurecida no se puede abrir; leerlo e informar de qué incumple;
+  - revisar si `quote_repository.py` tiene el mismo patrón con las versiones de presupuesto enviadas.
 - **Bloque 8:**
   - conectar `IssueInvoice` a `bootstrap` con `SystemInfo` configurable (NIF de KodigoLab y número de instalación);
   - actualizar el estado del presupuesto al emitir;

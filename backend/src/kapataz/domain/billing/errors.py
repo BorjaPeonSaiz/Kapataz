@@ -46,6 +46,17 @@ class InvoiceAlreadyIssuedError(DomainError):
     slug = "factura-emitida-inmutable"
 
 
+class IssuedAmountsMismatchError(DomainError):
+    """RN-F-02: los importes guardados de una factura emitida no cuadran con sus líneas.
+
+    Solo pasa si alguien cambia la fila fuera de la app o si cambia el cálculo
+    de importes (ADR-009). En los dos casos hay que saberlo: mostrar otros
+    importes que los emitidos sería cambiar la factura sin decirlo.
+    """
+
+    slug = "factura-emitida-descuadrada"
+
+
 class MissingIssueDataError(DomainError):
     """RN-F-06: falta algún dato obligatorio para emitir.
 

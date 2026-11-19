@@ -5,6 +5,12 @@ Las columnas de importe son una copia de lo que calcula el dominio
 calcularlos de sus líneas. Una factura emitida solo se escribe una vez, al
 pasar de borrador a emitida; después, los triggers de la base de datos
 impiden cualquier cambio (RN-F-02).
+
+Un borrador se lee con todas las reglas vigentes, porque todavía se puede
+editar. Una emitida se lee con sus importes guardados (``IssuedAmounts``): el
+dominio comprueba su estructura y que esos importes cuadran con las líneas,
+pero no le vuelve a aplicar las reglas de emisión, para que una regla más
+estricta no impida leer lo que ya se emitió (RN-F-02).
 """
 
 from decimal import Decimal
@@ -25,7 +31,13 @@ from kapataz.domain.billing.codes import (
 )
 from kapataz.domain.billing.errors import InvoiceAlreadyIssuedError, InvoiceNotFoundError
 from kapataz.domain.billing.ids import InvoiceId, QuoteLineId, QuoteVersionId
-from kapataz.domain.billing.invoice import CorrectiveInvoice, Guarantee, Invoice, RectifiedInvoice
+from kapataz.domain.billing.invoice import (
+    CorrectiveInvoice,
+    Guarantee,
+    Invoice,
+    IssuedAmounts,
+    RectifiedInvoice,
+)
 from kapataz.domain.billing.line_item import LineItem
 from kapataz.domain.billing.numbering import DocumentNumber, Series
 from kapataz.domain.billing.party import Party
@@ -175,11 +187,17 @@ class SqlInvoiceRepository:
             .order_by(InvoiceLineRow.position)
         )
         lines = tuple(_to_line(line_row) for line_row in line_rows)
+        issued_amounts = _issued_amounts(row)
         if not InvoiceType(row.invoice_type).is_corrective:
-            return Invoice(**_common_fields(row, lines), invoice_type=InvoiceType(row.invoice_type))
+            return Invoice(
+                **_common_fields(row, lines),
+                invoice_type=InvoiceType(row.invoice_type),
+                issued_amounts=issued_amounts,
+            )
         return CorrectiveInvoice(
             **_common_fields(row, lines),
             invoice_type=InvoiceType(row.invoice_type),
+            issued_amounts=issued_amounts,
             correction_type=CorrectionType(_required(row.correction_type)),
             rectified=await self._rectified(invoice_id),
             reason=_required(row.correction_reason),
@@ -277,8 +295,22 @@ def _invoice_values(invoice: Invoice) -> dict[str, Any]:
     }
 
 
+def _issued_amounts(row: InvoiceRow) -> IssuedAmounts | None:
+    """Importes guardados de una emitida; un borrador no los tiene (se recalculan)."""
+    if row.status != InvoiceStatus.ISSUED.value:
+        return None
+    return IssuedAmounts(
+        base=row.base_total,
+        tax=row.tax_total,
+        total_amount=row.total_amount,
+        withholding=row.withholding_amount,
+        guarantee=row.guarantee_amount,
+        amount_due=row.amount_due,
+    )
+
+
 def _common_fields(row: InvoiceRow, lines: tuple[LineItem, ...]) -> dict[str, Any]:
-    """Campos comunes a ``Invoice`` y ``CorrectiveInvoice``; el dominio los vuelve a validar."""
+    """Campos comunes a ``Invoice`` y ``CorrectiveInvoice``; el dominio comprueba su estructura."""
     issued = row.status == InvoiceStatus.ISSUED.value
     return {
         "id": InvoiceId(row.id),

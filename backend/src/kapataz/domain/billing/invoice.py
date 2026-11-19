@@ -7,10 +7,21 @@ emitida no se modifica (RN-F-02): cualquier cambio lanza
 
 Los importes no se guardan en la entidad: salen siempre de las líneas con el
 cálculo del dominio (``calculation``), así no pueden desfasarse.
+
+Las comprobaciones van en dos grupos:
+
+- **Estructura:** lo que una factura necesita para tener sentido y para que
+  sus importes se puedan calcular (estado coherente, fase y anticipo, citas de
+  la rectificativa, importes dentro de ``Money``). Vale siempre.
+- **Reglas de emisión:** lo que la normativa o la política vigente exige para
+  emitir (RN-F-06, RN-F-13, RF-FA-15 y los límites de longitud). Se aplican al
+  crear y editar el borrador y otra vez al emitir, pero no al leer una factura
+  ya emitida: si una regla se endurece, lo emitido antes tiene que seguir
+  leyéndose para consultarlo, exportarlo y rectificarlo (RN-F-02).
 """
 
 from collections.abc import Iterable
-from dataclasses import dataclass, replace
+from dataclasses import InitVar, dataclass, replace
 from datetime import date, datetime
 from typing import Self
 
@@ -33,6 +44,7 @@ from kapataz.domain.billing.errors import (
     InvalidDocumentNumberError,
     InvalidInvoiceError,
     InvoiceAlreadyIssuedError,
+    IssuedAmountsMismatchError,
     MissingIssueDataError,
     NegativeInvoiceBaseError,
 )
@@ -70,6 +82,34 @@ class Guarantee:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class IssuedAmounts:
+    """Importes de una factura emitida tal como se guardaron al emitirla (RN-F-02).
+
+    Son la prueba de integridad al leerla: tienen que coincidir al céntimo con
+    los que el dominio calcula de sus líneas.
+    """
+
+    base: Money
+    tax: Money
+    total_amount: Money
+    withholding: Money
+    guarantee: Money
+    amount_due: Money
+
+    def differences(self, totals: InvoiceTotals) -> tuple[str, ...]:
+        """Nombres de los importes guardados que no cuadran con los calculados."""
+        pairs = (
+            ("base", self.base, totals.base),
+            ("tax", self.tax, totals.tax),
+            ("total_amount", self.total_amount, totals.total_amount),
+            ("withholding", self.withholding, totals.withholding),
+            ("guarantee", self.guarantee, totals.guarantee),
+            ("amount_due", self.amount_due, totals.amount_due),
+        )
+        return tuple(name for name, stored, calculated in pairs if stored != calculated)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class Invoice:
     """Factura completa (F1) emitida por la app.
 
@@ -83,6 +123,12 @@ class Invoice:
 
     ``gross_amount`` es el importe con IVA incluido del anticipo (RN-F-12): con
     él, la base sale del importe y no de las líneas.
+
+    ``issued_amounts`` solo lo pasa el repositorio al leer una factura emitida:
+    con él se comprueban la estructura y que los importes guardados cuadran,
+    pero no las reglas de emisión, que pueden haber cambiado desde que se
+    emitió (RN-F-02). Sin él, la factura se valida entera con las reglas
+    vigentes; así se crea y se edita el borrador, y así lo valida ``issue``.
     """
 
     id: InvoiceId
@@ -110,12 +156,20 @@ class Invoice:
     issued_at: datetime | None = None
     issuer: Party | None = None
     recipient: Party | None = None
+    # InitVar y no campo: lo guardado solo sirve para comprobar la lectura. Si
+    # fuera un campo, ``replace`` lo arrastraría y la factura tendría dos
+    # fuentes de importes que podrían discrepar.
+    issued_amounts: InitVar[IssuedAmounts | None] = None
 
-    def __post_init__(self) -> None:
-        _check_common(self)
+    def __post_init__(self, issued_amounts: IssuedAmounts | None) -> None:
+        _check_structure(self)
         self._check_kind()
         _check_status(self)
         _check_amounts(self)
+        if issued_amounts is None:
+            self._check_issue_rules()
+        else:
+            _check_reconstituted(self, issued_amounts)
 
     @property
     def totals(self) -> InvoiceTotals:
@@ -252,13 +306,16 @@ class Invoice:
             raise InvalidInvoiceError(msg)
         if self.phase_type is PhaseType.ADVANCE:
             _check_advance(self)
-        if self.guarantee is not None and self.phase_type not in _GUARANTEE_PHASES:
-            msg = "La garantía solo cabe en la factura completa o en la fase final (RF-FA-15)."
-            raise InvalidInvoiceError(msg)
         if self.phase_type is not PhaseType.FINAL and any(
             line.origin is LineOrigin.PRIOR_INVOICE for line in self.lines
         ):
             raise InvalidInvoiceError("Solo la fase final resta facturas anteriores (RN-F-12).")
+
+    def _check_issue_rules(self) -> None:
+        _check_common_issue_rules(self)
+        if self.guarantee is not None and self.phase_type not in _GUARANTEE_PHASES:
+            msg = "La garantía solo cabe en la factura completa o en la fase final (RF-FA-15)."
+            raise InvalidInvoiceError(msg)
         if self.phase_type in _WHOLE_WORKS_PHASES:
             _check_material_limit(self)
 
@@ -342,13 +399,11 @@ class CorrectiveInvoice(Invoice):
         return self.correction_type is CorrectionType.SUBSTITUTION
 
     def _check_kind(self) -> None:
-        if not self.invoice_type.is_corrective or not self.invoice_type.is_supported:
+        if not self.invoice_type.is_corrective:
             raise InvalidInvoiceError("Una rectificativa de la v1 es de clase R1 a R4.")
         if self.phase_type is not None or self.gross_amount is not None:
             raise InvalidInvoiceError("Una rectificativa no es una fase de facturación.")
-        if self.guarantee is not None:
-            raise InvalidInvoiceError("Una rectificativa no lleva garantía.")
-        if not self.reason.strip() or len(self.reason) > MAX_DESCRIPTION_LENGTH:
+        if not self.reason.strip():
             msg = f"El motivo es obligatorio y admite {MAX_DESCRIPTION_LENGTH} caracteres."
             raise InvalidInvoiceError(msg)
         if not self.rectified:
@@ -359,6 +414,17 @@ class CorrectiveInvoice(Invoice):
         substitution = self.correction_type is CorrectionType.SUBSTITUTION
         if any((item.rectified_base is not None) != substitution for item in self.rectified):
             msg = "Solo la rectificativa por sustitución, y siempre, guarda lo rectificado."
+            raise InvalidInvoiceError(msg)
+
+    def _check_issue_rules(self) -> None:
+        _check_common_issue_rules(self)
+        # R5 es de facturas simplificadas, que la v1 no emite.
+        if not self.invoice_type.is_supported:
+            raise InvalidInvoiceError("Una rectificativa de la v1 es de clase R1 a R4.")
+        if self.guarantee is not None:
+            raise InvalidInvoiceError("Una rectificativa no lleva garantía.")
+        if len(self.reason) > MAX_DESCRIPTION_LENGTH:
+            msg = f"El motivo es obligatorio y admite {MAX_DESCRIPTION_LENGTH} caracteres."
             raise InvalidInvoiceError(msg)
 
     @property
@@ -380,16 +446,9 @@ def _sum_optional(amounts: Iterable[Money | None]) -> Money | None:
     return total
 
 
-def _check_common(invoice: Invoice) -> None:
+def _check_structure(invoice: Invoice) -> None:
     if invoice.created_at.tzinfo is None:
         raise InvalidInvoiceError("La fecha de creación debe llevar zona horaria.")
-    if invoice.description is not None and (
-        not invoice.description.strip()
-        or invoice.description != invoice.description.strip()
-        or len(invoice.description) > MAX_DESCRIPTION_LENGTH
-    ):
-        msg = f"La descripción general es texto sin bordes en blanco de {MAX_DESCRIPTION_LENGTH}."
-        raise InvalidInvoiceError(msg)
     if invoice.withholding_rate is not None and (
         invoice.withholding_rate.is_zero() or invoice.withholding_rate.value >= 100  # noqa: PLR2004
     ):
@@ -402,7 +461,30 @@ def _check_common(invoice: Invoice) -> None:
     ):
         msg = "Si la factura sale de un presupuesto, el destinatario y la vivienda están en él."
         raise InvalidInvoiceError(msg)
+
+
+def _check_common_issue_rules(invoice: Invoice) -> None:
+    """Reglas de emisión comunes a facturas y rectificativas (RN-F-06, RN-F-13)."""
+    if invoice.description is not None and (
+        not invoice.description.strip()
+        or invoice.description != invoice.description.strip()
+        or len(invoice.description) > MAX_DESCRIPTION_LENGTH
+    ):
+        msg = f"La descripción general es texto sin bordes en blanco de {MAX_DESCRIPTION_LENGTH}."
+        raise InvalidInvoiceError(msg)
     _check_treatment(invoice)
+
+
+def _check_reconstituted(invoice: Invoice, issued_amounts: IssuedAmounts) -> None:
+    # Un borrador se puede seguir editando, así que se le aplican siempre las
+    # reglas vigentes; solo lo emitido queda fijado tal como se emitió.
+    if not invoice.is_issued:
+        msg = "Solo una factura emitida se lee con sus importes guardados."
+        raise InvalidInvoiceError(msg)
+    differences = issued_amounts.differences(invoice.totals)
+    if differences:
+        msg = "Los importes guardados no cuadran con las líneas: " + ", ".join(differences)
+        raise IssuedAmountsMismatchError(msg)
 
 
 def _check_treatment(invoice: Invoice) -> None:
