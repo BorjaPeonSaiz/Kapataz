@@ -313,3 +313,60 @@ def test_una_rectificativa_ajusta_lo_facturado():
     summary = billing_summary(money("10000.00"), [money("7000.00"), money("-1000.00")])
     assert summary.invoiced_base == money("6000.00")
     assert summary.pending == money("4000.00")
+
+
+@pytest.mark.req("RN-F-13")
+def test_el_iva_que_ingresar_no_se_corta_en_una_fase_que_no_lo_debe():
+    reverse = prior("1000.00", "0.00", 1, treatment=VatTreatment.reverse_charge())
+    general = prior("1000.00", "210.00", 2)
+    reduced = prior("1000.00", "100.00", 3, treatment=REDUCED)
+    extras = extra_vat_on_prior_phases([reverse, general, reduced], GENERAL)
+    assert [extra.prior for extra in extras] == [reduced]
+
+
+@pytest.mark.req("RN-F-12")
+def test_trabajos_quitados_tras_una_linea_sin_precio():
+    unpriced = QuoteLine(
+        id=QuoteLineId(uuid4()),
+        description="Pintura",
+        quantity=Quantity.one(),
+        unit_price=None,
+        price_source=PriceSource.none(),
+    )
+    walls = QuoteLine(
+        id=QuoteLineId(uuid4()),
+        description="Alicatado",
+        quantity=Quantity.one(),
+        unit_price=money("4000.00"),
+        price_source=PriceSource.manual(),
+    )
+    (removed,) = removed_works([unpriced, walls], [])
+    assert removed.quote_line_id == walls.id
+    assert removed.removed_base == money("4000.00")
+
+
+@pytest.mark.req("RN-F-12")
+@pytest.mark.req("RN-F-13")
+def test_el_iva_que_ingresar_tras_rectificar_cuenta_cada_fase_con_sus_datos():
+    # La lista no va en orden: se rectifica la última emitida (la del día 2),
+    # que aquí va en segundo lugar.
+    earlier = prior("1000.00", "100.00", 1, treatment=REDUCED, phase=PhaseType.ADVANCE)
+    later = prior("1000.00", "100.00", 2, treatment=REDUCED)
+    plan = plan_final_phase(
+        realized_lines=[realized("1500.00")],
+        prior_phases=[earlier, later],
+        treatment=GENERAL,
+    )
+    assert isinstance(plan, OverbillingPlan)
+    assert [extra.prior for extra in plan.extra_vat] == [
+        earlier,
+        PriorPhase(
+            invoice_id=later.invoice_id,
+            number=later.number,
+            issue_date=later.issue_date,
+            phase_type=PhaseType.PROGRESS,
+            base=money("500.00"),
+            tax=money("50.00"),
+            treatment=REDUCED,
+        ),
+    ]

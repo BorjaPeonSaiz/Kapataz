@@ -203,3 +203,9 @@ def test_operacion_sujeta_lleva_tipo_y_no_mencion():
 def test_tratamientos_imposibles(operation_class, rate):
     with pytest.raises(InvalidTaxRateError):
         VatTreatment(operation_class, rate)
+
+
+@pytest.mark.req("RF-FA-05")
+def test_tipo_superreducido():
+    assert TaxRate.super_reduced().percent == Decimal(4)
+    assert TaxRate.super_reduced().as_fraction() == Fraction(4, 100)

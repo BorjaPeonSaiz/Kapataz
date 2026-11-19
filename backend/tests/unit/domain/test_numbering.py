@@ -27,7 +27,7 @@ def test_series_por_defecto():
 @pytest.mark.req("RN-F-06")
 @pytest.mark.parametrize("code", ["", "f", "1F", "F-1", "ABCDEFGHIJK", "Ñ"])
 def test_series_no_validas(code):
-    with pytest.raises(InvalidSeriesError):
+    with pytest.raises(InvalidSeriesError, match=r"^Una serie son"):
         Series(code)
 
 
@@ -48,24 +48,38 @@ def test_serie_y_numero_no_pasan_de_60_caracteres():
     long_series = Series("ABCDEFGHIJ")
     ok = DocumentNumber(long_series, 2026, 10**43)
     assert len(str(ok)) == 60
-    with pytest.raises(InvalidDocumentNumberError):
+    with pytest.raises(InvalidDocumentNumberError, match=r"^La serie y el número juntos"):
         DocumentNumber(long_series, 2026, 10**44)
 
 
 @pytest.mark.req("RF-FA-02")
 @pytest.mark.parametrize(
-    ("year", "sequence"),
-    [(1999, 1), (10000, 1), (2026, 0), (2026, -1)],
+    ("year", "sequence", "message"),
+    [
+        (1999, 1, "^Año fuera"),
+        (10000, 1, "^Año fuera"),
+        (2026, 0, "^La secuencia empieza"),
+        (2026, -1, "^La secuencia empieza"),
+    ],
 )
-def test_numeros_fuera_de_rango(year, sequence):
-    with pytest.raises(InvalidDocumentNumberError):
+def test_numeros_fuera_de_rango(year, sequence, message):
+    with pytest.raises(InvalidDocumentNumberError, match=message):
         DocumentNumber(Series("F"), year, sequence)
 
 
 @pytest.mark.req("RF-FA-02")
-@pytest.mark.parametrize("raw", ["F-2026-1", "F-2026-00001", "F2026-0001", "f-2026-0001", ""])
-def test_numeros_no_normalizados(raw):
-    with pytest.raises(InvalidDocumentNumberError):
+@pytest.mark.parametrize(
+    ("raw", "message"),
+    [
+        ("F-2026-1", "^Número de documento no válido"),
+        ("F-2026-00001", "^Número de documento no normalizado"),
+        ("F2026-0001", "^Número de documento no válido"),
+        ("f-2026-0001", "^Número de documento no válido"),
+        ("", "^Número de documento no válido"),
+    ],
+)
+def test_numeros_no_normalizados(raw, message):
+    with pytest.raises(InvalidDocumentNumberError, match=message):
         DocumentNumber.parse(raw)
 
 
@@ -81,7 +95,7 @@ def test_siguiente_numero_sin_huecos():
 @pytest.mark.req("RN-F-01")
 @pytest.mark.parametrize("last", ["R-2026-0003", "F-2025-0003"])
 def test_el_contador_es_por_serie_y_anio(last):
-    with pytest.raises(InvalidDocumentNumberError):
+    with pytest.raises(InvalidDocumentNumberError, match=r"^El último número"):
         next_number(Series.invoices(), 2026, DocumentNumber.parse(last))
 
 
@@ -102,3 +116,10 @@ def test_fecha_igual_o_posterior_a_la_ultima():
 def test_fecha_anterior_a_la_ultima_se_rechaza():
     with pytest.raises(IssueDateBeforeLastError, match="2026-02-28"):
         check_issue_date(date(2026, 2, 28), date(2026, 3, 1))
+
+
+@pytest.mark.req("RF-FA-02")
+@pytest.mark.parametrize("year", [2000, 9999])
+def test_anios_en_el_borde_del_rango(year):
+    number = DocumentNumber(Series.invoices(), year, 1)
+    assert DocumentNumber.parse(str(number)) == number

@@ -273,3 +273,39 @@ def test_importes_del_presupuesto_por_encima_del_maximo():
     other = quote_line("20000000.00", "1")
     with pytest.raises(InvalidAmountError):
         version(1, big, other)
+
+
+@pytest.mark.req("RN-07")
+def test_con_tres_muestras_ya_se_propone_precio():
+    source = PriceSource(kind=PriceSourceKind.HISTORY_MEDIAN, sample_count=3)
+    assert source.sample_count == 3
+
+
+@pytest.mark.req("RN-06")
+def test_precio_puesto_a_mano():
+    assert PriceSource.manual().kind is PriceSourceKind.MANUAL
+    assert PriceSource.none().kind is PriceSourceKind.NONE
+
+
+@pytest.mark.req("RF-PR-04")
+def test_descripcion_de_linea_de_presupuesto_de_1000_caracteres():
+    assert len(quote_line(description="x" * 1000).description) == 1000
+    with pytest.raises(InvalidQuoteError):
+        quote_line(description="x" * 1001)
+
+
+@pytest.mark.req("RF-FA-03")
+@pytest.mark.req("RN-F-13")
+def test_lo_que_va_fuera_de_la_obra_sigue_fuera_en_la_factura():
+    assert quote_line("600.00", outside_works=True).to_invoice_line().outside_works is True
+    assert quote_line("600.00").to_invoice_line().outside_works is False
+
+
+@pytest.mark.req("RF-PR-04")
+def test_editar_el_borrador_de_una_segunda_version_conserva_la_primera():
+    second = quote(QuoteStatus.SENT).revise(version(2))
+    first = second.versions[0]
+    edited = second.revise(version(2, quote_line("50.00")))
+    assert [v.version for v in edited.versions] == [1, 2]
+    assert edited.versions[0] == first
+    assert edited.current_version.base == money("150.00")
