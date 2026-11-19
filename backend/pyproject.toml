@@ -226,6 +226,19 @@ markers = [
     "slow: prueba lenta.",
 ]
 
+# ---------------------------------------------------------------- mutmut
+
+# Mutación sobre domain/billing (ADR-009, ADR-033; objetivo >= 80 %). Corre a
+# mano en GitHub Actions (.github/workflows/mutacion.yml). mutmut 3 no funciona
+# en Windows nativo: en local, con WSL o Docker. Se copia todo src/ para que el
+# paquete se importe entero desde mutants/, pero solo se muta billing.
+[tool.mutmut]
+source_paths = ["src/"]
+only_mutate = ["src/kapataz/domain/billing/*"]
+pytest_add_cli_args_test_selection = ["tests/unit/domain/"]
+
+# ---------------------------------------------------------------- coverage
+
 [tool.coverage.run]
 source = ["kapataz"]
 branch = true

@@ -5,6 +5,16 @@ from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
+from kapataz.application.ports.repositories import (
+    BillingChainRepository,
+    CatalogRepository,
+    CustomerRepository,
+    InvoiceRepository,
+    PaymentRepository,
+    ProfessionalRepository,
+    QuoteRepository,
+    SeriesCounterRepository,
+)
 from kapataz.domain.accounts.email_address import EmailAddress
 from kapataz.domain.accounts.model import (
     EmailVerification,
@@ -57,10 +67,38 @@ class AccountRepository(Protocol):
 
 
 class UnitOfWork(Protocol):
-    """Una transacción. Sin ``commit()`` explícito, todo se deshace al salir."""
+    """Una transacción. Sin ``commit()`` explícito, todo se deshace al salir.
+
+    Los repositorios de negocio trabajan en la cuenta fijada con ``set_tenant``
+    (``repositories``).
+    """
 
     @property
     def accounts(self) -> AccountRepository: ...
+
+    @property
+    def professional(self) -> ProfessionalRepository: ...
+
+    @property
+    def customers(self) -> CustomerRepository: ...
+
+    @property
+    def catalog(self) -> CatalogRepository: ...
+
+    @property
+    def quotes(self) -> QuoteRepository: ...
+
+    @property
+    def invoices(self) -> InvoiceRepository: ...
+
+    @property
+    def payments(self) -> PaymentRepository: ...
+
+    @property
+    def series_counters(self) -> SeriesCounterRepository: ...
+
+    @property
+    def billing_chain(self) -> BillingChainRepository: ...
 
     async def set_tenant(self, tenant_id: TenantId) -> None:
         """Fija la cuenta solo para esta transacción (``SET LOCAL``, ADR-024)."""

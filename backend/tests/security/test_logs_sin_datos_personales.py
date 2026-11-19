@@ -1,15 +1,12 @@
 """Los logs no llevan emails, contraseñas ni tokens (ADR-015, RNF-01)."""
 
-import io
 import json
-import logging
 
 import pytest
 
 from kapataz.api.cookies import SESSION_COOKIE
 from kapataz.infrastructure.logging.setup import (
     REDACTED,
-    configure_logging,
     mask_personal_data,
     mask_text,
 )
@@ -18,18 +15,6 @@ from tests.support import STRONG_PASSWORD, harness
 # A09 en todo el módulo (plan de verificación, Fase 7). RNF-01 en las que comprueban que no
 # quedan datos personales (ADR-015); las otras dos comprueban qué sí debe quedar en el log.
 pytestmark = pytest.mark.owasp("A09")
-
-
-@pytest.fixture
-def captured_logs():
-    configure_logging()
-    stream = io.StringIO()
-    root = logging.getLogger()
-    [handler] = root.handlers
-    assert isinstance(handler, logging.StreamHandler)
-    handler.setStream(stream)
-    yield stream
-    root.handlers = []
 
 
 @pytest.mark.req("RNF-01")

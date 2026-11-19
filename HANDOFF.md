@@ -4,34 +4,44 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 
 ## Estado y objetivo actual
 
-- **Bloque 0:** cerrado. PR #3 integrado en `main` el 12/11/2026 (commit `12e5edb`).
-- **Bloque en curso:** 1 — Esqueleto ejecutable, en la rama `bloque-01-esqueleto`.
-  - **PR:** el #4, abierto el 17/11/2026 (commit `e1f22a5`).
-  - **`main`:** protegida desde el 17/11/2026, con el check `ci` obligatorio, la rama al día, conversaciones resueltas y también para administradores; sin force push.
-  - **Para integrar faltan:** el CI en verde en GitHub y la prueba con un móvil real, que es la excepción aprobada por Borja y anotada en el PR.
-- **Demo de portafolio y sin despliegue hasta el Bloque 12** (Borja, 17/11/2026; plan maestro §1.5, ADR-014 modificado):
-  - Todo se construye y se prueba en local. El primer despliegue en `kapataz.kodigolab.es` se hace en el Bloque 12, y después la Parte II en producción.
-  - La 1.0.0 es la demo que supera la Parte II. Publicarla no abre el registro: RN-13 lo mantiene cerrado mientras quede algún pendiente legal (escenario renombrado a «Registro cerrado con pendientes legales»).
-  - Los pendientes legales están listados en §1.5 y en «Pendientes legales (demo)», más abajo. No bloquean ningún bloque.
-  - Actualizados el plan maestro (§1.5, RN-13 y Bloques 1, 10 y 12), la especificación, ADR-014 y ADR-012, 016, 020, 025 y 031, el índice de ADR, el modelo de amenazas (S-08), el plan de verificación, `despliegue.md`, los agentes `plataforma-entrega` y `qa-testing`, dos docstrings de RN-13 en `domain/accounts` y un comentario de `deploy/deploy.sh`.
-- **Hecho en el Bloque 1:**
-  - **Backend:** FastAPI 0.162.5 y uvicorn 0.54.0, con las cuatro capas e import-linter. Incluye cuentas, sesiones en cookie y CSRF firmado, registro cerrado por defecto con lista de emails (RN-13), verificación de email, chat SSE con `FakeLlm`, cabeceras de seguridad y HSTS, migración inicial con RLS en `tenants` y roles `kapataz_owner` y `kapataz_app`, CLI `kapataz-admin create-user` y contrato en `docs/api/openapi.json`.
-  - **Pruebas del backend:** 174, también con PostgreSQL real.
-  - **`backend/tools/traceability.py`:** con `--check` en CI; `--strict` queda para la Parte II.
-  - **Frontend:** Vue 3, Vite y Tailwind con los tokens de kodigolab.es, componentes base, acceso, verificación de email y chat SSE, y cliente generado desde OpenAPI. 35 pruebas; JS inicial de 63,5 KB gzip. Manifiesto PWA estático, sin service worker hasta el Bloque 10.
-  - **Plataforma:**
-    - `Dockerfile` sin root y fijado por digest;
-    - `docker-compose.yml` con `kapataz`, `kapataz-worker` y `kapataz-db`, y las redes `kapataz-internal` (sin salida), `kapataz-egress` y `kronoqr-app` (solo `kapataz`);
-    - `docker-compose.local.yml`;
-    - scripts de `deploy/` (despliegue, vuelta atrás y copia cifrada con age);
-    - `docs/operacion/despliegue.md`, con el bloque de nginx para el administrador;
-    - `.github/workflows/ci.yml`: acciones por SHA, herramientas por digest y un job final `ci`.
-  - ADR-022 cerrado.
-- **Decisiones del día sobre el despliegue** (Borja, 12/11/2026; en ADR-014 y en el resto de documentos):
-  - sin Caddy, detrás del nginx de KronoQR;
-  - sin staging: solo local y producción en `https://kapataz.kodigolab.es`;
-  - el servicio `kapataz` escucha en `0.0.0.0:8000`;
-  - HSTS y cabeceras de seguridad en la app.
+- **Bloques 0 y 1:** cerrados. PR #3 integrado el 12/11/2026 (`12e5edb`) y PR #4 el 17/11/2026 (`c4a95c0`). La prueba del Bloque 1 con un móvil real queda pendiente como excepción aprobada (ver «Pendiente»).
+- **Bloque en curso:** 2 — Dominio y persistencia, en la rama `bloque-02-dominio` (plan maestro, §Bloque 2).
+- **`main`:** protegida desde el 17/11/2026, con el check `ci` obligatorio, la rama al día, conversaciones resueltas y también para administradores; sin force push.
+- **Demo de portafolio y sin despliegue hasta el Bloque 12** (Borja, 17/11/2026; plan maestro §1.5, ADR-014): todo se construye y se prueba en local. La 1.0.0 es la demo que supera la Parte II, y publicarla no abre el registro mientras quede algún pendiente legal (RN-13).
+- **Decisiones de Borja del 18/11/2026:**
+  - `billing_chain_heads` guarda solo el enlace al último registro (`last_record_id`, nulo con la cadena vacía), con la clave foránea compuesta `(tenant_id, last_record_id)`. Recogido en §4.5 del plan y en la arquitectura §5.2.
+  - La cuenta no lleva el email como nombre: `tenants.name` admite nulos y se rellena con los datos del profesional.
+  - La factura guarda una copia de nombre, NIF y domicilio del emisor y del destinatario (§4.5 y arquitectura §5.2).
+  - La huella del `BillingRecord` sigue desde ya el algoritmo oficial de la AEAT (especificación v0.1.2; ADR-012 modificado).
+  - ADR-009 recoge el cálculo con `Fraction` y un solo redondeo, y el tope de `Money` (21.474.836,47 €), comprobado al crear el borrador.
+  - RN-F-06 exige el domicilio del emisor y del destinatario (art. 6 del RD 1619/2012), en el plan y en la especificación.
+  - Las dudas fiscales del cálculo quedan provisionales y van a la lista del asesor (más abajo).
+- **Hecho en el Bloque 2:**
+  - F-05 y M-03 de las revisiones del Bloque 1: fábrica común `add_account` para el registro y la cortesía, migración `0002_nombre_de_cuenta` (vacía los nombres existentes) y prueba A09 con un error de base de datos forzado contra PostgreSQL.
+  - El fixture `captured_logs` pasa a `tests/conftest.py`.
+  - **Dominio puro** (`arquitecto-python`; commit de la fase 2):
+    - objetos de valor, `TaxId` con dígito de control, clientes, catálogo, presupuestos con versiones, facturas, rectificativas, cobros y `BillingRecord` con la huella oficial (los tres ejemplos de la AEAT como pruebas);
+    - cálculo de importes, IVA de la obra, regla del 40 %, fases y rectificativa por exceso, en `domain/billing`.
+  - **Pruebas de propiedades** (`qa-testing`): `test_totales_propiedades.py` y `test_fases_propiedades.py`, con un perfil de hypothesis `ci` (200 ejemplos, se activa con `CI`) y otro `exhaustivo` para lanzarlo a mano.
+  - **Persistencia** (`backend-fastapi`; commit de la fase 3):
+    - migración `0003_facturacion` con 13 tablas, RLS en todas, FK compuestas `(tenant_id, …)`, céntimos `INTEGER` con un único conversor (`persistence/money.py`) y permisos mínimos;
+    - triggers `KZF02` (factura emitida, sus líneas y correcciones inmutables) y `KZF07` (registros solo actualizables en las columnas de envío; la cabeza solo avanza al registro siguiente; `UNIQUE (tenant_id, previous_record_id) NULLS NOT DISTINCT` impide bifurcar la cadena);
+    - repositorios, unidad de trabajo ampliada, `Professional` en `domain/settings` e `IssueInvoice` (factura → cabeza → contador, en una transacción) con `NullBillingRecordSubmission`;
+    - datos de partida para pruebas en `tests/billing_support.py` y fixtures en `tests/integration/persistence/conftest.py`.
+  - **Concurrencia, inmutabilidad y aislamiento** (`qa-testing`; commit de la fase 4):
+    - 20 emisiones en procesos separados (`spawn` y barrera) con una y con tres cuentas, F y R a la vez, la misma factura desde 10 procesos y relojes desfasados para RN-F-04; 10 de 10 repeticiones con cada configuración de roles;
+    - inmutabilidad columna a columna con los dos roles;
+    - recorrido del catálogo: toda tabla fuera de la lista cerrada tiene RLS y la política `tenant_isolation`, y toda FK entre tablas de negocio es compuesta. Una tabla de negocio nueva también hay que añadirla a `_seed_every_table`.
+  - **Cierre (fase 4):** `TRUNCATE` rechazado también en `series_counters`, `billing_chain_heads` y `payments` (Borja, 19/11/2026; migración 0003, aún sin integrar). §4.5, la arquitectura §5.2 y las rutas de ADR-012 recogen lo construido.
+  - **Correcciones de las revisiones de cierre** (aprobadas por Borja el 19/11/2026; commit de la fase 5):
+    - S2-01: las funciones de la migración 0003 fijan `search_path` y nombran sus tablas con esquema; TEMPORARY retirado a PUBLIC y a `kapataz_app` (la migración falla si no lo consigue);
+    - S2-02: la base de datos ata la emisión al contador y a la cadena (solo se inserta en borrador; el contador sube de uno en uno con su factura emitida; el alta coincide con emisor, número y fecha; un solo alta por factura; las rectificadas y fases anteriores citadas están emitidas); SQLSTATE nuevos KZF00, KZF01, KZF03, KZF04 y KZF12;
+    - S2-04/I-02/I-01: la factura que sale de un presupuesto copia al emitir el destinatario y la vivienda y se le aplica RN-F-13; reglas del destinatario solo en `works_vat`; CHECK `ck_invoices_works_recipient`;
+    - M-10: TRUNCATE con código neutro KZF00; I-03 e I-06 documentados en ADR-009, ADR-012 y la arquitectura §7;
+    - I-05: cada puerto de §4.3 llega con el bloque que lo usa; ADR-017 se cierra en el Bloque 4;
+    - CI: cobertura de `domain/` ≥ 90 %, regla de Semgrep contra `float` en `domain/billing` (`.semgrep/`) y `mutacion.yml` manual.
+  - Segunda revisión de `seguridad-ia`: sin bloqueantes.
+  - 787 pruebas con PostgreSQL y cobertura de `domain/` del 100 %.
 
 ### Bloque 0 (histórico)
 
@@ -64,23 +74,9 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 
 ## Siguiente acción
 
-1. **CI del PR #4:** en verde a la primera el 17/11/2026, en los ocho jobs. Hay que volver a pasarlo con cada commit nuevo.
-2. **Comprobar el criterio de terminado con el móvil:** iniciar sesión en `https://<IP>:8443` desde un móvil real y comprobar que el chat responde con `FakeLlm`.
-   - Para arrancar: `sh deploy/local-up.sh --https <IP>`; la guía es `docs/operacion/https-local.md`.
-   - Anotar en el PR el móvil, el navegador y el resultado, y marcar la casilla de mkcert del Bloque 1 en el plan maestro.
-   - **Estado a 17/11/2026:**
-     - En el portátil funciona: mkcert instalado, certificado generado y `https://192.168.4.37:8443` responde con un certificado de confianza.
-     - **Desde el móvil no abre.** Borja lo deja para más adelante.
-   - **Diagnóstico:**
-     - el cortafuegos activo es el de **Bitdefender**, que sustituye al de Windows (la regla de Windows para el 8443 existe, pero no sirve);
-     - se intentó una regla de Bitdefender para `com.docker.backend.exe` con el puerto local 8443, sin éxito.
-   - **Por revisar al retomar:**
-     - el tipo de red de la Ethernet en Bitdefender (Hogar/Oficina) y el modo oculto;
-     - que el móvil esté en la misma red (`192.168.4.0/22`) y no en una red de invitados;
-     - el error exacto que da el móvil: tiempo agotado o certificado;
-     - probar desactivando un momento el cortafuegos de Bitdefender para confirmar que es él.
-   - El portátil también tiene la Wi-Fi conectada, con la IP `192.168.4.33`.
-3. **Integrar el PR #4** cuando se cumplan los puntos 1 y 2, con el visto bueno de Borja. Después, empezar el Bloque 2 (dominio y persistencia) en la rama `bloque-02-dominio`, creada desde `main`.
+1. Borja revisa e integra el PR #5 del Bloque 2 (abierto el 19/11/2026, CI en verde).
+2. Después, lanzar `mutacion.yml` sobre la rama para tener la cifra de referencia (no bloquea el Bloque 2).
+3. Bloque 3 del plan maestro.
 
 ## Pendiente
 
@@ -108,6 +104,12 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
   - la clave es `ANTHROPIC_API_KEY`, no `OPENAI_API_KEY`;
   - hasta la 1.0.0 las imágenes se etiquetan por commit, no `0.1.0` (ADR-032);
   - solo el servicio `kapataz` entra en `kronoqr-app`, y la base de datos queda en una red interna.
+
+### Prueba del Bloque 1 con un móvil real (excepción aprobada)
+
+- Iniciar sesión en `https://<IP>:8443` desde un móvil real y comprobar que el chat responde con `FakeLlm` (`sh deploy/local-up.sh --https <IP>`; guía en `docs/operacion/https-local.md`). Anotar móvil, navegador y resultado, y marcar la casilla de mkcert del Bloque 1 en el plan maestro.
+- En el portátil funciona (`https://192.168.4.37:8443`); desde el móvil no abre. El cortafuegos activo es el de Bitdefender, que sustituye al de Windows, y la regla para `com.docker.backend.exe` con el puerto 8443 no bastó.
+- Por revisar: tipo de red de la Ethernet en Bitdefender (Hogar/Oficina) y modo oculto; que el móvil esté en `192.168.4.0/22` y no en una red de invitados; el error exacto del móvil; probar con el cortafuegos desactivado un momento. El portátil también tiene la Wi-Fi conectada (`192.168.4.33`).
 
 ### Pendiente técnico del Bloque 1
 
@@ -142,7 +144,6 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
   - F-06: `vue/no-v-html` es error y el lint falla con avisos.
 
   Pendientes:
-  - **antes del Bloque 2 (F-05):** igualar la longitud de `tenants.name` con la del email, o no usar el email como nombre de la cuenta, y probar `test_a09` con un error de base de datos forzado;
   - **Bloque 4 o 10 (F-03):** el registro enumera cuentas por el tiempo de respuesta, porque el SMTP es síncrono y solo se envía si el email es nuevo; y con el registro cerrado, el 403 revela la lista de emails habilitados. O se aplica la solución, o Borja acepta el riesgo;
   - **Bloque 10, antes del Bloque 12:**
     - F-02: secuestro previo de cuenta; guardar el hash de la contraseña en `email_verifications` y aplicarlo al verificar;
@@ -162,7 +163,6 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
   - M-07: `access_log off` en el bloque de nginx de producción.
 
   Pendientes:
-  - M-03: la creación de `Tenant` y `User` está duplicada en `register_account` y `create_courtesy_account`; sacar una función de fábrica antes de las cuentas de demostración;
   - M-04: los mensajes repiten constantes (`MIN_PASSWORD_LENGTH`, 4000); `InvalidChatMessageError` está en `application`, pero hereda de `DomainError`;
   - M-05: `FakeLlm` y `FakeEmail` acumulan mensajes y tokens en memoria en la app real; la captura debería existir solo en las pruebas;
   - M-06: el CI no comprueba que `schema.d.ts` esté al día, y `problem.ts` no cubre todos los tipos de error del backend;
@@ -176,9 +176,66 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 - **npm:** 14 vulnerabilidades moderadas en herramientas de desarrollo (`minimatch` y `glob`), sin arreglo compatible. Ninguna alta, ninguna en producción.
 - **Restos del build:** `backend/src/kapataz/static/` tiene restos del build del frontend. La carpeta está en `.gitignore`, pero conviene vaciarla; el comprobador de seguridad impidió a un agente borrarlos.
 
+### Huecos de la persistencia del Bloque 2 (`backend-fastapi`, 18/11/2026)
+
+- **Lectura de facturas emitidas** (resuelto el 19/11/2026: se leen con sus importes guardados, sin reglas de emisión; `IssuedAmountsMismatchError` si no cuadran). Queda:
+  - los objetos de valor se siguen validando al leer (`TaxRate`, longitudes de líneas, partes, número y `SystemInfo`, dígito de control del NIF; `BillingRecord` se reconstruye con su constructor): endurecerlos rompería la lectura de lo emitido;
+  - si cambia el cálculo de importes (ADR-009), las emitidas dejarán de cargarse; antes hará falta un ADR que haga de los importes guardados la fuente de verdad;
+  - Bloque 8: un borrador que incumpla una regla endurecida no se puede abrir; leerlo e informar de qué incumple;
+  - revisar si `quote_repository.py` tiene el mismo patrón con las versiones de presupuesto enviadas.
+- **Bloque 8:**
+  - conectar `IssueInvoice` a `bootstrap` con `SystemInfo` configurable (NIF de KodigoLab y número de instalación);
+  - actualizar el estado del presupuesto al emitir;
+  - traducir en la API los SQLSTATE de la migración 0003: `KZF00` (TRUNCATE), `KZF01` (numeración), `KZF02` (emitida inmutable), `KZF03` (rectificada no emitida), `KZF04` (fecha del contador que retrocede), `KZF07` (cadena) y `KZF12` (fase anterior no emitida);
+  - una sola emisión por transacción: el trigger diferido exige `contador = número`; si un caso de uso emite dos facturas de la misma serie juntas (reparto 10 %/21 % de RN-F-13), habrá que pasar a `last_number >= number` (igual de seguro, porque el contador ya liga cada número a su factura); requiere aprobación;
+  - decidir si `payments.invoice_id` solo admite facturas emitidas (¿se cobra un anticipo antes de emitir?);
+  - corregir un cobro mal apuntado (hoy `payments` no admite UPDATE ni DELETE).
+- **RF-FA-08:** la emisión aún no escribe en `audit_events` (tabla de otro bloque).
+- **Espacio de demostración (RN-13):** los triggers impiden borrar sus facturas emitidas; la función de mantenimiento necesitará una excepción controlada.
+- **Pruebas:** `tests/integration/test_rls.py::test_toda_tabla_sin_rls_esta_en_la_lista_cerrada` queda cubierta por la prueba nueva del catálogo; se puede retirar.
+- **Zona horaria:** la fecha de expedición es la de hoy en Europe/Madrid. En Windows, `zoneinfo` depende del paquete `tzdata`, que solo llega como dependencia de desarrollo; la imagen trae el tzdata del sistema. Valorar declararlo como dependencia de la app.
+
+### Hallazgos de las revisiones de cierre del Bloque 2 que no entran en su PR (19/11/2026)
+
+Corregidos en el PR: S2-01, S2-02, S2-04/I-02/I-01, M-10, M-12 (dentro de S2-02), I-03, I-04, I-05, I-06.
+
+- **Bloque 8 (`seguridad-ia`):**
+  - S2-03: el `DETAIL` de los errores de PostgreSQL puede llevar nombres, NIF y domicilios a los logs; corregir antes de los endpoints que escriben clientes o facturas (falta confirmar si el `DETAIL` viaja en la excepción registrada);
+  - S2-05: se puede construir a mano una `Invoice` «emitida» sin pasar por `issue`;
+  - S2-09: el filtro de logs no reconoce los NIF que empiezan por K, L o M.
+- **Bloque 12 (`seguridad-ia`):**
+  - S2-06: `billing_records` no comprueba que sus columnas coinciden con el contenido de la huella; la base de datos tampoco comprueba la huella ni la fecha real de emisión, así que un rol de app comprometido aún puede montar por SQL una emisión coherente con datos falsos (ya sin huecos, duplicados, retrocesos ni bifurcaciones);
+  - S2-10: la vuelta atrás de la migración 0003 borraría facturas; bloquearla con datos fiscales.
+- **Segunda revisión de seguridad del cierre (19/11/2026), menores que no entran en el PR:**
+  - RN-F-04 entre años: con SQL directo se puede abrir el contador de un año anterior con una fecha anterior a la última emitida de la serie, o emitir con fecha futura (el dominio sí lo impide); exigir en `series_counters_advance` el máximo de la serie en todos los años y un margen sobre `current_date`;
+  - la base de datos no comprueba que el tipo de IVA encaje con el destinatario ni que la copia coincida con la versión del presupuesto (consultar al asesor antes de fijar la regla en la base de datos); `quote_versions` no tiene el CHECK de la vivienda;
+  - Bloque 8: una rectificativa sin presupuesto toma el destinatario de quien la crea; atarla al de la factura rectificada;
+  - la vuelta atrás de 0003 borra con DROP las tablas fiscales (ver S2-10); las pruebas necesitan una vía de escape;
+  - `search_path` podría ser `pg_catalog, pg_temp`;
+  - `.semgrep/` y `.github/` sin CODEOWNERS; la regla no detecta float implícito (división entre enteros);
+  - confirmar que `source_paths` y `only_mutate` son claves válidas de mutmut 3.8.1.
+- **Asesor fiscal:** S2-07 (que las rectificativas vayan obligatoriamente en su propia serie) y S2-08 (cambio de NIF del profesional con facturas emitidas).
+- **Revisión de código (`revisor-codigo`), antes o durante el Bloque 8:**
+  - I-07: las comprobaciones de RN-F-06 están en cuatro sitios (`missing_issue_data`, `issue`, `party.py`, `_parties` de `IssueInvoice`); la pantalla de confirmación y la emisión deben dar la misma lista;
+  - M-01: `check_issue_date` se llama dos veces;
+  - M-02: validaciones de texto copiadas (nombre de 120, texto sin bordes) en clientes, partes, profesional, líneas y presupuesto;
+  - M-04: `works_vat` copia el redondeo de `Money.round` para el porcentaje de material;
+  - M-05: lenguaje ubicuo (`BillingPhase` del glosario frente a `PhaseType`; `AdditionalWork` no existe como tipo); el glosario lo aprueba Borja;
+  - M-06: marcadores `req` mal asignados (`test_repositorios.py`, `test_tax_id_and_customers.py`, `test_issue_invoice.py`);
+  - M-07: higiene de pruebas (prueba de `NullBillingRecordSubmission` fuera de sitio; los campos obligatorios del XSD viven en el código que se prueba);
+  - M-08: el doble en memoria se aparta del real (excepciones, `mark_issued`, orden de cobros, rectificadas en `add_draft`);
+  - M-09: la arquitectura §7 y los comentarios de `issue_invoice.py` no describen el orden real de bloqueos ni `bootstrap`;
+  - M-11: `_locked_head` es poco legible;
+  - M-13: código sobrante y mensajes que repiten lo obvio.
+- **Mutación (`plataforma-entrega`, 19/11/2026):** primera pasada de mutmut 3.8.1 sobre `domain/billing`: 76,3 % (2392 mutantes, 566 supervivientes; sobre todo `invoice`, `billing_record` y `quote`). El umbral del 80 % es de la Fase 3 del plan de verificación y de ADR-033 (Bloque 8), no del Bloque 2: `qa-testing` debe subirla antes. El job `mutacion.yml` es manual y falla por debajo del 80 %. mutmut entra con `uv run --with` sin hash: añadirlo al grupo `dev` y al lock (ADR-022).
+
 ### Por decidir en su bloque
 
-- **Bloque 2:** columnas de `billing_chain_heads` (enlace al último registro o copia de sus datos de encadenamiento).
+- **Bloque 12, contraste con los esquemas de la AEAT** (interpretaciones provisionales del Bloque 2 en `billing_record.py`):
+  - con inversión del sujeto pasivo (S2), `TipoImpositivo` y `CuotaRepercutida` van a `0.00`;
+  - `RechazoPrevio` se trata como S/N (la AEAT admite también X) y `SinRegistroPrevio` siempre es N;
+  - `FechaHoraHusoGenRegistro` se genera en UTC (`+00:00`).
+
 - **Bloque 4 (ADR-026):** las tablas de la cola (`procrastinate`) no tienen RLS ni están en la lista cerrada de tablas globales. Hay que meterlas en la lista o limitar la prueba al esquema de la aplicación.
 - **Bloque 6 (ADR-028):** límite de uso de IA para las cuentas de cortesía y de demostración.
 - **Bloque 8:** vivienda alquilada en `recipient_type`, según el RDL 29/2026 (depende del asesor).
@@ -207,6 +264,12 @@ Están listados en el plan maestro, §1.5. No bloquean ningún bloque ni la 1.0.
 Son el detalle de los pendientes legales. No bloquean los bloques de la demo.
 
 - **Asesor fiscal:** reglas de IVA de la facturación por fases (ADR-033, Bloque 8), aplazamiento de VERI*FACTU para el productor, importe total del registro y validación final (Bloque 12).
+  - **Interpretaciones provisionales del Bloque 2** (aisladas en `domain/billing`; aprobadas por Borja el 18/11/2026 a la espera del asesor):
+    - base del 40 % de material: solo las líneas de la obra, sin lo que va fuera de ella ni las restas de fases (`works_vat.material_share`);
+    - si las fases que hay que rectificar van a tipos de IVA distintos, una rectificativa por tipo (`phases.plan_final_phase`); el plan habla de «una rectificativa»;
+    - sin decidir: anticipo y certificaciones al 21 % y final al 10 %; hoy el dominio no lo resuelve, decide quien llama;
+    - anticipo cobrado con retención de IRPF: el importe cobrado se trata como el total con IVA (`calculation.totals_from_gross`).
+  - **Fecha de expedición en Europe/Madrid** (`issue_invoice.FISCAL_TIMEZONE`, ADR-012): en Canarias solo cambiaría la fecha entre las 23:00 y las 00:00 de allí; confirmar con el asesor.
 - **Abogado:** condiciones de uso, contrato de encargo, política de privacidad, aviso de IA y plazos de conservación (antes de producción, Bloque 10). Comprobar también la lista oficial del Marco de Privacidad.
 - **Proveedores de envío VERI*FACTU:** elección del proveedor y autorización de cada cliente (Bloque 12).
 - **Anthropic:** retención cero, canal de aviso de subencargados e información para la evaluación de la transferencia (antes de usar datos reales, ADR-029). Revisar a mano la lista de subencargados, que no se pudo leer automáticamente.

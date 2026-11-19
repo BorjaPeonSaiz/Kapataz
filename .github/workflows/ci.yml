@@ -172,10 +172,12 @@ jobs:
           --skip-dirs /src/backend/.venv --skip-dirs /src/frontend/node_modules
           --no-progress --skip-version-check /src
       - name: Semgrep
-        # Reglas de la comunidad; solo bloquean las de severidad ERROR.
+        # Reglas de la comunidad y las propias de .semgrep/ (p. ej., nada de
+        # float en domain/billing, ADR-009); solo bloquean las de severidad ERROR.
         run: >-
           docker run --rm -v "$PWD:/src" -w /src "$SEMGREP_IMAGE"
           semgrep scan --metrics=off --error --severity ERROR
+          --config .semgrep/
           --config p/python --config p/fastapi
           --config p/typescript --config p/javascript
           --config p/dockerfile --config p/github-actions --config p/secrets
@@ -244,9 +246,16 @@ jobs:
       - name: Dependencias (uv sync --locked)
         working-directory: backend
         run: uv sync --locked
-      - name: pytest (sin evaluaciones con la API real)
+      - name: pytest (sin evaluaciones con la API real) con cobertura
+        # Mide todo kapataz (fuente en [tool.coverage.run]); el umbral se aplica
+        # aparte, por capa.
         working-directory: backend
-        run: uv run --frozen pytest -m "not llm"
+        run: uv run --frozen pytest -m "not llm" --cov --cov-report=
+      - name: Cobertura de kapataz.domain >= 90 % (ADR-033)
+        working-directory: backend
+        run: >-
+          uv run --frozen coverage report
+          --include='src/kapataz/domain/*' --fail-under=90
       - name: Trazabilidad
         working-directory: backend
         run: uv run --frozen python tools/traceability.py --check

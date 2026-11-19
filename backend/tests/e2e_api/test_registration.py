@@ -4,6 +4,7 @@ from datetime import timedelta
 
 import pytest
 
+from tests.fakes.memory_uow import MemoryUnitOfWorkFactory
 from tests.support import STRONG_PASSWORD, harness, make_settings
 
 
@@ -141,3 +142,18 @@ def test_enlace_inventado_no_verifica():
         response = h.post("/api/auth/verify-email", {"token": "inventado"})
 
     assert response.status_code == 400
+
+
+# Un email válido de 250 caracteres: antes se copiaba en tenants.name, de 200 (F-05).
+LONG_EMAIL = "a" * 64 + "@" + ("b" * 60 + ".") * 3 + "es"
+
+
+@pytest.mark.req("RF-AC-01")
+@pytest.mark.req("RNF-01")
+def test_la_cuenta_no_copia_el_email_en_su_nombre():
+    factory = MemoryUnitOfWorkFactory()
+    with harness(uow_factory=factory) as h:
+        h.register_and_verify(LONG_EMAIL)
+
+    [tenant] = factory.state.tenants.values()
+    assert tenant.name is None

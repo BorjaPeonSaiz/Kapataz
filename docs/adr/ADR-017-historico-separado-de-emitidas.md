@@ -2,9 +2,10 @@
 
 - **Estado:** Aceptado
 - **Fecha:** 2026-11-12
+- **Modificado:** 2026-11-19. Borja aprueba que el cierre pase al Bloque 4, que es el que crea el histórico; el Bloque 2 verifica el lado de las facturas emitidas.
 - **Decide:** arquitecto-python (aprueba: Borja)
 - **Requisitos relacionados:** RF-IN-06, RF-IN-08, RF-IN-09, RF-CO-02, RF-CO-03, RF-CO-04, RN-07, RN-08, RN-F-01, RN-F-02, RN-F-07, RN-F-08, RN-F-13
-- **Se cierra en:** Bloque 2
+- **Se cierra en:** Bloque 4
 
 ## Contexto
 
@@ -39,7 +40,7 @@ Opción 1.
 - Las consultas agregadas combinan las dos fuentes en un único módulo de persistencia. Cada resultado lleva su origen (emitida por la app o histórico) y el enlace a su documento.
 - Las dos fuentes comparten objetos de valor del dominio (`LineItem`, `Money`), no tablas.
 
-El Bloque 2 cierra este ADR con las migraciones y las pruebas.
+El Bloque 2 fija el lado de las facturas emitidas: la serie y la cadena no se enlazan con ninguna tabla ajena. El Bloque 4, que crea `historical_invoices` y `historical_lines` al aprobar extracciones, cierra este ADR con sus migraciones y sus pruebas.
 
 ## Consecuencias
 
@@ -54,6 +55,13 @@ El Bloque 2 cierra este ADR con las migraciones y las pruebas.
   - Que la normativa obligue a tratar el histórico importado como parte del sistema de facturación.
 
 ## Verificación
+
+**Bloque 2** (lado de las facturas emitidas; el histórico aún no existe):
+
+- `tests/integration/persistence/test_historico_separado.py` (`test_la_serie_y_la_cadena_no_se_enlazan_con_ninguna_tabla_ajena`): desde el catálogo de PostgreSQL, el núcleo fiscal (facturas, líneas, rectificaciones, contadores y cadena de registros) solo apunta a la cuenta, a sus clientes y a sus presupuestos, y solo lo apuntan sus propias tablas y los cobros. Una tabla del histórico o de la ingesta enlazada con él hace fallar la prueba. `@pytest.mark.req("RN-F-08")`, `@pytest.mark.req("RF-IN-09")`.
+- `tests/integration/persistence/test_historico_separado.py` (`test_un_registro_de_facturacion_solo_puede_citar_una_factura_de_invoices`): un `BillingRecord` solo puede citar una factura de `invoices`. `@pytest.mark.req("RN-F-08")`.
+
+**Bloque 4** (cierre, con el histórico ya creado):
 
 - `tests/integration/documents/test_historico_no_toca_serie.py`: aprobar una factura histórica numerada «F-2025-0099» no cambia `series_counters` ni el siguiente número de la serie F. `@pytest.mark.req("RN-F-08")`.
 - `tests/integration/documents/test_historico_sin_registro.py`: aprobar una factura histórica no genera ningún `BillingRecord`. `@pytest.mark.req("RN-F-08")`.

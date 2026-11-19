@@ -6,18 +6,11 @@ from uuid import uuid4
 from kapataz.application.ports.email import EmailDeliveryError, EmailPort
 from kapataz.application.ports.persistence import UnitOfWork, UnitOfWorkFactory
 from kapataz.application.ports.security import PasswordHasher
+from kapataz.application.use_cases.account_creation import add_account
 from kapataz.application.use_cases.verification_links import VerificationLinkBuilder
 from kapataz.domain.accounts.email_address import EmailAddress
 from kapataz.domain.accounts.errors import EmailAlreadyRegisteredError, RegistrationClosedError
-from kapataz.domain.accounts.model import (
-    EMAIL_VERIFICATION_TTL,
-    EmailVerification,
-    Tenant,
-    TenantId,
-    TenantKind,
-    User,
-    UserId,
-)
+from kapataz.domain.accounts.model import EMAIL_VERIFICATION_TTL, EmailVerification, UserId
 from kapataz.domain.accounts.password_policy import check_password_policy
 from kapataz.domain.accounts.registration_policy import RegistrationPolicy
 from kapataz.domain.accounts.tokens import hash_token, new_secret_token
@@ -65,7 +58,9 @@ class RegisterAccount:
             async with self._uow_factory() as uow:
                 existing = await uow.accounts.get_user_by_email(email)
                 if existing is None:
-                    user_id = await self._create_account(uow, email, password_hash)
+                    user_id = await add_account(
+                        uow, email, password_hash, now=self._clock.now(), verified=False
+                    )
                     token = await self._issue_verification(uow, user_id)
                 elif not existing.is_verified:
                     token = await self._issue_verification(uow, existing.id)
@@ -83,34 +78,6 @@ class RegisterAccount:
                 # La cuenta queda creada; repetir el registro envía otro enlace.
                 # Responder con un error revelaría que el email no estaba verificado.
                 _log.warning("email_verificacion_no_enviado")
-
-    async def _create_account(
-        self, uow: UnitOfWork, email: EmailAddress, password_hash: str
-    ) -> UserId:
-        now = self._clock.now()
-        tenant_id = TenantId(uuid4())
-        await uow.set_tenant(tenant_id)
-        await uow.accounts.add_tenant(
-            Tenant(
-                id=tenant_id,
-                name=email.value,
-                kind=TenantKind.STANDARD,
-                parent_tenant_id=None,
-                created_at=now,
-            )
-        )
-        user_id = UserId(uuid4())
-        await uow.accounts.add_user(
-            User(
-                id=user_id,
-                tenant_id=tenant_id,
-                email=email.value,
-                password_hash=password_hash,
-                email_verified_at=None,
-                created_at=now,
-            )
-        )
-        return user_id
 
     async def _issue_verification(self, uow: UnitOfWork, user_id: UserId) -> str:
         token = new_secret_token()

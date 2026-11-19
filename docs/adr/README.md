@@ -22,7 +22,7 @@ Ningún ADR aceptado cambia sin que `arquitecto-python` lo proponga y Borja lo a
 | [ADR-014](ADR-014-despliegue-docker-compose-vps-ue.md) | Despliegue con Docker Compose en un VPS de la UE | Aceptado | Bloque 12 |
 | [ADR-015](ADR-015-logs-estructurados-sin-datos-personales.md) | Logs estructurados sin datos personales | Aceptado | Bloque 0 |
 | [ADR-016](ADR-016-suscripcion-stripe.md) | Suscripción con Stripe | Aceptado | Bloque 10 |
-| [ADR-017](ADR-017-historico-separado-de-emitidas.md) | Separación entre histórico importado y facturas emitidas | Aceptado | Bloque 2 |
+| [ADR-017](ADR-017-historico-separado-de-emitidas.md) | Separación entre histórico importado y facturas emitidas | Aceptado | Bloque 4 |
 | [ADR-018](ADR-018-confirmacion-humana-escrituras-agente.md) | Confirmación humana obligatoria para escrituras del agente | Aceptado | Bloque 6 |
 | [ADR-019](ADR-019-defensa-inyeccion-instrucciones.md) | Defensa ante inyección de instrucciones | Aceptado | Bloque 6 |
 | [ADR-020](ADR-020-datos-sinteticos.md) | Datos sintéticos para demo y pruebas | Aceptado | Bloque 3 |

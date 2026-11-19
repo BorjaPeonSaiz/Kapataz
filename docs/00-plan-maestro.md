@@ -349,7 +349,7 @@ Todas las cuentas y todas las rutas (chat, clasificación y extracción) usan `c
 | RN-F-03 | Una rectificativa referencia siempre a la factura o facturas que rectifica e indica el motivo. Guarda su clase (R1 a R4 del registro de la AEAT, según el motivo) y si es por sustitución o por diferencias; la de sustitución guarda además la base y la cuota rectificadas. |
 | RN-F-04 | La fecha de expedición no puede ser anterior a la de la última factura emitida de la misma serie. Se comprueba después de bloquear el contador (RN-F-01), para que una emisión simultánea no pueda colarse entre la comprobación y el número. |
 | RN-F-05 | Una factura con inversión del sujeto pasivo lleva cuota de IVA cero y la mención legal correspondiente. |
-| RN-F-06 | Los datos obligatorios (emisor, destinatario con NIF español, número, fecha, descripción general de la operación, base, tipo, cuota, total) son requisito para emitir; si falta alguno, no se emite. En la v1 toda factura es completa y lleva el NIF del destinatario, también si es un particular: no se emiten facturas simplificadas ni a clientes sin NIF español (§1.4). Los datos respetan los límites del registro de la AEAT: nombre o razón social de 120 caracteres, serie y número juntos de 60, descripción de 500 y NIF de 9. |
+| RN-F-06 | Los datos obligatorios (emisor y destinatario, los dos con su domicilio según el art. 6 del RD 1619/2012, destinatario con NIF español, número, fecha, descripción general de la operación, base, tipo, cuota, total) son requisito para emitir; si falta alguno, no se emite. En la v1 toda factura es completa y lleva el NIF del destinatario, también si es un particular: no se emiten facturas simplificadas ni a clientes sin NIF español (§1.4). Los datos respetan los límites del registro de la AEAT: nombre o razón social de 120 caracteres, serie y número juntos de 60, descripción de 500 y NIF de 9. |
 | RN-F-07 | Cada emisión genera un registro de facturación con el contenido canónico de la factura y una huella SHA-256 encadenada con la anterior de la misma cuenta. Hay una sola cadena por cuenta, y en ella van las altas, las subsanaciones y las anulaciones, así que una factura puede tener varios registros. Toda operación que añade un registro bloquea primero la cabeza de la cadena de la cuenta, en la misma transacción y antes que el contador de la serie, siempre en ese orden. Así, dos emisiones simultáneas no enlazan con el mismo registro anterior aunque sean de series distintas (F y R). Una factura con un registro de anulación aceptado está anulada: ese estado se deduce de la cadena, sin modificar la factura (RN-F-02), y coincide con el estado «Anulado» que devuelve la consulta de la AEAT. El contenido canónico usa desde el Bloque 2 los mismos campos que `RegistroAlta` y `RegistroAnulacion` de los esquemas de la AEAT (Orden HAC/1177/2024, arts. 7 y 13): tipo de factura, descripción, destinatario, desglose con clave de régimen y calificación, cuota total, importe total, datos del registro anterior o marca de primer registro, identificación del sistema, y fecha, hora y huso horario de generación, con un minuto de margen como máximo. El Bloque 12 lo convierte a XML, calcula la huella con el algoritmo oficial y lo envía. |
 | RN-F-08 | El histórico importado no se mezcla con la serie emitida (RF-IN-09). |
 | RN-F-09 | Las facturas de una cuenta real son válidas y no llevan ninguna marca. Solo las del espacio de demostración llevan la marca «Documento de demostración», que no se puede quitar. |
@@ -731,15 +731,15 @@ kapataz/
 | `platform_settings` | Modelo y `effort` por ruta, límites, tope global y plazos de gracia y de solo lectura, y `registration_open` (RN-13). Solo escribe el superadministrador |
 | `platform_admins` | Superadministradores: se crean fuera del registro, con TOTP obligatorio (RF-SA-01, ADR-031) |
 | `platform_audit_events` | Cada cambio hecho en la zona de superadministración, con fecha, autor y valores anterior y nuevo (RF-SA-06) |
-| `professional` | Una fila por cuenta. Datos fiscales y logotipo |
+| `professional` | Una fila por cuenta, con `tenant_id` como clave primaria. Datos fiscales (nombre, NIF y domicilio del emisor) y logotipo |
 | `customers` | `tax_id` único por cuenta cuando existe. `tax_id_type` y `tax_id_country` quedan preparados para identificadores extranjeros; la v1 solo admite NIF español (§1.4) |
 | `catalog_items` | Concepto, unidad, precio de referencia, origen |
 | `quotes`, `quote_versions`, `quote_lines` | Versionado al modificar un enviado. Datos para decidir el tipo de IVA de la obra: `recipient_type` (`private`, `community`, `business`) y `dwelling_over_two_years` (RN-F-13). En las líneas, `is_material` para calcular el límite del 40 % y `outside_works` para lo que no forma parte de la obra y va en una segunda factura al 21 % (RN-F-13) |
-| `invoices`, `invoice_lines` | `status` (`draft`, `issued`), `series`, `number`, `issued_at`, `quote_version_id`, `phase_type` (`full`, `advance`, `progress`, `final`); en las líneas, `origin` (`quote`, `additional`, `prior_invoice`, esta última para restar una factura anterior); trigger que impide `UPDATE`/`DELETE` de campos fiscales con `status='issued'`. También `due_date` (RF-FA-14) y la garantía: `guarantee_pct`, `guarantee_amount` y `guarantee_due_date` (RF-FA-15), con nombre distinto de la retención de IRPF. En las líneas, `is_material` y `outside_works`, como en el presupuesto (RN-F-13). Una factura que no sale de un presupuesto guarda también `recipient_type` y `dwelling_over_two_years` (RN-F-13). Datos que pide el registro de la AEAT (RN-F-07): `invoice_type` (`F1` y `R1` a `R4` en la v1; `F2`, `F3` y `R5` reservados), `correction_type` (`substitution`, `difference`), `operation_date` cuando difiere de la de expedición, `description` (descripción general, 500 caracteres), `regime_key`, `operation_class` (`S1`, `S2`, `N1`, `N2`) y `exemption_cause`. Importes: `tax_total` y `total_amount` (base más cuota, sin restar la retención de IRPF ni la garantía) se guardan aparte de `amount_due`, el importe a cobrar |
+| `invoices`, `invoice_lines` | `status` (`draft`, `issued`), `series`, `number`, `issued_at`, `quote_version_id`, `phase_type` (`full`, `advance`, `progress`, `final`); en las líneas, `origin` (`quote`, `additional`, `prior_invoice`, esta última para restar una factura anterior); trigger que impide `UPDATE`/`DELETE` de campos fiscales con `status='issued'`. También `due_date` (RF-FA-14) y la garantía: `guarantee_pct`, `guarantee_amount` y `guarantee_due_date` (RF-FA-15), con nombre distinto de la retención de IRPF. En las líneas, `is_material` y `outside_works`, como en el presupuesto (RN-F-13). También `recipient_type` y `dwelling_over_two_years` (RN-F-13): en el borrador solo si la factura no sale de un presupuesto, porque si sale están en la versión; al emitir se copian de la versión, como las partes, y una emitida los guarda siempre (la vivienda, si el destinatario es un particular o una comunidad). Datos que pide el registro de la AEAT (RN-F-07): `invoice_type` (`F1` y `R1` a `R4` en la v1; `F2`, `F3` y `R5` reservados), `correction_type` (`substitution`, `difference`), `operation_date` cuando difiere de la de expedición, `description` (descripción general, 500 caracteres), `regime_key`, `operation_class` (`S1`, `S2`, `N1`, `N2`) y `exemption_cause`. Importes: `tax_total` y `total_amount` (base más cuota, sin restar la retención de IRPF ni la garantía) se guardan aparte de `amount_due`, el importe a cobrar. Copia de las partes tal como figuran en la factura (RN-F-02, RN-F-06): `issuer_name`, `issuer_tax_id`, `issuer_address`, `recipient_name`, `recipient_tax_id` y `recipient_address`; si después cambian los datos del cliente o del profesional, la factura emitida no cambia. También guarda `base_total`, `withholding_pct` y `withholding_amount` (retención de IRPF), `gross_amount` (importe cobrado con IVA incluido de un anticipo, RN-F-12), `correction_reason` (motivo de la rectificación, RN-F-03) e `issue_year`, que forma con `series` y `number` la clave única de la numeración. Las líneas y las correcciones llevan `position` para conservar su orden |
 | `invoice_corrections` | Relación entre una rectificativa y cada factura que rectifica (RN-F-03, RN-F-12), con `rectified_base` y `rectified_tax` en las de sustitución |
-| `series_counters` | Contador por cuenta, serie y año, bloqueado con `SELECT … FOR UPDATE` en la misma transacción que la emisión |
-| `billing_chain_heads` | Una fila por cuenta con el último registro de la cadena. Toda operación que añade un registro la bloquea con `SELECT … FOR UPDATE` antes que el contador de la serie (RN-F-07) |
-| `billing_records` | Varios por factura. `record_type` (`registration`, `cancellation`), `is_correction` (subsanación) y `prior_rejection`. Contenido canónico JSON con los campos del registro de la AEAT (RN-F-07), `hash` y `generated_at` con huso horario. Encadenamiento: `is_first` o los datos del registro anterior (`prev_issuer_tax_id`, `prev_series_number`, `prev_issue_date`, `prev_hash`). Sistema que lo generó: `system_name`, `system_id`, `system_version` (antes de la 1.0.0, el identificador del commit) e `installation_number`. Envío: `submission_status` (`pending`, `accepted`, `accepted_with_errors`, `rejected`), `error_code`, `error_description` (1.500 caracteres), `submission_csv`, `submitted_at`, `external_ref` (referencia propia de 60 caracteres, que la AEAT devuelve y por la que se puede consultar) y `sent_with_incident` (registro generado durante una incidencia que impidió enviarlo a tiempo) |
+| `series_counters` | Contador por cuenta, serie y año (`last_number` y `last_issue_date`), bloqueado con `SELECT … FOR UPDATE` en la misma transacción que la emisión |
+| `billing_chain_heads` | Una fila por cuenta con el último registro de la cadena: `tenant_id` y `last_record_id`, nulo mientras la cadena está vacía. Solo guarda el enlace, sin copiar datos del registro, que se leen de `billing_records`; la clave foránea compuesta `(tenant_id, last_record_id)` impide apuntar a un registro de otra cuenta. Toda operación que añade un registro la bloquea con `SELECT … FOR UPDATE` antes que el contador de la serie (RN-F-07) |
+| `billing_records` | Varios por factura. `record_type` (`registration`, `cancellation`), `is_correction` (subsanación) y `prior_rejection`. Contenido canónico JSON con los campos del registro de la AEAT (RN-F-07), `hash` y `generated_at` con huso horario. Encadenamiento: `is_first` o los datos del registro anterior (`prev_issuer_tax_id`, `prev_series_number`, `prev_issue_date`, `prev_hash`), y `previous_record_id`, con `UNIQUE (tenant_id, previous_record_id) NULLS NOT DISTINCT` para que la cadena no se bifurque ni tenga dos primeros registros. Sistema que lo generó: `system_name`, `system_id`, `system_version` (antes de la 1.0.0, el identificador del commit) e `installation_number`. Envío: `submission_status` (`pending`, `accepted`, `accepted_with_errors`, `rejected`), `error_code`, `error_description` (1.500 caracteres), `submission_csv`, `submitted_at`, `external_ref` (referencia propia de 60 caracteres, que la AEAT devuelve y por la que se puede consultar) y `sent_with_incident` (registro generado durante una incidencia que impidió enviarlo a tiempo) |
 | `submission_authorizations` | Autorización de cada cuenta para enviar sus registros (RF-VF-07): a favor de quién, tipo de firma, documento firmado guardado con `FileStoragePort`, fecha de firma, revocación y fecha hasta la que se conserva bloqueada (RN-12). Se crea en el Bloque 12 |
 | `payments` | Cobros asociados a facturas, con `paid_at` y `method` (`cash`, `card`, `transfer`, `bizum`, `cheque`, `deposit`), para el estado de cobro (RF-FA-06) y el aviso de cobro en efectivo en obras al 10 % (RN-F-13) |
 | `source_documents`, `extractions`, `extraction_fields` | Hash del fichero, estado, confianza por campo |
@@ -1005,7 +1005,7 @@ Responsabilidades:
 - Dockerfile multietapa sin root e imágenes fijadas por digest; Compose con api, worker y PostgreSQL.
 - Dos entornos: local y producción en un VPS de la UE, sin staging. Todo se construye y se prueba en local hasta cerrar el Bloque 12; el primer despliegue se hace entonces (§1.5 del plan). Solo el proxy nginx existente se expone a internet; enruta a `kapataz:8000` por la red `kronoqr-app` (ADR-014).
 - Secretos fuera del repo y de las imágenes, incluida la clave de la API de Claude.
-- CI en GitHub Actions sobre ubuntu-latest con PostgreSQL real, caché de uv y npm, etapas lint → seguridad (pip-audit, npm audit, bandit, Semgrep, gitleaks, Trivy) → unitarias → integración/contrato → build frontend → E2E → imagen. Se ejecuta en cada PR y sus comprobaciones son requisito para integrar en main.
+- CI en GitHub Actions sobre ubuntu-latest con PostgreSQL real, caché de uv y npm, etapas lint → seguridad (pip-audit, npm audit, bandit, Semgrep, gitleaks, Trivy) → unitarias → integración/contrato → build frontend → E2E → imagen. Se ejecuta en cada PR y sus comprobaciones son requisito para integrar en main. La mutación con mutmut sobre `domain/billing` no va en cada PR, porque tarda demasiado: es un job manual de CI (`mutacion.yml`, con `workflow_dispatch`) (Borja, 19/11/2026).
 - Despliegue con migraciones controladas, health checks reales y vuelta atrás probada.
 - Copias cifradas fuera del servidor con archivado de WAL y simulacros de restauración (RNF-15).
 - Observabilidad: logs JSON, métricas básicas, monitor externo de disponibilidad, alertas de errores y de gasto de IA. Cada alerta tiene su runbook en docs/operacion/.
@@ -1259,7 +1259,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `arquitecto-python` · Opus 5.5
 - [ ] **Pruebas de propiedades** con hypothesis sobre el cálculo: la suma de bases y cuotas cuadra con el total para cualquier combinación de líneas, y, sin trabajos adicionales, la suma de las fases cuadra al céntimo con el presupuesto para cualquier reparto.
   - 🤖 `qa-testing` · Opus 5.5
-- [ ] **Puertos** de §4.3 definidos en el dominio y la aplicación, con `FakeX` en pruebas.
+- [ ] **Puertos** que usa este bloque (`Clock`, repositorios y unidad de trabajo, `BillingRecordSubmissionPort`), con su `FakeX` o su gemelo en memoria en pruebas. Los demás puertos de §4.3 no se crean por adelantado: cada uno llega con el bloque que lo usa, anotado en ese bloque (Borja, 19/11/2026).
   - 🤖 `arquitecto-python` · Opus 5.5
 - [ ] **Migraciones Alembic** del modelo de §4.5, políticas RLS (ADR-024), triggers de inmutabilidad (RN-F-02) y tabla de contadores.
   - 🤖 `backend-fastapi` · Opus 5.5
@@ -1275,7 +1275,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `qa-testing` · Opus 5.5
 - [ ] **Pruebas de aislamiento:** con el rol de la aplicación, una consulta sin cuenta fijada no devuelve filas y una consulta de la cuenta A no ve datos de la B. Una prueba comprueba que toda tabla de negocio tiene política RLS.
   - 🤖 `qa-testing` · Opus 5.5
-- [ ] **Cerrar ADR-017** (histórico separado de emitidas).
+- [ ] **ADR-017, lado de las emitidas:** la serie y la cadena no se enlazan con ninguna tabla ajena (`test_historico_separado.py`). El cierre del ADR pasa al Bloque 4, que crea el histórico (Borja, 19/11/2026).
   - 🤖 `arquitecto-python` · Opus 5.5
 
 **Criterio de terminado:** cobertura de `domain/` ≥ 90 %, pruebas de concurrencia, inmutabilidad y aislamiento en verde, mypy `--strict` limpio.
@@ -1310,9 +1310,9 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 
 ### Bloque 4 — Ingesta de documentos
 
-- [ ] **Lectura de PDF** en nuestro servidor con pdfplumber, y con Tesseract para los escaneados; rechazo de PDFs cifrados o enormes con motivo claro.
+- [ ] **Lectura de PDF** en nuestro servidor con pdfplumber, y con Tesseract para los escaneados; rechazo de PDFs cifrados o enormes con motivo claro. Puertos nuevos `PdfTextPort` y `OcrPort`, con `FakePdfText` y `FakeOcr`.
   - 🤖 `ingeniero-ia` · Opus 5.5
-- [ ] **Seudonimización** (RN-11, ADR-030): diccionario de la cuenta, patrones (NIF, IBAN, email, teléfono), Presidio para nombres y direcciones no registrados, y restitución de los datos reales.
+- [ ] **Seudonimización** (RN-11, ADR-030): diccionario de la cuenta, patrones (NIF, IBAN, email, teléfono), Presidio para nombres y direcciones no registrados, y restitución de los datos reales. Puerto nuevo `PseudonymizerPort`, con `FakePseudonymizer`.
   - 🤖 `ingeniero-ia` · Opus 5.5
 - [ ] **Clasificación** del documento (RF-IN-02) con salida estructurada.
   - 🤖 `ingeniero-ia` · Opus 5.5
@@ -1322,7 +1322,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `ingeniero-ia` · Opus 5.5
 - [ ] **Deduplicación** por hash y de clientes por NIF o similitud (RF-IN-07, RF-IN-08).
   - 🤖 `backend-fastapi` · Opus 5.5
-- [ ] **Casos de uso y endpoints:** subir, listar, revisar, corregir y aprobar; ficheros por `FileStoragePort`, separados por cuenta.
+- [ ] **Casos de uso y endpoints:** subir, listar, revisar, corregir y aprobar; ficheros por `FileStoragePort` (puerto nuevo de este bloque), separados por cuenta.
   - 🤖 `backend-fastapi` · Opus 5.5
 - [ ] **Cola de ingesta** en el worker (ADR-026) con progreso por SSE; un PDF que falla no detiene los demás y una cuenta no acapara la cola. **Cerrar ADR-026.**
   - 🤖 `backend-fastapi` · Opus 5.5
@@ -1330,6 +1330,8 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `arquitecto-vue` · Sonnet 5.5 + `ui-ux` · Sonnet 5.5
 - [ ] **Evaluación de extracción** con Claude real, informe en `docs/04-evaluacion-ia.md`: precisión sobre texto seudonimizado (RNF-06), fugas (RNF-17) y coste por documento. Primera medición del ADR-030, que se cierra en el Bloque 6.
   - 🤖 `ingeniero-ia` · Opus 5.5
+- [ ] **Cerrar ADR-017** (histórico separado de emitidas): `historical_invoices` y `historical_lines` al aprobar una extracción, sin contador ni registros de facturación, y las pruebas del Bloque 4 de su verificación. El Bloque 2 ya verificó el lado de las emitidas.
+  - 🤖 `arquitecto-python` · Opus 5.5
 
 **Criterio de terminado:** RNF-06 y RNF-17 medidos; las facturas con errores sembrados quedan en revisión con el motivo correcto.
 
@@ -1339,9 +1341,9 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 
 - [ ] **Troceado** por documento y por línea significativa, con metadatos (cliente, fecha, tipo, importe).
   - 🤖 `ingeniero-ia` · Opus 5.5
-- [ ] **Embeddings** con `EmbeddingPort` y un modelo abierto multilingüe elegido por evaluación; indexación incremental al aprobar documentos.
+- [ ] **Embeddings** con `EmbeddingPort` (puerto nuevo de este bloque, con `FakeEmbeddings`) y un modelo abierto multilingüe elegido por evaluación; indexación incremental al aprobar documentos.
   - 🤖 `ingeniero-ia` · Opus 5.5
-- [ ] **Búsqueda de texto** de PostgreSQL con configuración en español y `unaccent`, y **pgvector**; fusión con RRF; filtros por cuenta y metadatos en SQL.
+- [ ] **Búsqueda de texto** de PostgreSQL con configuración en español y `unaccent`, y **pgvector**; fusión con RRF; filtros por cuenta y metadatos en SQL. Detrás del puerto nuevo `SearchPort`.
   - 🤖 `ingeniero-ia` · Opus 5.5
 - [ ] **Evaluación de recuperación:** recall@5 y MRR sobre consultas de referencia («baño completo», «cuadro eléctrico comunidad»).
   - 🤖 `ingeniero-ia` · Opus 5.5
@@ -1391,7 +1393,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 🤖 `backend-fastapi` · Opus 5.5
 - [ ] **Propuesta de líneas** desde el histórico con origen de cada precio (RF-PR-02, RN-06).
   - 🤖 `ingeniero-ia` · Opus 5.5
-- [ ] **PDF del presupuesto** con ReportLab y el sistema visual (RF-PR-06).
+- [ ] **PDF del presupuesto** con ReportLab y el sistema visual (RF-PR-06). Puerto nuevo `PdfRenderPort`, con `FakePdfRender`; el PDF de factura del Bloque 8 lo reutiliza.
   - 🤖 `backend-fastapi` · Opus 5.5 + `ui-ux` · Sonnet 5.5
 - [ ] **Compartir el PDF** con el menú de compartir del móvil y descarga en el portátil (RF-PR-08).
   - 🤖 `arquitecto-vue` · Sonnet 5.5
@@ -1440,7 +1442,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 
 ### Bloque 9 — Voz
 
-- [ ] **Endpoint de transcripción** con faster-whisper en el worker, prompt inicial con vocabulario de oficio (RF-VO-02, RF-VO-04).
+- [ ] **Endpoint de transcripción** con faster-whisper en el worker, prompt inicial con vocabulario de oficio (RF-VO-02, RF-VO-04). Puerto nuevo `TranscriptionPort`, con `FakeTranscription`.
   - 🤖 `ingeniero-ia` · Opus 5.5
 - [ ] **Modelo de Whisper** incluido en la imagen o en un volumen, nunca descargado en ejecución; concurrencia limitada para no agotar la CPU del servidor (RNF-14).
   - 🤖 `ingeniero-ia` · Opus 5.5
@@ -1511,7 +1513,7 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 
 - [ ] **Contrastar la normativa vigente:** Real Decreto 1007/2023, Orden HAC/1177/2024 y especificaciones técnicas de la AEAT. Incluye tres comprobaciones: comparar los esquemas de producción con los de preproducción que se usaron para el modelo (en noviembre de 2026, la lista de exenciones llegaba a E8 en preproducción y a E6 en la orden); confirmar en el documento de validaciones que `ImporteTotal` es base más cuota, sin restar la retención de IRPF ni la garantía; y revisar si la modificación técnica anunciada por Hacienda el 5 de octubre de 2026 ha cambiado el registro.
   - 🤖 `arquitecto-python` · Opus 5.5 + `seguridad-ia` · Opus 5.5
-- [ ] **Registros de alta y de anulación** con el formato y la huella oficiales (RF-VF-01, RN-F-07).
+- [ ] **Registros de alta y de anulación** con el formato oficial (RF-VF-01, RN-F-07). La huella ya sigue el algoritmo oficial desde el Bloque 2 (ADR-012); aquí se contrasta con la versión vigente de la especificación.
   - 🤖 `backend-fastapi` · Opus 5.5
 - [ ] **QR en la factura** (RF-VF-02).
   - 🤖 `backend-fastapi` · Opus 5.5 + `ui-ux` · Sonnet 5.5

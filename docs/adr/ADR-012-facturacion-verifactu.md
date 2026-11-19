@@ -2,6 +2,7 @@
 
 - **Estado:** Propuesto
 - **Fecha:** 2026-11-12
+- **Modificado:** 2026-11-18. Borja aprueba calcular la huella con el algoritmo oficial desde el Bloque 2, en vez de en el Bloque 12. Rutas de las pruebas actualizadas al cerrar el Bloque 2. 2026-11-19: se documenta que la fecha de expedición se calcula en `Europe/Madrid` y que Canarias queda pendiente del asesor (cierre del Bloque 2, aprobado por Borja).
 - **Decide:** arquitecto-python (aprueba: Borja)
 - **Requisitos relacionados:** RF-FA-02, RF-FA-04, RF-FA-08, RF-VF-01, RF-VF-02, RF-VF-03, RF-VF-04, RF-VF-05, RF-VF-06, RF-VF-07, RN-12, RN-13, RN-F-01, RN-F-02, RN-F-03, RN-F-04, RN-F-06, RN-F-07
 - **Se cierra en:** Bloque 12
@@ -42,13 +43,15 @@ Kapataz emite facturas válidas desde la primera factura real, con el sistema VE
 - `BillingRecord` con huella SHA-256 encadenada en una sola cadena por cuenta, con altas, subsanaciones y anulaciones. El estado «anulada» se deduce de la cadena, sin modificar la factura (RN-F-07).
 - Toda operación que añade un registro bloquea primero la cabeza de la cadena de la cuenta (`billing_chain_heads`, `SELECT … FOR UPDATE`) y después el contador de la serie, siempre en ese orden y en la misma transacción (RN-F-07, ADR-004). Así, dos emisiones simultáneas no enlazan con el mismo registro anterior aunque sean de series distintas (F y R). RN-F-04 se comprueba con el contador ya bloqueado.
 - Contenido canónico con los mismos campos que `RegistroAlta` y `RegistroAnulacion` de los esquemas de la AEAT (Orden HAC/1177/2024, arts. 7 y 13).
+- **Huella con el algoritmo oficial desde el primer registro** («Detalle de las especificaciones técnicas para generación de la huella o hash de los registros de facturación», AEAT, v0.1.2 de 27/08/2024). Es SHA-256 en hexadecimal y mayúsculas sobre la cadena `campo=valor&…` de los campos del registro, en el orden de la especificación: ocho en el alta y cinco en la anulación. La huella del registro anterior va vacía en el primero. Así una misma cadena nunca mezcla huellas calculadas de dos formas. El contenido canónico completo se sigue guardando en el registro.
 - `BillingRecordSubmissionPort` con `NullBillingRecordSubmission` hasta el Bloque 12.
+- **Fecha de expedición en el calendario español.** `IssueInvoice` toma la hora del `Clock` (UTC) y calcula la fecha de expedición en `Europe/Madrid` (`FISCAL_TIMEZONE`, en `application/use_cases/issue_invoice.py`). Una factura emitida a las 00:30 en Madrid es de ese día aunque en UTC sea el anterior; con esa fecha se elige el año del contador (RN-F-01) y se compara con la última de la serie (RN-F-04). El instante exacto (`issued_at`) se guarda con zona horaria. Provisional: en Canarias, una hora por detrás, la fecha solo cambiaría entre las 23:00 y las 00:00 de allí. Va a la lista del asesor fiscal con las demás interpretaciones provisionales del Bloque 2 y, si hace falta, la zona saldrá del perfil fiscal del profesional (RF-CF-01).
 
 **En el Bloque 12:**
 
 - Solo modalidad VERI*FACTU (RF-VF-03). Cada registro se envía a la AEAT mediante el proveedor y la factura lleva la mención y el QR (RF-VF-02).
 - Adaptador `VerifactuProviderSubmission`. `VerifactuAeatSubmission` queda como alternativa si KodigoLab se hace colaborador social.
-- El Bloque 12 convierte el contenido canónico a XML y calcula la huella con el algoritmo oficial.
+- El Bloque 12 convierte el contenido canónico a XML. La huella ya sigue el algoritmo oficial desde el Bloque 2; aquí se contrasta con la versión vigente de la especificación.
 - Envíos fallidos reintentados y visibles; rechazos avisados con motivo y forma de corregirlos (RF-VF-04). Corregir y reenviar funciona también con la cuenta en solo lectura (RN-12).
 - Exportación de registros a petición de la Administración (RF-VF-05).
 - **Autorización de cada cliente** antes de su primera factura (RF-VF-07), guardada en `submission_authorizations`: Anexo I de la Resolución de 18 de diciembre de 2024, a favor de quien envía con su certificado (el proveedor, o KodigoLab si se hace colaborador social). Firma manuscrita con copia del DNI, certificado cualificado o firma electrónica avanzada, dentro de la app. Aceptar unas condiciones no sirve. No hace falta ningún trámite en la sede de la AEAT. Se conserva mientras dure la relación y cuatro años después (art. 66 de la Ley General Tributaria) y queda bloqueada tras el borrado de la cuenta (RN-12). Mientras no la otorgue, el usuario puede usar el resto de la app.
@@ -95,10 +98,12 @@ Kapataz emite facturas válidas desde la primera factura real, con el sistema VE
 
 - **import-linter:** el proveedor solo se conoce en `kapataz.infrastructure.fiscal`; dominio y aplicación solo ven `BillingRecordSubmissionPort`.
 - **Bloque 2:**
-  - `tests/integration/billing/test_numeracion_concurrente.py`, `@pytest.mark.req("RN-F-01")`. Incluye emisiones simultáneas de las series F y R en la misma cuenta: la cadena no se bifurca. `@pytest.mark.req("RN-F-07")`.
-  - `tests/integration/billing/test_inmutabilidad_sql.py`, `@pytest.mark.req("RN-F-02")`.
-  - `tests/unit/billing/test_billing_record_campos_aeat.py`: cada campo obligatorio del esquema tiene su dato. `@pytest.mark.req("RN-F-07")`.
-  - `tests/unit/billing/test_cadena_unica.py`: una subsanación y una anulación se encadenan en la misma cadena que las altas. `@pytest.mark.req("RN-F-07")`.
+  - `tests/integration/persistence/test_emision_concurrente.py`, `@pytest.mark.req("RN-F-01")`: 20 emisiones en procesos separados, con una y con varias cuentas, sin huecos ni duplicados. Incluye emisiones simultáneas de las series F y R en la misma cuenta: la cadena no se bifurca. `@pytest.mark.req("RN-F-07")`.
+  - `tests/integration/persistence/test_inmutabilidad_sql.py`, `@pytest.mark.req("RN-F-02")`.
+  - `tests/unit/domain/test_billing_record.py` (`test_cada_campo_obligatorio_del_alta_tiene_su_dato` y el de la anulación): cada campo obligatorio del esquema tiene su dato. `@pytest.mark.req("RN-F-07")`.
+  - `tests/unit/domain/test_billing_record.py` (`test_subsanacion_y_anulacion_se_encadenan_en_la_misma_cadena_que_las_altas`): una subsanación y una anulación se encadenan en la misma cadena que las altas. `@pytest.mark.req("RN-F-07")`.
+  - `tests/unit/domain/test_billing_record.py`: los tres ejemplos de §6 de la especificación de la huella dan exactamente las huellas publicadas por la AEAT. `@pytest.mark.req("RN-F-07")`.
+  - `tests/unit/application/test_issue_invoice.py` (`test_la_fecha_de_expedicion_es_la_del_calendario_espanol`): el 31/12/2026 a las 23:30 UTC ya es 1 de enero en Madrid y la factura se numera en 2027. `@pytest.mark.req("RN-F-01")`.
 - **Bloque 8:** `kapataz verify-billing-chain` detecta una alteración hecha por SQL.
 - **Bloque 12:**
   - Huella y QR contrastados con la especificación oficial. `@pytest.mark.req("RF-VF-01")` y `@pytest.mark.req("RF-VF-02")`.
