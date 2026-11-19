@@ -74,7 +74,7 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 
 ## Siguiente acción
 
-1. Con el visto bueno de Borja, subir `bloque-02-dominio` y abrir el PR único del Bloque 2 contra `main`; integrar con el CI en verde.
+1. Borja revisa e integra el PR #5 del Bloque 2 (abierto el 19/11/2026, CI en verde).
 2. Después, lanzar `mutacion.yml` sobre la rama para tener la cifra de referencia (no bloquea el Bloque 2).
 3. Bloque 3 del plan maestro.
 
