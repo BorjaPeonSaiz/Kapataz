@@ -4,8 +4,8 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 
 ## Estado y objetivo actual
 
-- **Bloques 0 y 1:** cerrados. PR #3 integrado el 12/11/2026 (`12e5edb`) y PR #4 el 17/11/2026 (`c4a95c0`). La prueba del Bloque 1 con un móvil real queda pendiente como excepción aprobada (ver «Pendiente»).
-- **Bloque en curso:** 2 — Dominio y persistencia, en la rama `bloque-02-dominio` (plan maestro, §Bloque 2).
+- **Bloques 0, 1 y 2:** cerrados. PR #3 integrado el 12/11/2026 (`12e5edb`), PR #4 el 17/11/2026 (`c4a95c0`) y PR #5 el 19/11/2026 (`7ce0758`). La prueba del Bloque 1 con un móvil real queda pendiente como excepción aprobada (ver «Pendiente»).
+- **Trabajo en curso:** rama `calidad-mutacion` (Borja, 19/11/2026): la mutación de `domain/billing` pasa del 76,3 % al 90,76 % (2392 mutantes, 2171 muertos, 221 supervivientes) solo con pruebas. En `invoice`, `billing_record` y `numbering` las pruebas comprueban el principio del mensaje con `match=` anclado (decisión de Borja: solo en las reglas fiscales); en el resto de módulos, no.
 - **`main`:** protegida desde el 17/11/2026, con el check `ci` obligatorio, la rama al día, conversaciones resueltas y también para administradores; sin force push.
 - **Demo de portafolio y sin despliegue hasta el Bloque 12** (Borja, 17/11/2026; plan maestro §1.5, ADR-014): todo se construye y se prueba en local. La 1.0.0 es la demo que supera la Parte II, y publicarla no abre el registro mientras quede algún pendiente legal (RN-13).
 - **Decisiones de Borja del 18/11/2026:**
@@ -74,9 +74,8 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 
 ## Siguiente acción
 
-1. Borja revisa e integra el PR #5 del Bloque 2 (abierto el 19/11/2026, CI en verde).
-2. Después, lanzar `mutacion.yml` sobre la rama para tener la cifra de referencia (no bloquea el Bloque 2).
-3. Bloque 3 del plan maestro.
+1. Borja revisa e integra el PR de `calidad-mutacion` (con `mutacion.yml` en verde sobre la rama).
+2. Bloque 3 del plan maestro.
 
 ## Pendiente
 
@@ -227,7 +226,7 @@ Corregidos en el PR: S2-01, S2-02, S2-04/I-02/I-01, M-10, M-12 (dentro de S2-02)
   - M-09: la arquitectura §7 y los comentarios de `issue_invoice.py` no describen el orden real de bloqueos ni `bootstrap`;
   - M-11: `_locked_head` es poco legible;
   - M-13: código sobrante y mensajes que repiten lo obvio.
-- **Mutación (`plataforma-entrega`, 19/11/2026):** primera pasada de mutmut 3.8.1 sobre `domain/billing`: 76,3 % (2392 mutantes, 566 supervivientes; sobre todo `invoice`, `billing_record` y `quote`). El umbral del 80 % es de la Fase 3 del plan de verificación y de ADR-033 (Bloque 8), no del Bloque 2: `qa-testing` debe subirla antes. El job `mutacion.yml` es manual y falla por debajo del 80 %. mutmut entra con `uv run --with` sin hash: añadirlo al grupo `dev` y al lock (ADR-022).
+- **Mutación (`plataforma-entrega`, 19/11/2026):** primera pasada de mutmut 3.8.1 sobre `domain/billing`, confirmada en `main` (run 44536494958): 76,3 % (2392 mutantes, 1826 muertos, 566 supervivientes; sobre todo `invoice`, `billing_record` y `quote`). El umbral del 80 % es de la Fase 3 del plan de verificación y de ADR-033 (Bloque 8); corregido en `calidad-mutacion` (90,76 %). Quedan 16 mutantes equivalentes; seis delatan código redundante para `arquitecto-python`: `billing_record.py` `_require_issued` (cuatro `or` que solo acotan tipos para mypy), el `or ""` de la descripción y la segunda condición de base y cuota de la rectificada. Trampa de mutmut 3: los objetos creados al importar o en `parametrize` no ven el mutante; la llamada tiene que ir dentro de la prueba. El job `mutacion.yml` es manual y falla por debajo del 80 %. mutmut entra con `uv run --with` sin hash: añadirlo al grupo `dev` y al lock (ADR-022).
 
 ### Por decidir en su bloque
 

@@ -189,3 +189,17 @@ def test_obra_con_inversion_y_venta_aparte():
 def test_sin_lineas_fuera_de_la_obra_no_hay_segunda_factura():
     groups = split_by_vat([line("100.00")], REDUCED)
     assert [group.treatment for group in groups] == [REDUCED]
+
+
+@pytest.mark.req("RN-F-13")
+def test_el_40_sigue_contando_tras_una_linea_fuera_de_la_obra():
+    result = material_share(
+        [line("600.00", outside_works=True), line("1000.00", is_material=True), line("1500.00")]
+    )
+    assert (result.works_base, result.material_base) == (money("2500.00"), money("1000.00"))
+
+
+@pytest.mark.req("RN-F-13")
+def test_la_factura_unica_lleva_el_tratamiento_de_la_obra():
+    (group,) = split_by_vat([line("100.00"), line("50.00", outside_works=True)], GENERAL)
+    assert group.treatment == VatTreatment.taxed(TaxRate.general())

@@ -83,7 +83,7 @@ def test_por_sustitucion_no_admite_base_negativa():
         rectified=(rectified(base="1.00", tax="0.21"),),
         correction_type=CorrectionType.SUBSTITUTION,
     )
-    with pytest.raises(NegativeInvoiceBaseError):
+    with pytest.raises(NegativeInvoiceBaseError, match=r"^La base no puede ser negativa"):
         issue(invoice)
 
 
@@ -96,26 +96,26 @@ def test_clases_r1_a_r4(invoice_type):
 @pytest.mark.req("RN-F-03")
 @pytest.mark.parametrize("invoice_type", [InvoiceType.F1, InvoiceType.R5, InvoiceType.F3])
 def test_clases_no_admitidas(invoice_type):
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^Una rectificativa de la v1"):
         corrective(rectified=(rectified(),), invoice_type=invoice_type)
 
 
 @pytest.mark.req("RN-F-03")
 def test_rectificativas_no_validas():
     same = rectified()
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^Una rectificativa cita al menos"):
         corrective(rectified=())
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^Una factura no se cita dos veces"):
         corrective(rectified=(same, same))
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^El motivo es obligatorio"):
         corrective(rectified=(rectified(),), reason="  ")
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^El motivo es obligatorio"):
         corrective(rectified=(rectified(),), reason="x" * 501)
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^Solo la rectificativa por sustitución"):
         corrective(rectified=(rectified(base="1.00", tax="0.21"),))
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^Solo la rectificativa por sustitución"):
         corrective(rectified=(rectified(),), correction_type=CorrectionType.SUBSTITUTION)
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^La base y la cuota rectificadas"):
         rectified(base="1.00")
 
 
@@ -123,11 +123,11 @@ def test_rectificativas_no_validas():
 def test_una_rectificativa_no_es_una_fase_ni_lleva_garantia():
     invoice = corrective(rectified=(rectified(),))
     assert invoice.phase_type is None
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^Una rectificativa no es una fase"):
         dataclasses.replace(invoice, phase_type=PhaseType.FULL)
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^Una rectificativa no lleva garantía"):
         invoice.with_guarantee(Guarantee(rate=Percentage.of("5"), due_date=TODAY))
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^Una rectificativa no es una fase"):
         dataclasses.replace(invoice, gross_amount=money("1.00"))
 
 
@@ -135,7 +135,7 @@ def test_una_rectificativa_no_es_una_fase_ni_lleva_garantia():
 def test_una_rectificativa_es_inmutable_al_emitirla():
     issued = issue(corrective(line("-1.00"), rectified=(rectified(),)))
     assert isinstance(issued, CorrectiveInvoice)
-    with pytest.raises(Exception, match="rectificativa"):
+    with pytest.raises(Exception, match=r"^Una factura emitida no se modifica"):
         issued.add_line(line("1.00"))
 
 
@@ -172,7 +172,7 @@ def test_la_rectificativa_de_fases_tampoco_va_al_10_con_una_empresa():
         QUOTE_VERSION, recipient_type=RecipientType.BUSINESS, dwelling_over_two_years=None
     )
 
-    with pytest.raises(InvalidInvoiceError, match="10 %"):
+    with pytest.raises(InvalidInvoiceError, match=r"^El 10 % exige"):
         issue(_overbilling_corrective(REDUCED), version=version)
 
 
@@ -186,10 +186,16 @@ def test_sin_presupuesto_la_rectificativa_lleva_los_suyos_y_se_comprueban():
     with pytest.raises(MissingIssueDataError) as error:
         issue(invoice)
     assert error.value.missing == ("recipient_type",)
-    with pytest.raises(InvalidInvoiceError, match="inversión"):
+    with pytest.raises(InvalidInvoiceError, match=r"^La inversión del sujeto"):
         dataclasses.replace(
             invoice,
             treatment=VatTreatment.reverse_charge(),
             recipient_type=RecipientType.PRIVATE,
             dwelling_over_two_years=True,
         )
+
+
+@pytest.mark.req("RN-F-03")
+def test_motivo_de_500_caracteres():
+    invoice = corrective(line("-10.00"), rectified=(rectified(),), reason="x" * 500)
+    assert len(invoice.reason) == 500

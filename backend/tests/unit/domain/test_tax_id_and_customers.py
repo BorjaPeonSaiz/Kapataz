@@ -225,3 +225,8 @@ def test_concepto_no_valido(concept, unit, price, created_at):
             is_material=False,
             created_at=created_at,
         )
+
+
+@pytest.mark.req("RN-F-06")
+def test_parte_con_nombre_de_120_caracteres():
+    assert Party("x" * 120, TaxId("12345678Z"), "Calle Mayor 1").name == "x" * 120

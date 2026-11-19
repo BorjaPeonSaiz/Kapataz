@@ -319,11 +319,11 @@ def test_huella_del_registro_con_el_algoritmo_oficial(invoice):
 
 @pytest.mark.req("RN-F-07")
 def test_contenido_sin_los_campos_de_la_huella():
-    with pytest.raises(InvalidBillingRecordError):
+    with pytest.raises(InvalidBillingRecordError, match=r"^Falta IDFactura"):
         compute_record_hash(RecordType.REGISTRATION, {"Encadenamiento": {"PrimerRegistro": "S"}})
-    with pytest.raises(InvalidBillingRecordError):
+    with pytest.raises(InvalidBillingRecordError, match=r"^Contenido canónico"):
         compute_record_hash(RecordType.CANCELLATION, {"Encadenamiento": "S"})
-    with pytest.raises(InvalidBillingRecordError):
+    with pytest.raises(InvalidBillingRecordError, match=r"^Falta FechaHoraHusoGenRegistro"):
         compute_record_hash(
             RecordType.CANCELLATION,
             {"Encadenamiento": {"PrimerRegistro": "S"}, "IDFactura": {}},
@@ -336,9 +336,9 @@ def test_un_registro_alterado_no_se_puede_cargar(invoice):
     # ImporteTotal entra en la huella oficial; cambiarlo sin recalcularla se nota.
     tampered = record.canonical_json.replace('"ImporteTotal":"1210.00"', '"ImporteTotal":"1200.00"')
     assert tampered != record.canonical_json
-    with pytest.raises(InvalidBillingRecordError):
+    with pytest.raises(InvalidBillingRecordError, match=r"^La huella no corresponde"):
         dataclasses.replace(record, canonical_json=tampered)
-    with pytest.raises(InvalidBillingRecordError):
+    with pytest.raises(InvalidBillingRecordError, match=r"^El encadenamiento no cuadra"):
         dataclasses.replace(record, previous=record.as_link())
 
 
@@ -392,20 +392,20 @@ def test_la_cadena_rota_se_detecta(invoice):
 @pytest.mark.req("RN-F-07")
 def test_una_sola_cadena_por_cuenta(invoice):
     other = dataclasses.replace(issue(draft(line("1.00"))), tenant_id=TenantId(uuid4()))
-    with pytest.raises(InvalidBillingRecordError):
+    with pytest.raises(InvalidBillingRecordError, match=r"^Hay una sola cadena"):
         alta(other, alta(invoice))
     foreign_first = alta(other)
     # Un registro de otra cuenta que enlazara con este no se puede crear con
     # las fábricas; se fuerza para comprobar que la verificación lo detecta.
     mixed = dataclasses.replace(alta(other, foreign_first), tenant_id=invoice.tenant_id)
-    with pytest.raises(InvalidBillingRecordError, match="cuentas"):
+    with pytest.raises(InvalidBillingRecordError, match=r"^Una cadena no mezcla"):
         verify_chain([foreign_first, mixed])
 
 
 @pytest.mark.req("RN-F-07")
 def test_un_registro_no_es_anterior_al_que_le_precede(invoice):
     first = alta(invoice)
-    with pytest.raises(InvalidBillingRecordError):
+    with pytest.raises(InvalidBillingRecordError, match=r"^Un registro no puede ser anterior"):
         alta(invoice, first, generated_at=NOW - timedelta(seconds=1))
     same_second = alta(invoice, first, generated_at=NOW + timedelta(microseconds=500))
     assert same_second.generated_at == NOW
@@ -413,25 +413,25 @@ def test_un_registro_no_es_anterior_al_que_le_precede(invoice):
 
 @pytest.mark.req("RN-F-07")
 def test_registros_no_validos(invoice):
-    with pytest.raises(InvalidBillingRecordError):
+    with pytest.raises(InvalidBillingRecordError, match=r"^Solo una factura emitida tiene"):
         alta(draft(line("1.00")))
-    with pytest.raises(InvalidBillingRecordError):
+    with pytest.raises(InvalidBillingRecordError, match=r"^Un rechazo previo"):
         alta(invoice, prior_rejection=True)
-    with pytest.raises(InvalidBillingRecordError):
+    with pytest.raises(InvalidBillingRecordError, match=r"^La hora de generación"):
         alta(invoice, generated_at=NOW.replace(tzinfo=None))
     record = alta(invoice)
-    with pytest.raises(InvalidBillingRecordError):
+    with pytest.raises(InvalidBillingRecordError, match=r"^La hora de generación"):
         dataclasses.replace(record, generated_at=NOW.replace(tzinfo=None))
-    with pytest.raises(InvalidBillingRecordError):
+    with pytest.raises(InvalidBillingRecordError, match=r"^Serie y número"):
         dataclasses.replace(record, series_number="F" * 61)
-    with pytest.raises(InvalidBillingRecordError):
+    with pytest.raises(InvalidBillingRecordError, match=r"^La referencia externa"):
         dataclasses.replace(record, external_ref="x" * 61)
-    with pytest.raises(InvalidBillingRecordError):
+    with pytest.raises(InvalidBillingRecordError, match=r"^La descripción del error"):
         dataclasses.replace(record, error_description="x" * 1501)
     cancel = anulacion(invoice, None)
-    with pytest.raises(InvalidBillingRecordError):
+    with pytest.raises(InvalidBillingRecordError, match=r"^Una anulación no es"):
         dataclasses.replace(cancel, is_correction=True)
-    with pytest.raises(InvalidBillingRecordError):
+    with pytest.raises(InvalidBillingRecordError, match=r"^Huella no válida"):
         ChainLink(
             issuer_tax_id=TaxId("12345678Z"),
             series_number="F-2026-0001",
@@ -442,18 +442,18 @@ def test_registros_no_validos(invoice):
 
 @pytest.mark.req("RN-F-07")
 @pytest.mark.parametrize(
-    "changes",
+    ("changes", "message"),
     [
-        {"producer_name": ""},
-        {"system_name": "x" * 31},
-        {"version": "x" * 51},
-        {"installation_number": "x" * 101},
-        {"system_id": "K"},
-        {"system_id": "K-"},
+        ({"producer_name": ""}, "^Dato del sistema"),
+        ({"system_name": "x" * 31}, "^Dato del sistema"),
+        ({"version": "x" * 51}, "^Dato del sistema"),
+        ({"installation_number": "x" * 101}, "^Dato del sistema"),
+        ({"system_id": "K"}, "^El id del sistema"),
+        ({"system_id": "K-"}, "^El id del sistema"),
     ],
 )
-def test_datos_del_sistema_no_validos(changes):
-    with pytest.raises(InvalidBillingRecordError):
+def test_datos_del_sistema_no_validos(changes, message):
+    with pytest.raises(InvalidBillingRecordError, match=message):
         dataclasses.replace(SYSTEM, **changes)
 
 
@@ -509,3 +509,167 @@ def test_sistema_de_un_solo_obligado():
         has_multiple_taxpayers=False,
     )
     assert system.canonical()["IndicadorMultiplesOT"] == "N"
+
+
+# Bordes y contenido exacto: cada dato del registro va a la AEAT tal cual.
+
+
+@pytest.mark.req("RN-F-07")
+def test_serializacion_canonica_exacta():
+    content = {"b": "Peón", "a": ["x", {"d": "1", "c": "2"}]}
+    assert canonical_json(content) == '{"a":["x",{"c":"2","d":"1"}],"b":"Peón"}'
+
+
+@pytest.mark.req("RN-F-07")
+def test_el_registro_anterior_se_cita_entero(invoice):
+    first = alta(invoice)
+    second = alta(invoice, first)
+    assert second.content()["Encadenamiento"] == {
+        "RegistroAnterior": {
+            "IDEmisorFactura": "12345678Z",
+            "NumSerieFactura": "F-2026-0001",
+            "FechaExpedicionFactura": "18-11-2026",
+            "Huella": first.hash,
+        }
+    }
+    assert first.as_link() == ChainLink(
+        issuer_tax_id=TaxId("12345678Z"),
+        series_number="F-2026-0001",
+        issue_date=TODAY,
+        hash=first.hash,
+    )
+
+
+@pytest.mark.req("RN-F-07")
+def test_contenido_completo_de_la_anulacion(invoice):
+    first = alta(invoice)
+    record = anulacion(invoice, first)
+    content = record.content()
+    assert content == {
+        "IDVersion": "1.0",
+        "IDFactura": {
+            "IDEmisorFacturaAnulada": "12345678Z",
+            "NumSerieFacturaAnulada": "F-2026-0001",
+            "FechaExpedicionFacturaAnulada": "18-11-2026",
+        },
+        "SinRegistroPrevio": "N",
+        "RechazoPrevio": "N",
+        "Encadenamiento": {"RegistroAnterior": first.as_link().canonical()},
+        "SistemaInformatico": SYSTEM.canonical(),
+        "FechaHoraHusoGenRegistro": "2026-11-18T09:30:00+00:00",
+        "TipoHuella": "01",
+    }
+    assert record.is_correction is False
+    assert record.prior_rejection is False
+    rejected = cancellation_record(
+        record_id=BillingRecordId(uuid4()),
+        invoice=invoice,
+        previous=first,
+        system=SYSTEM,
+        generated_at=NOW,
+        prior_rejection=True,
+    )
+    assert rejected.prior_rejection is True
+    assert rejected.content()["RechazoPrevio"] == "S"
+
+
+@pytest.mark.req("RN-F-07")
+@pytest.mark.parametrize("build", ["registration", "cancellation"])
+def test_el_registro_guarda_sus_datos(invoice, build):
+    record_id = BillingRecordId(uuid4())
+    system = dataclasses.replace(SYSTEM, installation_number="obra-2")
+    common = {
+        "record_id": record_id,
+        "invoice": invoice,
+        "previous": None,
+        "system": system,
+        "generated_at": NOW,
+        "external_ref": "REF-9",
+    }
+    if build == "registration":
+        record = registration_record(**common)  # type: ignore[arg-type]
+    else:
+        record = cancellation_record(**common)  # type: ignore[arg-type]
+    assert record.id == record_id
+    assert record.invoice_id == invoice.id
+    assert record.tenant_id == invoice.tenant_id
+    assert record.issuer_tax_id == TaxId("12345678Z")
+    assert record.series_number == "F-2026-0001"
+    assert record.issue_date == TODAY
+    assert record.system == system
+    assert record.external_ref == "REF-9"
+    assert record.content()["SistemaInformatico"]["NumeroInstalacion"] == "obra-2"
+
+
+@pytest.mark.req("RN-F-07")
+def test_la_anulacion_tambien_comprueba_el_registro_anterior(invoice):
+    other = dataclasses.replace(issue(draft(line("1.00"))), tenant_id=TenantId(uuid4()))
+    with pytest.raises(InvalidBillingRecordError, match=r"^Hay una sola cadena"):
+        anulacion(invoice, alta(other))
+    later = alta(invoice, generated_at=NOW + timedelta(seconds=1))
+    with pytest.raises(InvalidBillingRecordError, match=r"^Un registro no puede ser anterior"):
+        anulacion(invoice, later)
+
+
+@pytest.mark.req("RN-F-07")
+def test_dos_registros_en_el_mismo_segundo_se_encadenan(invoice):
+    first = alta(invoice)
+    second = alta(invoice, first, generated_at=NOW)
+    assert second.generated_at == first.generated_at
+    with pytest.raises(InvalidBillingRecordError, match=r"^La hora de generación"):
+        alta(invoice, first, generated_at=NOW.replace(tzinfo=None))
+
+
+@pytest.mark.req("RN-F-07")
+def test_longitudes_maximas_admitidas_en_el_registro(invoice):
+    record = alta(invoice, external_ref="x" * 60)
+    assert record.external_ref == "x" * 60
+    long_number = dataclasses.replace(record, series_number="F" * 60)
+    assert len(long_number.series_number) == 60
+    sent = record.with_submission_result(
+        status=SubmissionStatus.REJECTED, submitted_at=NOW, error_description="x" * 1500
+    )
+    assert sent.error_description == "x" * 1500
+
+
+@pytest.mark.req("RN-F-07")
+def test_el_envio_guarda_todo_su_resultado(invoice):
+    record = alta(invoice)
+    sent_at = NOW + timedelta(minutes=5)
+    sent = record.with_submission_result(
+        status=SubmissionStatus.ACCEPTED_WITH_ERRORS,
+        submitted_at=sent_at,
+        error_code="2000",
+        error_description="Aviso admisible",
+        submission_csv="CSV123",
+    )
+    assert (
+        sent.submission_status,
+        sent.submitted_at,
+        sent.error_code,
+        sent.error_description,
+        sent.submission_csv,
+    ) == (SubmissionStatus.ACCEPTED_WITH_ERRORS, sent_at, "2000", "Aviso admisible", "CSV123")
+
+
+@pytest.mark.req("RN-F-07")
+def test_datos_del_sistema_en_su_longitud_maxima():
+    system = dataclasses.replace(
+        SYSTEM,
+        producer_name="x" * 120,
+        system_name="x" * 30,
+        version="x" * 50,
+        installation_number="x" * 100,
+    )
+    assert SystemInfo.from_canonical(system.canonical()) == system
+
+
+@pytest.mark.req("RN-F-07")
+def test_el_sistema_con_indicadores_n_se_reconstruye():
+    system = dataclasses.replace(
+        SYSTEM, only_verifactu=False, multi_taxpayer=False, has_multiple_taxpayers=False
+    )
+    assert system.canonical()["TipoUsoPosibleSoloVerifactu"] == "N"
+    assert SystemInfo.from_canonical(system.canonical()) == system
+    with pytest.raises(InvalidBillingRecordError, match=r"^Indicador S/N"):
+        SystemInfo.from_canonical({**system.canonical(), "IndicadorMultiplesOT": "n"})

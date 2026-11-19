@@ -101,14 +101,14 @@ def test_el_bloque_del_sistema_se_reconstruye_de_su_contenido_canonico():
 
 @pytest.mark.req("RN-F-07")
 @pytest.mark.parametrize(
-    "block",
+    ("block", "message"),
     [
-        None,
-        "texto",
-        {**SYSTEM.canonical(), "TipoUsoPosibleSoloVerifactu": "X"},
-        {k: v for k, v in SYSTEM.canonical().items() if k != "Version"},
+        (None, "^Contenido canónico mal"),
+        ("texto", "^Contenido canónico mal"),
+        ({**SYSTEM.canonical(), "TipoUsoPosibleSoloVerifactu": "X"}, "^Indicador S/N"),
+        ({k: v for k, v in SYSTEM.canonical().items() if k != "Version"}, "^Falta Version"),
     ],
 )
-def test_un_bloque_del_sistema_mal_formado_se_rechaza(block):
-    with pytest.raises(InvalidBillingRecordError):
+def test_un_bloque_del_sistema_mal_formado_se_rechaza(block, message):
+    with pytest.raises(InvalidBillingRecordError, match=message):
         SystemInfo.from_canonical(block)

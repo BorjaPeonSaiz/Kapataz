@@ -99,7 +99,7 @@ def test_el_numero_se_asigna_al_emitir(invoice_emitida):
 
 @pytest.mark.req("RN-F-02")
 def test_factura_emitida_no_admite_cambios_en_lineas(invoice_emitida):
-    with pytest.raises(InvoiceAlreadyIssuedError):
+    with pytest.raises(InvoiceAlreadyIssuedError, match=r"^Una factura emitida no se modifica"):
         invoice_emitida.add_line(line("45.00", description="Punto de luz"))
 
 
@@ -117,14 +117,16 @@ def test_factura_emitida_no_admite_cambios_en_lineas(invoice_emitida):
     ],
 )
 def test_factura_emitida_no_se_modifica(invoice_emitida, change):
-    with pytest.raises(InvoiceAlreadyIssuedError) as error:
+    with pytest.raises(
+        InvoiceAlreadyIssuedError, match=r"^Una factura emitida no se modifica"
+    ) as error:
         change(invoice_emitida)
     assert error.value.slug == "factura-emitida-inmutable"
 
 
 @pytest.mark.req("RN-F-02")
 def test_factura_emitida_no_se_emite_dos_veces(invoice_emitida):
-    with pytest.raises(InvoiceAlreadyIssuedError):
+    with pytest.raises(InvoiceAlreadyIssuedError, match=r"^Una factura emitida no se modifica"):
         issue(invoice_emitida, sequence=2)
 
 
@@ -190,7 +192,7 @@ def test_fecha_anterior_a_la_ultima_de_la_serie():
     [DocumentNumber(Series.correctives(), 2026, 1), DocumentNumber(Series.invoices(), 2025, 1)],
 )
 def test_el_numero_es_de_la_serie_y_el_anio_de_la_factura(number):
-    with pytest.raises(InvalidDocumentNumberError):
+    with pytest.raises(InvalidDocumentNumberError, match=r"^El número no es de la serie y el año"):
         draft(line("1.00")).issue(
             number=number,
             issue_date=TODAY,
@@ -203,14 +205,14 @@ def test_el_numero_es_de_la_serie_y_el_anio_de_la_factura(number):
 
 @pytest.mark.req("RN-F-12")
 def test_no_se_emite_una_factura_con_base_negativa():
-    with pytest.raises(NegativeInvoiceBaseError):
+    with pytest.raises(NegativeInvoiceBaseError, match=r"^La base no puede ser negativa"):
         issue(draft(line("100.00"), line("-200.00")))
 
 
 @pytest.mark.req("RF-FA-14")
 def test_el_vencimiento_no_es_anterior_a_la_expedicion():
     invoice = draft(line("1.00")).with_dates(operation_date=None, due_date=TODAY - timedelta(1))
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^El vencimiento no puede"):
         issue(invoice)
 
 
@@ -219,21 +221,23 @@ def test_el_vencimiento_de_la_garantia_no_es_anterior_a_la_expedicion():
     invoice = draft(line("1.00")).with_guarantee(
         Guarantee(rate=Percentage.of("5"), due_date=TODAY - timedelta(1))
     )
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^El vencimiento de la garantía"):
         issue(invoice)
 
 
 @pytest.mark.req("RN-F-02")
 def test_estados_imposibles(invoice_emitida):
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^Un borrador no tiene"):
         dataclasses.replace(draft(), number=DocumentNumber(Series.invoices(), 2026, 1))
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^Una emitida tiene"):
         dataclasses.replace(invoice_emitida, issuer=None)
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^La hora de emisión"):
         dataclasses.replace(invoice_emitida, issued_at=datetime(2026, 1, 1))  # noqa: DTZ001
-    with pytest.raises(InvalidDocumentNumberError):
+    with pytest.raises(
+        InvalidDocumentNumberError, match=r"^El número no es de la serie de la factura"
+    ):
         dataclasses.replace(invoice_emitida, series=Series.correctives())
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^La fecha de creación"):
         dataclasses.replace(draft(), created_at=datetime(2026, 1, 1))  # noqa: DTZ001
 
 
@@ -243,15 +247,15 @@ def test_estados_imposibles(invoice_emitida):
 @pytest.mark.req("RF-FA-04")
 @pytest.mark.parametrize("invoice_type", [InvoiceType.F2, InvoiceType.R1])
 def test_una_factura_es_completa_f1(invoice_type):
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^Una factura de la v1"):
         dataclasses.replace(draft(), invoice_type=invoice_type)
 
 
 @pytest.mark.req("RF-FA-10")
 def test_las_fases_salen_de_un_presupuesto():
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^Solo se factura por fases"):
         draft(line("1.00"), phase_type=PhaseType.PROGRESS)
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^Una factura lleva su fase"):
         dataclasses.replace(draft(), phase_type=None)
     progress = draft(line("1.00"), phase_type=PhaseType.PROGRESS, quote_version_id=QUOTE_VERSION)
     assert progress.phase_type is PhaseType.PROGRESS
@@ -262,7 +266,7 @@ def test_las_fases_salen_de_un_presupuesto():
 def test_la_garantia_solo_en_completa_o_final(phase):
     guarantee = Guarantee(rate=Percentage.of("5"), due_date=TODAY)
     invoice = draft(line("1.00"), phase_type=phase, quote_version_id=QUOTE_VERSION)
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^La garantía solo cabe"):
         invoice.with_guarantee(guarantee)
     final = draft(line("1.00"), phase_type=PhaseType.FINAL, quote_version_id=QUOTE_VERSION)
     assert final.with_guarantee(guarantee).guarantee == guarantee
@@ -271,14 +275,14 @@ def test_la_garantia_solo_en_completa_o_final(phase):
 @pytest.mark.req("RF-FA-15")
 @pytest.mark.parametrize("rate", ["0", "100"])
 def test_garantia_fuera_de_rango(rate):
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^La garantía es un"):
         Guarantee(rate=Percentage.of(rate), due_date=TODAY)
 
 
 @pytest.mark.req("RF-FA-05")
 @pytest.mark.parametrize("rate", ["0", "100"])
 def test_retencion_fuera_de_rango(rate):
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^La retención es un"):
         draft().with_withholding(Percentage.of(rate))
 
 
@@ -291,7 +295,7 @@ def test_solo_la_final_resta_facturas_anteriores():
         origin=LineOrigin.PRIOR_INVOICE,
         prior_invoice_id=InvoiceId(uuid4()),
     )
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^Solo la fase final resta"):
         draft(prior, phase_type=PhaseType.PROGRESS, quote_version_id=QUOTE_VERSION)
     final = draft(
         line("300.00", origin=LineOrigin.QUOTE),
@@ -312,13 +316,13 @@ def test_trabajo_adicional_marcado_en_la_app():
 
 @pytest.mark.req("RF-FA-12")
 def test_sin_presupuesto_las_lineas_no_tienen_origen():
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^Sin presupuesto no hay"):
         draft(line("1.00", origin=LineOrigin.ADDITIONAL))
 
 
 @pytest.mark.req("RN-F-13")
 def test_con_presupuesto_destinatario_y_vivienda_estan_en_el():
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^Si la factura sale de un presupuesto"):
         dataclasses.replace(
             draft(quote_version_id=QUOTE_VERSION), recipient_type=RecipientType.PRIVATE
         )
@@ -360,7 +364,7 @@ def test_desde_presupuesto_no_se_emite_al_10_sin_destinatario_y_vivienda_que_lo_
         QUOTE_VERSION, recipient_type=recipient, dwelling_over_two_years=dwelling
     )
 
-    with pytest.raises(InvalidInvoiceError, match="10 %"):
+    with pytest.raises(InvalidInvoiceError, match=r"^El 10 % exige"):
         issue(invoice, version=version)
 
 
@@ -371,7 +375,7 @@ def test_desde_presupuesto_no_se_invierte_el_sujeto_pasivo_a_un_particular(recip
     invoice = from_quote(VatTreatment.reverse_charge())
     version = quote_version(QUOTE_VERSION, recipient_type=recipient)
 
-    with pytest.raises(InvalidInvoiceError, match="inversión"):
+    with pytest.raises(InvalidInvoiceError, match=r"^La inversión del sujeto"):
         issue(invoice, version=version)
 
 
@@ -406,7 +410,7 @@ def test_se_emite_con_la_version_de_la_que_sale_y_solo_con_ella():
     invoice = from_quote(REDUCED)
     other = quote_version(QuoteVersionId(uuid4()))
 
-    with pytest.raises(InvalidInvoiceError, match="versión del presupuesto"):
+    with pytest.raises(InvalidInvoiceError, match=r"^La factura se emite con la versión"):
         invoice.issue(
             number=DocumentNumber(Series.invoices(), 2026, 1),
             issue_date=TODAY,
@@ -415,10 +419,10 @@ def test_se_emite_con_la_version_de_la_que_sale_y_solo_con_ella():
             recipient=RECIPIENT,
             last_issue_date=None,
         )
-    with pytest.raises(InvalidInvoiceError, match="versión del presupuesto"):
+    with pytest.raises(InvalidInvoiceError, match=r"^La factura se emite con la versión"):
         issue(invoice, version=other)
     # Una factura sin presupuesto no toma los datos de uno ajeno.
-    with pytest.raises(InvalidInvoiceError, match="no sale de un presupuesto"):
+    with pytest.raises(InvalidInvoiceError, match=r"^Una factura que no sale"):
         issue(draft(line("1.00")), version=other)
 
 
@@ -446,7 +450,7 @@ def test_sin_presupuesto_la_emitida_conserva_sus_propios_datos():
 def test_lo_que_no_es_obra_solo_va_al_21():
     appliance = line("600.00", outside_works=True)
     assert draft(appliance, treatment=GENERAL).totals.tax == money("126.00")
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^Lo que no forma parte"):
         draft(
             appliance,
             treatment=REDUCED,
@@ -465,7 +469,7 @@ def test_lo_que_no_es_obra_solo_va_al_21():
     ],
 )
 def test_el_10_exige_particular_o_comunidad_y_vivienda_de_dos_anios(recipient, dwelling):
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^El 10 % exige"):
         draft(
             line("1.00"),
             treatment=REDUCED,
@@ -487,7 +491,7 @@ def test_el_10_con_particular_y_vivienda_antigua():
 
 @pytest.mark.req("RN-F-05")
 def test_inversion_solo_con_empresario():
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^La inversión del sujeto"):
         draft(
             line("1.00"),
             treatment=VatTreatment.reverse_charge(),
@@ -506,7 +510,7 @@ def test_al_10_el_material_no_supera_el_40_en_la_obra_entera(phase):
         line("2500.00", origin=LineOrigin.QUOTE),
         line("2500.00", is_material=True, origin=LineOrigin.QUOTE),
     )
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^Con más del 40 %"):
         draft(*lines, treatment=REDUCED, phase_type=phase, quote_version_id=QUOTE_VERSION)
     assert draft(*lines, treatment=GENERAL, phase_type=phase, quote_version_id=QUOTE_VERSION)
 
@@ -569,19 +573,19 @@ def test_anticipo_con_retencion():
 @pytest.mark.req("RN-F-12")
 def test_anticipo_no_valido():
     good = advance("6000.00")
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^El anticipo es un importe"):
         advance("0.00")
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^El anticipo lleva una sola"):
         good.add_line(line("1.00"))
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^La línea del anticipo"):
         good.with_lines([line("5454.56")])
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^La línea del anticipo"):
         good.with_lines([line("5454.55", is_material=True)])
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^La garantía solo cabe"):
         good.with_guarantee(Guarantee(rate=Percentage.of("5"), due_date=TODAY))
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^El anticipo, y solo él"):
         dataclasses.replace(good, phase_type=PhaseType.PROGRESS)
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^El anticipo, y solo él"):
         dataclasses.replace(draft(line("1.00")), gross_amount=money("1.00"))
 
 
@@ -693,7 +697,7 @@ def test_sin_domicilio_no_se_emite(issuer_address, recipient_address, missing):
 def test_la_emitida_guarda_la_copia_completa_de_las_partes(invoice_emitida):
     assert invoice_emitida.issuer.address == "Calle Mayor 1, 28001 Madrid"
     assert invoice_emitida.recipient.address == "Avenida del Puerto 2, 46021 Valencia"
-    with pytest.raises(InvalidInvoiceError):
+    with pytest.raises(InvalidInvoiceError, match=r"^Una emitida tiene"):
         dataclasses.replace(invoice_emitida, recipient=dataclasses.replace(RECIPIENT, address=None))
 
 
@@ -723,3 +727,51 @@ def test_una_suma_de_lineas_por_encima_del_maximo_se_rechaza():
 def test_con_inversion_cabe_la_base_que_al_21_no_cabria():
     invoice = draft(line("20000000.00"), treatment=VatTreatment.reverse_charge())
     assert invoice.totals.total_amount == money("20000000.00")
+
+
+# ----------------------------------------------------------- bordes
+
+
+@pytest.mark.req("RF-FA-01")
+def test_la_descripcion_general_se_cambia_en_el_borrador():
+    invoice = draft(line("1.00"), description="Reforma de baño")
+    assert invoice.with_description("Reforma de cocina").description == "Reforma de cocina"
+
+
+@pytest.mark.req("RN-F-12")
+def test_el_anticipo_es_de_la_cuenta_y_el_cliente_que_lo_crean():
+    invoice = advance("6000.00")
+    assert (invoice.tenant_id, invoice.customer_id) == (TENANT, CUSTOMER)
+
+
+@pytest.mark.req("RN-F-12")
+def test_la_linea_del_anticipo_no_tiene_origen():
+    good = advance("6000.00")
+    (only,) = good.lines
+    with pytest.raises(InvalidInvoiceError, match=r"^La línea del anticipo"):
+        good.with_lines([dataclasses.replace(only, origin=LineOrigin.ADDITIONAL)])
+
+
+@pytest.mark.req("RF-FA-14")
+@pytest.mark.req("RF-FA-15")
+def test_vencimientos_el_mismo_dia_de_la_expedicion():
+    invoice = issue(
+        draft(line("100.00"))
+        .with_dates(operation_date=None, due_date=TODAY)
+        .with_guarantee(Guarantee(rate=Percentage.of("5"), due_date=TODAY))
+    )
+    assert invoice.due_date == TODAY
+    assert invoice.guarantee is not None
+    assert invoice.guarantee.due_date == TODAY
+
+
+@pytest.mark.req("RN-F-02")
+@pytest.mark.parametrize("missing", ["number", "issue_date", "issued_at", "recipient"])
+def test_una_emitida_sin_un_dato_de_emision_no_existe(invoice_emitida, missing):
+    with pytest.raises(InvalidInvoiceError, match=r"^Una emitida tiene"):
+        dataclasses.replace(invoice_emitida, **{missing: None})
+
+
+@pytest.mark.req("RF-FA-12")
+def test_descripcion_de_linea_de_1000_caracteres():
+    assert len(line("1.00", description="x" * 1000).description) == 1000

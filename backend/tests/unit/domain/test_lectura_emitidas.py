@@ -23,11 +23,13 @@ from kapataz.domain.billing.errors import (
 )
 from kapataz.domain.billing.invoice import (
     CorrectiveInvoice,
+    Guarantee,
     Invoice,
     IssuedAmounts,
     RectifiedInvoice,
 )
 from kapataz.domain.billing.numbering import DocumentNumber, Series
+from kapataz.domain.billing.quantity import Percentage
 from tests.unit.domain.billing_factories import (
     ISSUER,
     NOW,
@@ -119,7 +121,7 @@ def test_una_emitida_al_10_con_mas_del_40_de_material_se_lee_pero_no_se_crea():
     )
     lines = (line("700.00", is_material=True), line("300.00"))
     fields = _fields(issued) | {"lines": lines}
-    with pytest.raises(InvalidInvoiceError, match="40 %"):
+    with pytest.raises(InvalidInvoiceError, match=r"^Con más del 40 %"):
         Invoice(**fields)
 
     # La base es la misma (1.000 €), así que los importes guardados también.
@@ -150,7 +152,10 @@ def test_una_emitida_con_importes_guardados_que_no_cuadran_no_se_lee():
         amount_due=totals.amount_due + money("0.01"),
     )
 
-    with pytest.raises(IssuedAmountsMismatchError, match="base, total_amount, amount_due"):
+    with pytest.raises(
+        IssuedAmountsMismatchError,
+        match=r"^Los importes guardados .*: base, total_amount, amount_due$",
+    ):
         _reload(issued, issued_amounts=altered)
 
 
@@ -158,11 +163,13 @@ def test_una_emitida_con_importes_guardados_que_no_cuadran_no_se_lee():
 def test_la_lectura_de_una_emitida_sigue_comprobando_la_estructura():
     issued = issue(draft(line("45.00", "3")))
 
-    with pytest.raises(InvalidDocumentNumberError):
+    with pytest.raises(
+        InvalidDocumentNumberError, match=r"^El número no es de la serie de la factura"
+    ):
         _reload(issued, number=DocumentNumber(Series.correctives(), 2026, 1))
-    with pytest.raises(InvalidInvoiceError, match="Una emitida tiene"):
+    with pytest.raises(InvalidInvoiceError, match=r"^Una emitida tiene"):
         _reload(issued, recipient=dataclasses.replace(RECIPIENT, address=None))
-    with pytest.raises(InvalidInvoiceError, match="vencimiento"):
+    with pytest.raises(InvalidInvoiceError, match=r"^El vencimiento no puede"):
         _reload(issued, due_date=date(2026, 1, 1))
 
 
@@ -170,7 +177,7 @@ def test_la_lectura_de_una_emitida_sigue_comprobando_la_estructura():
 def test_un_borrador_no_se_lee_con_importes_guardados():
     invoice = draft(line("45.00", "3"))
 
-    with pytest.raises(InvalidInvoiceError, match="Solo una factura emitida"):
+    with pytest.raises(InvalidInvoiceError, match=r"^Solo una factura emitida se lee"):
         Invoice(**_fields(invoice), issued_amounts=_amounts(invoice.totals))
 
 
@@ -200,9 +207,9 @@ def test_una_emitida_sin_destinatario_o_sin_vivienda_no_se_lee():
         )
     )
 
-    with pytest.raises(InvalidInvoiceError, match="tipo de destinatario"):
+    with pytest.raises(InvalidInvoiceError, match=r"^Una emitida guarda el tipo"):
         _reload(issued, recipient_type=None, dwelling_over_two_years=None)
-    with pytest.raises(InvalidInvoiceError, match="tipo de destinatario"):
+    with pytest.raises(InvalidInvoiceError, match=r"^Una emitida guarda el tipo"):
         _reload(issued, dwelling_over_two_years=None)
 
 
@@ -235,10 +242,25 @@ def test_la_lectura_solo_exige_la_presencia_no_la_regla_del_tipo():
         )
     )
     fields = _fields(issued) | {"recipient_type": RecipientType.BUSINESS}
-    with pytest.raises(InvalidInvoiceError, match="10 %"):
+    with pytest.raises(InvalidInvoiceError, match=r"^El 10 % exige"):
         Invoice(**fields)
 
     stored = Invoice(**fields, issued_amounts=_amounts(issued.totals))
 
     assert stored.recipient_type is RecipientType.BUSINESS
     assert stored.totals.tax == money("100.00")
+
+
+@pytest.mark.req("RN-F-02")
+def test_cada_importe_guardado_que_no_cuadra_se_nombra():
+    issued = issue(
+        draft(line("1000.00"))
+        .with_withholding(Percentage.of("15"))
+        .with_guarantee(Guarantee(rate=Percentage.of("5"), due_date=TODAY))
+    )
+    stored = _amounts(issued.totals)
+    cent = money("0.01")
+    assert stored.differences(issued.totals) == ()
+    for name in ("base", "tax", "total_amount", "withholding", "guarantee", "amount_due"):
+        altered = dataclasses.replace(stored, **{name: getattr(stored, name) + cent})
+        assert altered.differences(issued.totals) == (name,)
