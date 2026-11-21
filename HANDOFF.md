@@ -98,8 +98,8 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
    - S3-R-08: el núcleo de la carga va con alias privado y `__all__`, y lo vigila la prueba AST `tests/security/test_api_aislamiento_estructural.py`.
    - Bloqueo `ACCESS EXCLUSIVE` en la 0004.
 
-   S3-R-07 y S3-R-09 quedan en «Pendiente». Verificación final del 21/11/2026, con PostgreSQL: 993 pruebas pasan; ruff, mypy, lint-imports (6 contratos), trazabilidad, `uv lock --check` y `--check` (156 documentos, 0 diferencias) en verde. Falta el visto bueno de Borja para el commit y el PR. Borja aprobó ese día la revisión de seguridad por bloque con la fase 7 del plan de verificación (plan maestro §7, «Flujo de entrega y calidad por bloque»).
-3. Comprobaciones completas con PostgreSQL, visto bueno de Borja, commit y PR del Bloque 3.
+   S3-R-07 y S3-R-09 quedan en «Pendiente». Verificación final del 21/11/2026, con PostgreSQL: 993 pruebas pasan; ruff, mypy, lint-imports (6 contratos), trazabilidad, `uv lock --check` y `--check` (156 documentos, 0 diferencias) en verde. Commit `c7c37dd` y PR #7 abierto el 21/11/2026, con el CI en verde; falta que Borja lo integre. Borja aprobó ese día la revisión de seguridad por bloque con la fase 7 del plan de verificación (plan maestro §7, «Flujo de entrega y calidad por bloque»).
+3. Borja revisa e integra el PR #7 (CI en verde el 21/11/2026). Después, Bloque 4.
 
 ## Pendiente
 
