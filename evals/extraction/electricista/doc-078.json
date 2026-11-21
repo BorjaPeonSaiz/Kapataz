@@ -1,0 +1,131 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-078",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-078.pdf",
+  "document_type": "factura",
+  "layout": "tabla_clasica",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Panadería Neira S.L.",
+      "tax_id": "B39112479",
+      "address": "Callejón de Nicanor Santana, 75, 39300 Torrelavega (Cantabria)"
+    },
+    "number": "F-2026-0011",
+    "date": "2026-06-08",
+    "valid_until": null,
+    "due_date": "2026-08-07",
+    "lines": [
+      {
+        "concept": "Cuadro general de mando y protección",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "256.64",
+        "discount": null,
+        "amount": "256.64",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Interruptor diferencial 40 A 30 mA",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "71.52",
+        "discount": null,
+        "amount": "71.52",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Magnetotérmico 16 A",
+        "quantity": "8",
+        "unit": "ud",
+        "unit_price": "15.11",
+        "discount": null,
+        "amount": "120.88",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "6.5",
+        "unit": "h",
+        "unit_price": "35.50",
+        "discount": null,
+        "amount": "230.75",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Certificado de instalación eléctrica (CIE)",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "144.00",
+        "discount": null,
+        "amount": "144.00",
+        "vat_rate": "21"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "21",
+        "base": "823.79",
+        "amount": "173.00"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "823.79",
+    "vat_rate": "21",
+    "vat_amount": "173.00",
+    "withholding": null,
+    "guarantee": null,
+    "total": "996.79",
+    "amount_due": "996.79"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Panadería Neira S.L."
+    },
+    {
+      "kind": "nif",
+      "value": "B39112479"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón de Nicanor Santana, 75, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "iban",
+      "value": "ES61 0000 2534 2671 0652 9292"
+    }
+  ]
+}

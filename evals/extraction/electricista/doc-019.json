@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-019",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-019.pdf",
+  "document_type": "otro",
+  "layout": "tabla_clasica",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": null,
+  "other": {
+    "kind": "albaran_proveedor",
+    "description": "Albarán de un proveedor de material, sin precios."
+  },
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Suministros Eléctricos Quintana S.L."
+    },
+    {
+      "kind": "nif",
+      "value": "B39499918"
+    },
+    {
+      "kind": "direccion",
+      "value": "C. Geraldo Urrutia, 84, 39011 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "499 20 26 14"
+    },
+    {
+      "kind": "email",
+      "value": "pedidosquintana@correo.example"
+    }
+  ]
+}

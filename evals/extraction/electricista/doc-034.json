@@ -1,0 +1,122 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-034",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-034.pdf",
+  "document_type": "factura",
+  "layout": "word_exportado",
+  "scanned": true,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Talleres Pizarro S.L.",
+      "tax_id": "B39751540",
+      "address": "C. Andrea Sureda, 62, 39470 Piélagos (Cantabria)"
+    },
+    "number": "F-2025-0021",
+    "date": "2025-08-01",
+    "valid_until": null,
+    "due_date": "2025-09-30",
+    "lines": [
+      {
+        "concept": "Cuadro general de mando y protección",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "235.45",
+        "discount": "5",
+        "amount": "223.68",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Interruptor diferencial 40 A 30 mA",
+        "quantity": "2",
+        "unit": "ud",
+        "unit_price": "65.34",
+        "discount": null,
+        "amount": "130.68",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Magnetotérmico 16 A",
+        "quantity": "4",
+        "unit": "ud",
+        "unit_price": "12.99",
+        "discount": "10",
+        "amount": "46.76",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "7.5",
+        "unit": "h",
+        "unit_price": "31.00",
+        "discount": null,
+        "amount": "232.50",
+        "vat_rate": "21"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "21",
+        "base": "633.62",
+        "amount": "133.06"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "633.62",
+    "vat_rate": "21",
+    "vat_amount": "133.06",
+    "withholding": null,
+    "guarantee": null,
+    "total": "766.68",
+    "amount_due": "766.68"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Talleres Pizarro S.L."
+    },
+    {
+      "kind": "nif",
+      "value": "B39751540"
+    },
+    {
+      "kind": "direccion",
+      "value": "C. Andrea Sureda, 62, 39470 Piélagos (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "iban",
+      "value": "ES61 0000 2534 2671 0652 9292"
+    }
+  ]
+}

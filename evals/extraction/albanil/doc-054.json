@@ -1,0 +1,126 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-054",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-054.pdf",
+  "document_type": "factura",
+  "layout": "logotipo_pie_extenso",
+  "scanned": true,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Victoriano Garrido Sandoval",
+      "tax_id": "52381187K",
+      "address": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    "customer": {
+      "name": "Comunidad de Propietarios Paseo Paloma Miguel 18",
+      "tax_id": "H39295670",
+      "address": "Paseo Paloma Miguel, 18, 39001 Santander (Cantabria)"
+    },
+    "number": "FA-2025-0032",
+    "date": "2025-11-28",
+    "valid_until": null,
+    "due_date": "2025-12-13",
+    "lines": [
+      {
+        "concept": "Andamio tubular",
+        "quantity": "2",
+        "unit": "semana",
+        "unit_price": "205.50",
+        "discount": null,
+        "amount": "411.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Enfoscado de mortero",
+        "quantity": "64",
+        "unit": "m²",
+        "unit_price": "12.93",
+        "discount": null,
+        "amount": "827.52",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Oficial de primera albañil",
+        "quantity": "24",
+        "unit": "h",
+        "unit_price": "25.50",
+        "discount": null,
+        "amount": "612.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Peón de albañil",
+        "quantity": "47",
+        "unit": "h",
+        "unit_price": "22.00",
+        "discount": null,
+        "amount": "1034.00",
+        "vat_rate": "10"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "10",
+        "base": "2884.52",
+        "amount": "288.45"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "2884.52",
+    "vat_rate": "10",
+    "vat_amount": "288.45",
+    "withholding": null,
+    "guarantee": null,
+    "total": "3172.97",
+    "amount_due": "3172.97"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Comunidad de Propietarios Paseo Paloma Miguel 18"
+    },
+    {
+      "kind": "nif",
+      "value": "H39295670"
+    },
+    {
+      "kind": "direccion",
+      "value": "Paseo Paloma Miguel, 18, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "465 14 65 95"
+    },
+    {
+      "kind": "email",
+      "value": "reformasyalbanileriagarrido@correo.example"
+    },
+    {
+      "kind": "nombre",
+      "value": "Reformas y Albañilería Garrido"
+    },
+    {
+      "kind": "iban",
+      "value": "ES98 0000 6561 8819 0436 4394"
+    }
+  ]
+}

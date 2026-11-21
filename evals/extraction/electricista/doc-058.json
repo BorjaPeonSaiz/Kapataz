@@ -1,0 +1,126 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-058",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-058.pdf",
+  "document_type": "factura",
+  "layout": "programa_generico",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Emelina Belda Bejarano",
+      "tax_id": "64037754G",
+      "address": "Acceso de Adrián Botella, 25, 4.º izda., 39008 Santander (Cantabria)"
+    },
+    "number": "F-2025-0037",
+    "date": "2025-12-04",
+    "valid_until": null,
+    "due_date": "2025-12-19",
+    "lines": [
+      {
+        "concept": "Punto de luz sencillo",
+        "quantity": "2",
+        "unit": "ud",
+        "unit_price": "36.50",
+        "discount": null,
+        "amount": "73.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Base de enchufe 16 A",
+        "quantity": "5",
+        "unit": "ud",
+        "unit_price": "32.00",
+        "discount": null,
+        "amount": "160.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Cable H07V-K 2,5 mm²",
+        "quantity": "21",
+        "unit": "m",
+        "unit_price": "0.92",
+        "discount": null,
+        "amount": "19.32",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "5.5",
+        "unit": "h",
+        "unit_price": "33.50",
+        "discount": null,
+        "amount": "184.25",
+        "vat_rate": "10"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "10",
+        "base": "436.57",
+        "amount": "43.66"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "436.57",
+    "vat_rate": "10",
+    "vat_amount": "43.66",
+    "withholding": null,
+    "guarantee": null,
+    "total": "480.23",
+    "amount_due": "480.23"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Emelina Belda Bejarano"
+    },
+    {
+      "kind": "nif",
+      "value": "64037754G"
+    },
+    {
+      "kind": "direccion",
+      "value": "Acceso de Adrián Botella, 25, 4.º izda., 39008 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "nombre",
+      "value": "Electricidad Batlle"
+    },
+    {
+      "kind": "iban",
+      "value": "ES61 0000 2534 2671 0652 9292"
+    }
+  ]
+}

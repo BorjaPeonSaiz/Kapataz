@@ -36,7 +36,18 @@ class AccountRepository(Protocol):
     """
 
     async def add_tenant(self, tenant: Tenant) -> None:
-        """Requiere la cuenta fijada en la transacción: ``tenants`` tiene RLS."""
+        """Requiere la cuenta fijada en la transacción: ``tenants`` tiene RLS.
+
+        Una cuenta normal se da de alta con ella misma fijada; un espacio de
+        demostración, con su cuenta padre fijada (migración 0004).
+
+        Lanza ``TenantAlreadyExistsError`` si ya hay una cuenta con ese id o la
+        cuenta padre ya tiene espacio de demostración.
+        """
+        ...
+
+    async def get_tenant(self, tenant_id: TenantId) -> Tenant | None:
+        """La cuenta, si es la fijada en la transacción; si no, None (RLS)."""
         ...
 
     async def add_user(self, user: User) -> None:

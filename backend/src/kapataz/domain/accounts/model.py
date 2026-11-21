@@ -3,8 +3,10 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
-from typing import NewType
-from uuid import UUID
+from typing import NewType, Self
+from uuid import UUID, uuid5
+
+from kapataz.domain.accounts.errors import InvalidDemoParentError
 
 TenantId = NewType("TenantId", UUID)
 UserId = NewType("UserId", UUID)
@@ -15,6 +17,10 @@ SESSION_TTL = timedelta(days=14)
 # para no escribir en la base de datos en cada petición.
 SESSION_TOUCH_INTERVAL = timedelta(minutes=5)
 EMAIL_VERIFICATION_TTL = timedelta(hours=24)
+
+# Espacio de nombres fijo del id del espacio de demostración. No cambia nunca:
+# los espacios ya creados dejarían de encontrarse.
+_DEMO_TENANT_NAMESPACE = UUID("0c44e0ae-77b2-4169-a20e-57700647830c")
 
 
 class TenantKind(StrEnum):
@@ -39,6 +45,30 @@ class Tenant:
         if (self.kind is TenantKind.DEMO) != (self.parent_tenant_id is not None):
             msg = "Un espacio de demostración, y solo él, tiene cuenta padre."
             raise ValueError(msg)
+
+    @classmethod
+    def demo_of(cls, parent: "Tenant", created_at: datetime) -> Self:
+        """El espacio de demostración de una cuenta normal (RF-CF-04), sin nombre."""
+        if parent.kind is not TenantKind.STANDARD:
+            raise InvalidDemoParentError("Un espacio de demostración no tiene otro dentro.")
+        return cls(
+            id=demo_tenant_id(parent.id),
+            name=None,
+            kind=TenantKind.DEMO,
+            parent_tenant_id=parent.id,
+            created_at=created_at,
+        )
+
+
+def demo_tenant_id(parent_id: TenantId) -> TenantId:
+    """Id del único espacio de demostración de una cuenta, derivado del de la cuenta.
+
+    RLS solo deja ver la fila de ``tenants`` de la cuenta fijada (ADR-024): desde
+    la cuenta no se puede buscar su espacio por ``parent_tenant_id``. Con el id
+    derivado se encuentra sin saltarse RLS, y la clave primaria impide que una
+    cuenta tenga dos.
+    """
+    return TenantId(uuid5(_DEMO_TENANT_NAMESPACE, str(parent_id)))
 
 
 @dataclass(frozen=True, slots=True)

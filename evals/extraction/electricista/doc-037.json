@@ -1,0 +1,162 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-037",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-037.pdf",
+  "document_type": "factura",
+  "layout": "programa_generico",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Melisa Llabrés Salas",
+      "tax_id": "49356914H",
+      "address": "Plaza de Marcio Guillén, 24, 2.º A, 39600 Camargo (Cantabria)"
+    },
+    "number": "F-2025-0024",
+    "date": "2025-08-11",
+    "valid_until": null,
+    "due_date": "2025-08-26",
+    "lines": [
+      {
+        "concept": "Punto de luz sencillo",
+        "quantity": "4",
+        "unit": "ud",
+        "unit_price": "39.50",
+        "discount": null,
+        "amount": "158.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Base de enchufe 16 A",
+        "quantity": "4",
+        "unit": "ud",
+        "unit_price": "34.50",
+        "discount": null,
+        "amount": "138.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Toma de cocina 25 A",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "57.00",
+        "discount": null,
+        "amount": "57.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Foco empotrable LED",
+        "quantity": "5",
+        "unit": "ud",
+        "unit_price": "15.11",
+        "discount": null,
+        "amount": "75.55",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Cable H07V-K 2,5 mm²",
+        "quantity": "32",
+        "unit": "m",
+        "unit_price": "0.91",
+        "discount": null,
+        "amount": "29.12",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Cable H07V-K 6 mm²",
+        "quantity": "15",
+        "unit": "m",
+        "unit_price": "2.04",
+        "discount": null,
+        "amount": "30.60",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Tubo corrugado de 20 mm",
+        "quantity": "15",
+        "unit": "m",
+        "unit_price": "0.67",
+        "discount": null,
+        "amount": "10.05",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "9.5",
+        "unit": "h",
+        "unit_price": "31.50",
+        "discount": null,
+        "amount": "299.25",
+        "vat_rate": "10"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "10",
+        "base": "797.57",
+        "amount": "79.76"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "797.57",
+    "vat_rate": "10",
+    "vat_amount": "79.76",
+    "withholding": null,
+    "guarantee": null,
+    "total": "877.33",
+    "amount_due": "877.33"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Melisa Llabrés Salas"
+    },
+    {
+      "kind": "nif",
+      "value": "49356914H"
+    },
+    {
+      "kind": "direccion",
+      "value": "Plaza de Marcio Guillén, 24, 2.º A, 39600 Camargo (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "nombre",
+      "value": "Electricidad Batlle"
+    },
+    {
+      "kind": "iban",
+      "value": "ES61 0000 2534 2671 0652 9292"
+    }
+  ]
+}

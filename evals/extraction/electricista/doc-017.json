@@ -1,0 +1,233 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-017",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-017.pdf",
+  "document_type": "presupuesto",
+  "layout": "programa_generico",
+  "scanned": false,
+  "pages": 2,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [
+    {
+      "kind": "linea_partida",
+      "field": "lines[7]",
+      "detail": "Una línea empieza en una página y sigue en la siguiente: en una tabla, el concepto continúa sin cantidad ni precio; en texto corrido, la frase continúa con el resto de la línea. Los importes cuadran.",
+      "pages": [
+        1,
+        2
+      ],
+      "printed": null,
+      "correct": null
+    }
+  ],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Tiburcio Garrido Alfaro",
+      "tax_id": "66217214F",
+      "address": "Rambla de Cristóbal Casal, 49, 4.º izda., 39470 Piélagos (Cantabria)"
+    },
+    "number": "P-2025-0008",
+    "date": "2025-05-12",
+    "valid_until": "2025-06-11",
+    "due_date": null,
+    "lines": [
+      {
+        "concept": "Cuadro general de mando y protección. Cuadro empotrable de 18 módulos con interruptor general, diferencial y magnetotérmicos por circuito, montado y conexionado.",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "248.92",
+        "discount": null,
+        "amount": "248.92",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Interruptor diferencial 40 A 30 mA. Interruptor diferencial bipolar de 40 A y 30 mA de sensibilidad, clase AC.",
+        "quantity": "2",
+        "unit": "ud",
+        "unit_price": "69.95",
+        "discount": null,
+        "amount": "139.90",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Magnetotérmico 16 A. Interruptor magnetotérmico bipolar de 16 A, curva C, 6 kA.",
+        "quantity": "9",
+        "unit": "ud",
+        "unit_price": "14.43",
+        "discount": null,
+        "amount": "129.87",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Punto de luz sencillo. Punto de luz sencillo con caja de registro, tubo corrugado y conductor de 1,5 mm² hasta el cuadro, con mecanismo de gama media.",
+        "quantity": "14",
+        "unit": "ud",
+        "unit_price": "37.50",
+        "discount": null,
+        "amount": "525.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Punto de luz conmutado. Punto de luz conmutado desde dos lugares, con cajas, tubo, conductor de 1,5 mm² y dos conmutadores de gama media.",
+        "quantity": "5",
+        "unit": "ud",
+        "unit_price": "49.50",
+        "discount": null,
+        "amount": "247.50",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Base de enchufe 16 A. Base de enchufe schuko de 16 A con toma de tierra, línea de 2,5 mm² bajo tubo corrugado y caja de mecanismo.",
+        "quantity": "17",
+        "unit": "ud",
+        "unit_price": "35.50",
+        "discount": null,
+        "amount": "603.50",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Toma de cocina 25 A. Toma de 25 A para placa de cocina con línea independiente de 6 mm² desde el cuadro y su magnetotérmico.",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "55.50",
+        "discount": null,
+        "amount": "55.50",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Foco empotrable LED. Foco LED empotrable de 7 W, luz neutra y aro blanco, con su caja de empotrar.",
+        "quantity": "9",
+        "unit": "ud",
+        "unit_price": "14.51",
+        "discount": null,
+        "amount": "130.59",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Cable H07V-K 2,5 mm². Conductor de cobre flexible H07V-K de 2,5 mm² en colores normalizados.",
+        "quantity": "159",
+        "unit": "m",
+        "unit_price": "0.91",
+        "discount": null,
+        "amount": "144.69",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Cable H07V-K 6 mm². Conductor de cobre flexible H07V-K de 6 mm² para circuitos de cocina y horno.",
+        "quantity": "18",
+        "unit": "m",
+        "unit_price": "1.94",
+        "discount": null,
+        "amount": "34.92",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Tubo corrugado de 20 mm. Tubo corrugado reforzado de 20 mm de diámetro para instalación empotrada.",
+        "quantity": "139",
+        "unit": "m",
+        "unit_price": "0.69",
+        "discount": null,
+        "amount": "95.91",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Toma de tierra con pica. Pica de acero cobrizado de 2 m, conductor de 35 mm² y arqueta de registro.",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "85.00",
+        "discount": null,
+        "amount": "85.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista. Hora de oficial de primera electricista, con pequeño material de fijación incluido.",
+        "quantity": "35.5",
+        "unit": "h",
+        "unit_price": "31.50",
+        "discount": null,
+        "amount": "1118.25",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Mano de obra de ayudante. Hora de ayudante de electricista para tendido de líneas y apertura de rozas.",
+        "quantity": "21",
+        "unit": "h",
+        "unit_price": "22.50",
+        "discount": null,
+        "amount": "472.50",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Certificado de instalación eléctrica (CIE). Redacción del certificado de instalación eléctrica, mediciones y tramitación ante la Dirección General de Industria.",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "150.50",
+        "discount": null,
+        "amount": "150.50",
+        "vat_rate": "10"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "10",
+        "base": "4182.55",
+        "amount": "418.26"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "4182.55",
+    "vat_rate": "10",
+    "vat_amount": "418.26",
+    "withholding": null,
+    "guarantee": null,
+    "total": "4600.81",
+    "amount_due": "4600.81"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Tiburcio Garrido Alfaro"
+    },
+    {
+      "kind": "nif",
+      "value": "66217214F"
+    },
+    {
+      "kind": "direccion",
+      "value": "Rambla de Cristóbal Casal, 49, 4.º izda., 39470 Piélagos (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "nombre",
+      "value": "Electricidad Batlle"
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-075",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-075.pdf",
+  "document_type": "factura",
+  "layout": "logotipo_pie_extenso",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Damián Hervia Serra",
+      "tax_id": "44351713P",
+      "address": "Avenida Eliana Lago, 90, 1.º B, 39011 Santander (Cantabria)"
+    },
+    "number": "F-2026-0008",
+    "date": "2026-04-28",
+    "valid_until": null,
+    "due_date": "2026-05-13",
+    "lines": [
+      {
+        "concept": "Desplazamiento a domicilio",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "26.00",
+        "discount": null,
+        "amount": "26.00",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "1",
+        "unit": "h",
+        "unit_price": "31.00",
+        "discount": null,
+        "amount": "31.00",
+        "vat_rate": "21"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "21",
+        "base": "57.00",
+        "amount": "11.97"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "57.00",
+    "vat_rate": "21",
+    "vat_amount": "11.97",
+    "withholding": null,
+    "guarantee": null,
+    "total": "68.97",
+    "amount_due": "68.97"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Damián Hervia Serra"
+    },
+    {
+      "kind": "nif",
+      "value": "44351713P"
+    },
+    {
+      "kind": "direccion",
+      "value": "Avenida Eliana Lago, 90, 1.º B, 39011 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "nombre",
+      "value": "Electricidad Batlle"
+    },
+    {
+      "kind": "iban",
+      "value": "ES61 0000 2534 2671 0652 9292"
+    }
+  ]
+}

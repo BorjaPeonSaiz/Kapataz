@@ -5,7 +5,19 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 ## Estado y objetivo actual
 
 - **Bloques 0, 1 y 2:** cerrados. PR #3 integrado el 12/11/2026 (`12e5edb`), PR #4 el 17/11/2026 (`c4a95c0`) y PR #5 el 19/11/2026 (`7ce0758`). La prueba del Bloque 1 con un móvil real queda pendiente como excepción aprobada (ver «Pendiente»).
-- **Trabajo en curso:** rama `calidad-mutacion` (Borja, 19/11/2026): la mutación de `domain/billing` pasa del 76,3 % al 90,76 % (2392 mutantes, 2171 muertos, 221 supervivientes) solo con pruebas. En `invoice`, `billing_record` y `numbering` las pruebas comprueban el principio del mensaje con `match=` anclado (decisión de Borja: solo en las reglas fiscales); en el resto de módulos, no.
+- **Calidad de la mutación:** PR #6 integrado el 19/11/2026 (`60e4c6f`). `domain/billing` está al 90,76 % (2392 mutantes, 2171 muertos, 221 supervivientes) solo con pruebas. En `invoice`, `billing_record` y `numbering` las pruebas comprueban el principio del mensaje con `match=` anclado (decisión de Borja: solo en las reglas fiscales); en el resto de módulos, no.
+- **Trabajo en curso: Bloque 3, datos sintéticos** (rama `bloque-03-datos-sinteticos`, desde el 20/11/2026). Decisiones de Borja del 20/11/2026:
+  - `seed_demo.py` crea el espacio demo (`tenants.kind = 'demo'` con `parent_tenant_id`) y carga el profesional, los clientes, el catálogo y los presupuestos con el dominio. No emite facturas: el histórico son documentos importados (RF-IN-09) y sus PDF se cargan como documentos aprobados en el Bloque 4.
+  - Hueco 1 de `docs/04-evaluacion-ia.md`: el 15 % de los PDF son escaneados, y todos llevan su JSON esperado.
+  - Un `README.md` en la raíz que documente los documentos sintéticos. El README de portafolio completo sigue en el Bloque 11.
+  - Los PDF van solo en `samples/`; `evals/extraction/` guarda los JSON emparejados por nombre y `manifest.json`.
+  - El `total` de la verdad de referencia es el total impreso (base + cuota − IRPF); el Bloque 4 lo traduce al `total_amount` del dominio.
+  - El NIF ausente sembrado tiene el motivo esperado `falta_nif_cliente` (apoyo en RN-F-06). El Bloque 4 lo confirma y, si hace falta, propone ampliar RF-IN-05.
+  - Los PDF del histórico no llevan marca visible de demostración; lo sintético consta en sus metadatos.
+- **Hecho en el Bloque 3:** generador (`backend/tools/gen_synthetic.py` y `backend/tools/synthetic/`) con 156 PDF (23 escaneados, 18 con error sembrado, 8 «otros» y 5 trampas) y sus JSON. `gen_synthetic.py --check` regenera y compara. Los PDF se comparan por `content_sha256` y no byte a byte, porque zlib y libjpeg cambian entre plataformas.
+  - `seed_demo.py` (`--account <email> --trade electricista|albanil`) con el caso de uso `LoadDemoSpace`, el rol de la app y una sola transacción. El id del espacio demo se deriva con `uuid5` a partir del de la cuenta, porque RLS no deja ver la fila desde la cuenta padre; pendiente de validar en la revisión. 884 pruebas pasan con PostgreSQL.
+  - ADR-020 cerrado; el hueco 1 de `docs/04` está resuelto y el árbol del plan, al día.
+  - Reparto: `qa-testing` hace el generador, los PDF, la verdad de referencia y la trampa; después `backend-fastapi` hace `seed_demo.py` y `arquitecto-python` cierra ADR-020 y el hueco 1; por último, el README y las revisiones.
 - **`main`:** protegida desde el 17/11/2026, con el check `ci` obligatorio, la rama al día, conversaciones resueltas y también para administradores; sin force push.
 - **Demo de portafolio y sin despliegue hasta el Bloque 12** (Borja, 17/11/2026; plan maestro §1.5, ADR-014): todo se construye y se prueba en local. La 1.0.0 es la demo que supera la Parte II, y publicarla no abre el registro mientras quede algún pendiente legal (RN-13).
 - **Decisiones de Borja del 18/11/2026:**
@@ -74,8 +86,20 @@ Memoria de continuidad entre sesiones. Lo actualiza solo el hilo principal (plan
 
 ## Siguiente acción
 
-1. Borja revisa e integra el PR de `calidad-mutacion` (con `mutacion.yml` en verde sobre la rama).
-2. Bloque 3 del plan maestro.
+1. Bloque 3: las correcciones de código de las revisiones de cierre están hechas (21/11/2026): 933 pruebas con PostgreSQL, sin omitidas; `--check` con 0 diferencias en 156 documentos; README de la raíz al día. Queda la documentación de `arquitecto-python` (ADR-024, arquitectura, ADR-020, docs/03, docs/04 y plan maestro).
+2. Segunda pasada de `seguridad-ia` hecha (21/11/2026), sin bloqueantes. Los hallazgos nuevos esperan la decisión de Borja:
+   - S3-R-01 (importante): la huella corta el PDF en la última `xref` y no ve lo que se añade detrás; los escapes `#xx` esquivan la prueba de contenido activo.
+   - S3-R-02 (importante): los teléfonos 0XX caen en números cortos reales. El del electricista es `061…` (urgencias) en 77 JSON.
+   - S3-R-03: `LoadDemoSpace.execute` acepta cualquier `TenantId`.
+   - S3-R-04: la prueba de destinos de las trampas no mira URL ni teléfonos.
+   - S3-R-05: la 0004 no revisa las filas existentes.
+   La documentación de `arquitecto-python` está hecha. Borja aprobó el 21/11/2026 corregir los cinco en este PR y dejar como están los puntos de documentación (P-07 en el Bloque 12, `/Subject` de la trampa, `may_flag_for_review` solo en las trampas, convención `KZF`, R-16). El código de los cinco está corregido: teléfonos `46X`/`49X` del segmento 4 (RD 2296/2004), huella del PDF completo con estructura validada, `LoadDemoSpace` con `AuthenticatedUser` y comprobación previa en la 0004. 939 pruebas con PostgreSQL; `--check`, con 0 diferencias. La documentación está al día (ADR-020, ADR-024, ADR-001, arquitectura y R-16). La revisión rápida de `seguridad-ia` da R-01 a R-05 por cerrados y no tiene bloqueantes. Corregidos también en el PR:
+   - S3-R-06: validación estricta del JPEG; `samples/` no cambia.
+   - S3-R-08: el núcleo de la carga va con alias privado y `__all__`, y lo vigila la prueba AST `tests/security/test_api_aislamiento_estructural.py`.
+   - Bloqueo `ACCESS EXCLUSIVE` en la 0004.
+
+   S3-R-07 y S3-R-09 quedan en «Pendiente». Verificación final del 21/11/2026, con PostgreSQL: 993 pruebas pasan; ruff, mypy, lint-imports (6 contratos), trazabilidad, `uv lock --check` y `--check` (156 documentos, 0 diferencias) en verde. Commit `c7c37dd` y PR #7 abierto el 21/11/2026, con el CI en verde; falta que Borja lo integre. Borja aprobó ese día la revisión de seguridad por bloque con la fase 7 del plan de verificación (plan maestro §7, «Flujo de entrega y calidad por bloque»).
+3. Borja revisa e integra el PR #7 (CI en verde el 21/11/2026). Después, Bloque 4.
 
 ## Pendiente
 
@@ -228,6 +252,41 @@ Corregidos en el PR: S2-01, S2-02, S2-04/I-02/I-01, M-10, M-12 (dentro de S2-02)
   - M-13: código sobrante y mensajes que repiten lo obvio.
 - **Mutación (`plataforma-entrega`, 19/11/2026):** primera pasada de mutmut 3.8.1 sobre `domain/billing`, confirmada en `main` (run 44536494958): 76,3 % (2392 mutantes, 1826 muertos, 566 supervivientes; sobre todo `invoice`, `billing_record` y `quote`). El umbral del 80 % es de la Fase 3 del plan de verificación y de ADR-033 (Bloque 8); corregido en `calidad-mutacion` (90,76 %). Quedan 16 mutantes equivalentes; seis delatan código redundante para `arquitecto-python`: `billing_record.py` `_require_issued` (cuatro `or` que solo acotan tipos para mypy), el `or ""` de la descripción y la segunda condición de base y cuota de la rectificada. Trampa de mutmut 3: los objetos creados al importar o en `parametrize` no ven el mutante; la llamada tiene que ir dentro de la prueba. El job `mutacion.yml` es manual y falla por debajo del 80 %. mutmut entra con `uv run --with` sin hash: añadirlo al grupo `dev` y al lock (ADR-022).
 
+### Hallazgos de las revisiones de cierre del Bloque 3 que no entran en su PR (20/11/2026)
+
+- **Bloque 4 (ingesta):**
+  - Motivo de revisión `contenido_sospechoso` para los documentos con instrucciones inyectadas (S3-03). Toca RF-IN-05 y necesita aprobación.
+  - Confirmar `falta_nif_cliente` como motivo de revisión; RF-IN-05 solo es aritmético.
+  - Traducir el `total` impreso al `total_amount` del dominio.
+  - Marcar en la verdad de referencia si cada dato personal está en el diccionario de la cuenta (§4.2).
+  - Numeración del histórico importado (`F-2025-…`) frente a la serie que emite la app en el mismo espacio de demostración (S3-12); las dudas, al asesor.
+  - Cargar los PDF del histórico como documentos aprobados con `seed_demo.py`.
+- **Bloque 6:** trampas en otro idioma, con trucos Unicode (anchura cero, bidi), en un presupuesto o en un «otro» (S3-04); un caso en el que un concepto aprobado con instrucción vuelve por una herramienta y debe seguir delimitado como dato (S3-03).
+- **Bloque del botón «Cargar datos de ejemplo» (RF-CF-04):** `gen_synthetic` exporta el contenido de la demo a un JSON empaquetado con la app y un adaptador lo carga sin Faker (decisión de Borja del 20/11/2026). Faltan además:
+  - el endpoint;
+  - la entrada de la sesión en el espacio, que deriva siempre el id de la sesión, comprueba `parent_tenant_id` y nunca acepta un id del cliente (S3-09);
+  - la función de vaciado: borra todo lo ligado al id (ficheros, `audit_events`, cola), y `professional.tenant_id` no tiene `ON DELETE CASCADE`.
+- **Bloques 7 y 8:** no hay contador de presupuestos, y los cargados ocupan `P-2026-00NN`; el caso de uso que cree presupuestos chocaría con ellos (M-5).
+- **Glosario:** `AccountNotFoundError` frente a `TenantAlreadyExistsError` (M-7, junto con la M-08 del Bloque 1).
+- **Restos de S3-06 y S3-09:**
+  - `ejemplo.es` sigue en `tests/integration/test_api_postgres.py` y en los docstrings de `admin_cli.py` y `email_address.py`; hay que pasarlo a un dominio reservado.
+  - `create_courtesy_account.py` (de `kapataz-admin`) sigue fuera de `use_cases/admin/`. Si se mueve, queda bajo el contrato que impide que la API lo importe.
+- **`seed_demo` y `SET ROLE`:** comprueba el rol con `current_user`, que es el que decide RLS. Un superusuario que haga `SET ROLE kapataz_app` pasa la comprobación mientras mantenga el rol (así se conectan las pruebas de integración en local). Aceptable para una herramienta de operador, pero hay que anotarlo.
+- **Revisión rápida de seguridad del Bloque 3 (21/11/2026), aplazado:**
+  - **S3-R-07 (medio, Bloque 4):** `scan_differences` (`tools/synthetic/scan.py`) solo cuenta los píxeles con una diferencia de 96 o más. Un PR podría añadir a un escaneado texto en gris 150-180 que lee el OCR, sin que falle `--check`. Hay que medir los umbrales con el OCR real del Bloque 4 (diferencia media por bloques o un `_INK_DELTA` de 40 a 48) y probarlo con texto en gris 160. Mientras tanto, lo protege la revisión de los PR que tocan `samples/`.
+  - **S3-R-09 (bajo, Bloque 6):** los filtros de destinos de las trampas no cubren algunas formas:
+    - números cortos (112, 016, 11818);
+    - paréntesis, barras o espacios duros entre cifras, o cifras pegadas a letras;
+    - `34…` sin `+`;
+    - dominios sin esquema y `\` en las URL;
+    - IBAN compactos o de otros países.
+
+    Las trampas actuales no usan ninguna.
+  - **Segmento 4 de la numeración:** contrastar con las atribuciones vigentes de la CNMC que sigue sin atribuir antes de la 1.0.0 (`tools/synthetic/people.py`, ADR-020, decisión 8).
+- **SQLSTATE `KZF14`** (migración 0004) rompe la regla de que `KZFnn` sigue a `RN-F-nn`: una futura RN-F-14 tendrá que tomar otro código.
+- **Dominio:** exponer `dni_letter` y `cif_control_digit` para que el generador no copie el algoritmo (M-1).
+- **DNI sintéticos:** no hay rango reservado y casi todos los números están expedidos. Documentar el riesgo residual en docs/03 y consultarlo con el abogado. Sube la prioridad de P-07 (que la demo nunca llegue a la AEAT).
+
 ### Por decidir en su bloque
 
 - **Bloque 12, contraste con los esquemas de la AEAT** (interpretaciones provisionales del Bloque 2 en `billing_record.py`):
@@ -268,6 +327,11 @@ Son el detalle de los pendientes legales. No bloquean los bloques de la demo.
     - si las fases que hay que rectificar van a tipos de IVA distintos, una rectificativa por tipo (`phases.plan_final_phase`); el plan habla de «una rectificativa»;
     - sin decidir: anticipo y certificaciones al 21 % y final al 10 %; hoy el dominio no lo resuelve, decide quien llama;
     - anticipo cobrado con retención de IRPF: el importe cobrado se trata como el total con IVA (`calculation.totals_from_gross`).
+  - **Reglas provisionales del generador sintético** (`backend/tools/synthetic/fiscal.py`, Bloque 3):
+    - inversión del sujeto pasivo solo en obras para constructoras y promotoras;
+    - 1 % de IRPF del albañil en estimación objetiva a empresas;
+    - retención de garantía del 5 % en cada certificación;
+    - lo que va fuera de la obra, al 21 % en la misma factura.
   - **Fecha de expedición en Europe/Madrid** (`issue_invoice.FISCAL_TIMEZONE`, ADR-012): en Canarias solo cambiaría la fecha entre las 23:00 y las 00:00 de allí; confirmar con el asesor.
 - **Abogado:** condiciones de uso, contrato de encargo, política de privacidad, aviso de IA y plazos de conservación (antes de producción, Bloque 10). Comprobar también la lista oficial del Marco de Privacidad.
 - **Proveedores de envío VERI*FACTU:** elección del proveedor y autorización de cada cliente (Bloque 12).

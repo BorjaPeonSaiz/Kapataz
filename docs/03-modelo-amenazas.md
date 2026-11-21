@@ -295,7 +295,7 @@ S = suplantación, T = manipulación, R = repudio, I = divulgación, D = denegac
 | T-55 | S | Credenciales del proveedor robadas, o claves de pruebas y reales mezcladas en producción. | Guardadas como secretos; en local solo claves de pruebas; en producción, las de pruebas hasta el bloque que pide las reales y nunca las dos a la vez (Fase 7, Fase 10, ADR-014) | 12 | Fase 7 · «Credenciales del proveedor de Verifactu» |
 | T-56 | R, T | El estado local de un registro no coincide con el de la AEAT. | Conciliación periódica por `external_ref` si el proveedor ofrece la consulta (Bloque 12) | 12 | Fase 3 · «Envío» |
 | T-57 | D | El proveedor o la AEAT no responden. | Reintentos visibles y `sent_with_incident` (RF-VF-04) | 12 | Fase 3 · «Envío» |
-| T-58 | T | Una factura del espacio de demostración o de una cuenta anterior a la 1.0.0 llega a la AEAT de producción. | RN-13 y RN-F-09 marcan esas facturas, pero el plan no dice que nunca se envíen. **Propuesta P-07** | 12 | Prueba de P-07 |
+| T-58 | T | Una factura del espacio de demostración o de una cuenta anterior a la 1.0.0 llega a la AEAT de producción. | RN-13 y RN-F-09 marcan esas facturas, pero el plan no dice que nunca se envíen. **Propuesta P-07**, prioritaria por R-16 | 12 | Prueba de P-07 |
 | T-59 | T | La hora del servidor se desvía y `generated_at` sale del margen de un minuto (RN-F-07). | `Clock` inyectado. **Propuesta P-12:** sincronización horaria vigilada | 10, 12 | Prueba de P-12 |
 
 ### 4.13 SMTP, copias, CI/CD y servidor
@@ -431,6 +431,7 @@ Las transferencias de Stripe también necesitan garantías (Fase 7, «Transferen
 | R-13 | Cuestiones fiscales abiertas: RDL 29/2026, convenio doble de colaboración social, aplazamiento para productores, modificación técnica de la AEAT, validación final. | Asesor fiscal ⚖️. | Antes del Bloque 8 (RDL 29/2026); el resto, antes de lanzar |
 | R-14 | Cuestiones de protección de datos y de IA: textos legales, contrato de encargo, art. 50, registro de actividades, posible evaluación de impacto. | Abogado ⚖️. | Antes de lanzar |
 | R-15 | Ámbito y custodia de la tabla de equivalencias y conservación de las conversaciones. | P-06 y P-15. | Bloques 4 y 6 |
+| R-16 | DNI sintéticos que pueden ser de alguien. No hay un rango de DNI reservado para pruebas y casi todos los números están expedidos, así que un DNI del generador, con su letra de control correcta, puede coincidir con el de una persona real. Teléfonos (segmento 4 del plan de numeración, sin atribuir), IBAN y correos sí son inatribuibles (ADR-020, decisión 8). Mitigación: el DNI va siempre con nombre, dirección y contacto inventados; todo PDF lo declara sintético en sus metadatos; y solo vive en `samples/`, `evals/` y el espacio de demostración, del que nada debe salir hacia la AEAT (P-07). | Consultar con el abogado ⚖️ si basta o hace falta otra medida. | Antes de lanzar |
 
 ### 7.3 Cuándo se revisa este documento
 
@@ -458,7 +459,7 @@ Controles que **no están en el plan**. Ninguno cambia una decisión aceptada. C
 | P-04 | Subida del logotipo: solo PNG o JPEG (sin SVG), tamaño y dimensiones máximos, y recodificación en el servidor antes de guardarlo. | T-29 | `backend-fastapi` | 10 |
 | P-05 | Decodificar el audio en el worker con límites de tiempo, memoria y duración, igual que los PDFs. | T-44 | `ingeniero-ia` | 9 |
 | P-06 | Fijar el ámbito de la tabla de equivalencias de seudónimos (por cuenta y por conversación o petición), dónde se guarda y cuánto dura. La restitución solo usa la tabla de esa cuenta y esa conversación. | T-37, LLM02 | `ingeniero-ia` | 4, 6 |
-| P-07 | El espacio de demostración y las cuentas anteriores a la 1.0.0 nunca envían registros a la AEAT de producción: usan `NullBillingRecordSubmission` o el entorno de pruebas. | T-58 | `arquitecto-python` | 12 |
+| P-07 | **Prioritaria (20/11/2026).** El espacio de demostración y las cuentas anteriores a la 1.0.0 nunca envían registros a la AEAT de producción: usan `NullBillingRecordSubmission` o el entorno de pruebas. Sube de prioridad porque los NIF de la demo pueden ser de personas reales (R-16): un envío atribuiría una factura falsa a alguien. | T-58, R-16 | `arquitecto-python` | 12 |
 | P-08 | Autorizaciones firmadas: guardarlas cifradas y aparte del resto de ficheros, con acceso restringido y registrado, y borrarlas al vencer el plazo de RF-VF-07. | T-53, R-12 | `backend-fastapi` + `plataforma-entrega` | 12 |
 | P-09 | Copias: la clave de cifrado se custodia fuera del VPS, y el destino tiene retención inmutable o el servidor solo tiene credenciales de escritura. | T-61, T-62 | `plataforma-entrega` | 10 |
 | P-10 | Despliegue a producción desde un entorno protegido de GitHub con aprobación manual, y clave de despliegue de alcance mínimo. | T-64 | `plataforma-entrega` | 1, 10 |
@@ -478,7 +479,7 @@ Controles que **no están en el plan**. Ninguno cambia una decisión aceptada. C
 ## 9. Huecos del plan detectados
 
 1. **Módulo 3 de Anthropic:** ADR-029 lo da por confirmado y el plan de verificación («Antes de empezar», 1.c) lo da por pendiente.
-2. **Facturas de demostración y la AEAT:** nada dice que el espacio de demostración no envíe registros a la AEAT de producción (P-07).
+2. **Facturas de demostración y la AEAT:** nada dice que el espacio de demostración no envíe registros a la AEAT de producción (P-07, prioritaria por R-16).
 3. **Tabla de equivalencias y conversaciones:** no se fija dónde viven, su ámbito ni su plazo (P-06, P-15).
 4. **Autorizaciones con copia del DNI:** hay plazo de conservación, pero no protección específica (P-08).
 5. **Subida del logotipo:** RF-CF-01 la incluye y no hay validación prevista (P-04).

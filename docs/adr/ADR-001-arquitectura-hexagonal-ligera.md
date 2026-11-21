@@ -60,6 +60,8 @@ Opción 1, según §4.1 del plan:
   - Contrato `layers`: `kapataz.api` > `kapataz.infrastructure` > `kapataz.application` > `kapataz.domain`. Una capa no importa otra superior.
   - Contrato `forbidden`: `kapataz.domain` no importa `fastapi`, `sqlalchemy`, `alembic`, `anthropic`, `stripe` ni `procrastinate`.
   - Contrato `forbidden`: `kapataz.application` no importa `fastapi`, `sqlalchemy` ni `anthropic`.
+  - Desde el Bloque 3, tres contratos `forbidden` más: `kapataz.api` no importa `kapataz.application.use_cases.admin` (ADR-024), `kapataz.api` no importa directamente `kapataz.application.use_cases.demo_space_loader` (ADR-024, S3-R-03) y `kapataz` no importa el generador de `tools/` (ADR-020).
+  - La lista completa de módulos prohibidos de cada contrato está en `backend/pyproject.toml` (`[tool.importlinter]`).
 - **ruff** (`flake8-tidy-imports.banned-api`) prohíbe `datetime.datetime.now` y `datetime.date.today`; solo `SystemClock` queda exceptuado.
 - **mypy `--strict`** sobre `domain` y `application`, en CI.
 - **Prueba unitaria sin E/S**, como la del Anexo C: `tests/unit/billing/test_invoice.py::test_factura_emitida_no_admite_cambios_en_lineas` con `@pytest.mark.req("RN-F-02")`. Las pruebas de `tests/unit` no usan base de datos ni red.

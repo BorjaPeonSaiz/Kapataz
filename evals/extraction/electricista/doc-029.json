@@ -1,0 +1,140 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-029",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-029.pdf",
+  "document_type": "factura",
+  "layout": "tabla_clasica",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Néstor Bauzà Valentín",
+      "tax_id": "50281627Q",
+      "address": "Alameda de Tomás Ríos, 60, 1.º A, 39470 Piélagos (Cantabria)"
+    },
+    "number": "F-2025-0016",
+    "date": "2025-06-23",
+    "valid_until": null,
+    "due_date": "2025-07-08",
+    "lines": [
+      {
+        "concept": "Cuadro general de mando y protección",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "261.66",
+        "discount": null,
+        "amount": "261.66",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Interruptor diferencial 40 A 30 mA",
+        "quantity": "2",
+        "unit": "ud",
+        "unit_price": "67.58",
+        "discount": null,
+        "amount": "135.16",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Magnetotérmico 16 A",
+        "quantity": "6",
+        "unit": "ud",
+        "unit_price": "14.49",
+        "discount": null,
+        "amount": "86.94",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Toma de tierra con pica",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "82.50",
+        "discount": null,
+        "amount": "82.50",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "7.5",
+        "unit": "h",
+        "unit_price": "30.00",
+        "discount": null,
+        "amount": "225.00",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Certificado de instalación eléctrica (CIE)",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "146.50",
+        "discount": null,
+        "amount": "146.50",
+        "vat_rate": "21"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "21",
+        "base": "937.76",
+        "amount": "196.93"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "937.76",
+    "vat_rate": "21",
+    "vat_amount": "196.93",
+    "withholding": null,
+    "guarantee": null,
+    "total": "1134.69",
+    "amount_due": "1134.69"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Néstor Bauzà Valentín"
+    },
+    {
+      "kind": "nif",
+      "value": "50281627Q"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Tomás Ríos, 60, 1.º A, 39470 Piélagos (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "iban",
+      "value": "ES61 0000 2534 2671 0652 9292"
+    }
+  ]
+}

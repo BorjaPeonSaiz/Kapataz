@@ -1,14 +1,18 @@
 """Reglas de cuentas en el dominio, sin E/S."""
 
 from datetime import UTC, datetime, timedelta
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
 from kapataz.domain.accounts.email_address import EmailAddress
-from kapataz.domain.accounts.errors import InvalidEmailError, WeakPasswordError
+from kapataz.domain.accounts.errors import (
+    InvalidDemoParentError,
+    InvalidEmailError,
+    WeakPasswordError,
+)
 from kapataz.domain.accounts.model import (
     SESSION_TOUCH_INTERVAL,
     EmailVerification,
@@ -18,6 +22,7 @@ from kapataz.domain.accounts.model import (
     TenantId,
     TenantKind,
     UserId,
+    demo_tenant_id,
 )
 from kapataz.domain.accounts.password_policy import check_password_policy
 from kapataz.domain.accounts.registration_policy import RegistrationPolicy
@@ -152,3 +157,29 @@ def test_espacio_de_demostracion_exige_cuenta_padre():
         Tenant(TenantId(uuid4()), "demo", TenantKind.DEMO, None, NOW)
     with pytest.raises(ValueError, match="demostración"):
         Tenant(TenantId(uuid4()), "normal", TenantKind.STANDARD, parent, NOW)
+
+
+@pytest.mark.req("RF-CF-04")
+def test_el_espacio_de_demostracion_de_una_cuenta_tiene_id_derivado_y_estable():
+    parent = Tenant(TenantId(uuid4()), None, TenantKind.STANDARD, None, NOW)
+    demo = Tenant.demo_of(parent, NOW)
+    assert demo == Tenant(demo_tenant_id(parent.id), None, TenantKind.DEMO, parent.id, NOW)
+    # El mismo para la misma cuenta, distinto del de la cuenta y del de otra.
+    assert demo_tenant_id(parent.id) == demo.id
+    assert demo.id != parent.id
+    assert demo_tenant_id(TenantId(uuid4())) != demo.id
+
+
+@pytest.mark.req("RF-CF-04")
+def test_un_espacio_de_demostracion_no_tiene_otro_dentro():
+    parent = Tenant(TenantId(uuid4()), None, TenantKind.STANDARD, None, NOW)
+    demo = Tenant.demo_of(parent, NOW)
+    with pytest.raises(InvalidDemoParentError):
+        Tenant.demo_of(demo, NOW)
+
+
+@pytest.mark.req("RF-CF-04")
+def test_el_id_del_espacio_de_demostracion_no_cambia_nunca():
+    """I-6: valor fijo. Si cambia el espacio de nombres, los espacios ya creados se pierden."""
+    parent = TenantId(UUID("6f1c2a4e-3b5d-4e7f-8a9b-0c1d2e3f4a5b"))
+    assert demo_tenant_id(parent) == UUID("02b85faa-6190-5dba-97b7-3fe1e20e4604")

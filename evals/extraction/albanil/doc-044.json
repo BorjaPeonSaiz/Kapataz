@@ -1,0 +1,119 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-044",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-044.pdf",
+  "document_type": "factura",
+  "layout": "tabla_clasica",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Victoriano Garrido Sandoval",
+      "tax_id": "52381187K",
+      "address": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    "customer": {
+      "name": "Construcciones Borrás S.L.",
+      "tax_id": "B39410469",
+      "address": "Paseo Pánfilo Iglesia, 62, 2.º A, 39008 Santander (Cantabria)"
+    },
+    "number": "FA-2025-0024",
+    "date": "2025-09-25",
+    "valid_until": null,
+    "due_date": "2025-11-24",
+    "lines": [
+      {
+        "concept": "Trasdosado de placa de yeso laminado",
+        "quantity": "50.75",
+        "unit": "m²",
+        "unit_price": "23.50",
+        "discount": null,
+        "amount": "1192.63",
+        "vat_rate": null
+      },
+      {
+        "concept": "Ayudas de albañilería a instalaciones",
+        "quantity": "1",
+        "unit": "pa",
+        "unit_price": "518.00",
+        "discount": null,
+        "amount": "518.00",
+        "vat_rate": null
+      },
+      {
+        "concept": "Oficial de primera albañil",
+        "quantity": "14.35",
+        "unit": "h",
+        "unit_price": "26.50",
+        "discount": null,
+        "amount": "380.28",
+        "vat_rate": null
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": null,
+        "base": "2090.91",
+        "amount": "0.00"
+      }
+    ],
+    "reverse_charge": true,
+    "base": "2090.91",
+    "vat_rate": null,
+    "vat_amount": "0.00",
+    "withholding": {
+      "rate": "1",
+      "amount": "20.91"
+    },
+    "guarantee": {
+      "rate": "5",
+      "amount": "104.55"
+    },
+    "total": "2070.00",
+    "amount_due": "1965.45"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Construcciones Borrás S.L."
+    },
+    {
+      "kind": "nif",
+      "value": "B39410469"
+    },
+    {
+      "kind": "direccion",
+      "value": "Paseo Pánfilo Iglesia, 62, 2.º A, 39008 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "465 14 65 95"
+    },
+    {
+      "kind": "email",
+      "value": "reformasyalbanileriagarrido@correo.example"
+    },
+    {
+      "kind": "iban",
+      "value": "ES98 0000 6561 8819 0436 4394"
+    }
+  ]
+}

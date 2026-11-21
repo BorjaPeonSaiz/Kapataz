@@ -1,0 +1,113 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-043",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-043.pdf",
+  "document_type": "factura",
+  "layout": "texto_sin_tabla",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Panadería Neira S.L.",
+      "tax_id": "B39112479",
+      "address": "Callejón de Nicanor Santana, 75, 39300 Torrelavega (Cantabria)"
+    },
+    "number": "F-2025-0028",
+    "date": "2025-09-26",
+    "valid_until": null,
+    "due_date": "2025-11-25",
+    "lines": [
+      {
+        "concept": "Luminaria LED de panel 60x60",
+        "quantity": "19",
+        "unit": "ud",
+        "unit_price": "49.82",
+        "discount": null,
+        "amount": "946.58",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Cable H07V-K 2,5 mm²",
+        "quantity": "72",
+        "unit": "m",
+        "unit_price": "0.95",
+        "discount": "10",
+        "amount": "61.56",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "13",
+        "unit": "h",
+        "unit_price": "32.00",
+        "discount": null,
+        "amount": "416.00",
+        "vat_rate": "21"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "21",
+        "base": "1424.14",
+        "amount": "299.07"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "1424.14",
+    "vat_rate": "21",
+    "vat_amount": "299.07",
+    "withholding": null,
+    "guarantee": null,
+    "total": "1723.21",
+    "amount_due": "1723.21"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Panadería Neira S.L."
+    },
+    {
+      "kind": "nif",
+      "value": "B39112479"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón de Nicanor Santana, 75, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "iban",
+      "value": "ES61 0000 2534 2671 0652 9292"
+    }
+  ]
+}

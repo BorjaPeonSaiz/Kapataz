@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-068",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-068.pdf",
+  "document_type": "presupuesto",
+  "layout": "tabla_clasica",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Comunidad de Propietarios Camino Selena Corbacho 77",
+      "tax_id": "H39745492",
+      "address": "Camino Selena Corbacho, 77, 39740 Santoña (Cantabria)"
+    },
+    "number": "P-2026-0001",
+    "date": "2026-03-12",
+    "valid_until": "2026-04-11",
+    "due_date": null,
+    "lines": [
+      {
+        "concept": "Desplazamiento a domicilio",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "27.50",
+        "discount": null,
+        "amount": "27.50",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "3.5",
+        "unit": "h",
+        "unit_price": "30.50",
+        "discount": null,
+        "amount": "106.75",
+        "vat_rate": "10"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "10",
+        "base": "134.25",
+        "amount": "13.43"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "134.25",
+    "vat_rate": "10",
+    "vat_amount": "13.43",
+    "withholding": null,
+    "guarantee": null,
+    "total": "147.68",
+    "amount_due": "147.68"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Comunidad de Propietarios Camino Selena Corbacho 77"
+    },
+    {
+      "kind": "nif",
+      "value": "H39745492"
+    },
+    {
+      "kind": "direccion",
+      "value": "Camino Selena Corbacho, 77, 39740 Santoña (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    }
+  ]
+}

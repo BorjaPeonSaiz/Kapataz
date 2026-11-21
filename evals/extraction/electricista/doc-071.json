@@ -1,0 +1,114 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-071",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-071.pdf",
+  "document_type": "factura",
+  "layout": "programa_generico",
+  "scanned": true,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [
+    {
+      "kind": "nif_ausente",
+      "field": "customer.tax_id",
+      "detail": "El documento no imprime el NIF del cliente.",
+      "printed": null,
+      "correct": "B39677448"
+    }
+  ],
+  "expected_review_reasons": [
+    "falta_nif_cliente"
+  ],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Cafetería Suárez S.L.",
+      "tax_id": null,
+      "address": "Alameda de Silvio Reguera, 41, 39200 Reinosa (Cantabria)"
+    },
+    "number": "F-2026-0005",
+    "date": "2026-04-06",
+    "valid_until": null,
+    "due_date": "2026-06-05",
+    "lines": [
+      {
+        "concept": "Desplazamiento a domicilio",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "25.00",
+        "discount": null,
+        "amount": "25.00",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "3.5",
+        "unit": "h",
+        "unit_price": "34.00",
+        "discount": null,
+        "amount": "119.00",
+        "vat_rate": "21"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "21",
+        "base": "144.00",
+        "amount": "30.24"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "144.00",
+    "vat_rate": "21",
+    "vat_amount": "30.24",
+    "withholding": null,
+    "guarantee": null,
+    "total": "174.24",
+    "amount_due": "174.24"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Cafetería Suárez S.L."
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Silvio Reguera, 41, 39200 Reinosa (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "nombre",
+      "value": "Electricidad Batlle"
+    },
+    {
+      "kind": "iban",
+      "value": "ES61 0000 2534 2671 0652 9292"
+    }
+  ]
+}

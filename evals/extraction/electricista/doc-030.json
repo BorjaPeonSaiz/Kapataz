@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-030",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-030.pdf",
+  "document_type": "factura",
+  "layout": "tabla_clasica",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Augusto Rivero Coll",
+      "tax_id": "46347435C",
+      "address": "Alameda Severino Ayuso, 14, 3.º D, 39001 Santander (Cantabria)"
+    },
+    "number": "F-2025-0017",
+    "date": "2025-06-25",
+    "valid_until": null,
+    "due_date": "2025-07-10",
+    "lines": [
+      {
+        "concept": "Base de enchufe 16 A",
+        "quantity": "6",
+        "unit": "ud",
+        "unit_price": "35.50",
+        "discount": null,
+        "amount": "213.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "5.5",
+        "unit": "h",
+        "unit_price": "32.00",
+        "discount": null,
+        "amount": "176.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Lámpara de techo (solo suministro)",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "84.00",
+        "discount": null,
+        "amount": "84.00",
+        "vat_rate": "21"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "10",
+        "base": "389.00",
+        "amount": "38.90"
+      },
+      {
+        "rate": "21",
+        "base": "84.00",
+        "amount": "17.64"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "473.00",
+    "vat_rate": null,
+    "vat_amount": "56.54",
+    "withholding": null,
+    "guarantee": null,
+    "total": "529.54",
+    "amount_due": "529.54"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Augusto Rivero Coll"
+    },
+    {
+      "kind": "nif",
+      "value": "46347435C"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda Severino Ayuso, 14, 3.º D, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "iban",
+      "value": "ES61 0000 2534 2671 0652 9292"
+    }
+  ]
+}

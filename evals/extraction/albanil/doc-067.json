@@ -1,0 +1,158 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-067",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-067.pdf",
+  "document_type": "factura",
+  "layout": "tabla_clasica",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Victoriano Garrido Sandoval",
+      "tax_id": "52381187K",
+      "address": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    "customer": {
+      "name": "Prudencia Franch Águila",
+      "tax_id": "50774958C",
+      "address": "Plaza José Antonio Moliner, 2, 1.º B, 39313 Polanco (Cantabria)"
+    },
+    "number": "FA-2026-0008",
+    "date": "2026-03-11",
+    "valid_until": null,
+    "due_date": "2026-03-26",
+    "lines": [
+      {
+        "concept": "Demolición de tabique",
+        "quantity": "8",
+        "unit": "m²",
+        "unit_price": "9.69",
+        "discount": null,
+        "amount": "77.52",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Contenedor y retirada de escombros",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "186.00",
+        "discount": null,
+        "amount": "186.00",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Alicatado de paredes",
+        "quantity": "19",
+        "unit": "m²",
+        "unit_price": "25.50",
+        "discount": null,
+        "amount": "484.50",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Solado de gres porcelánico",
+        "quantity": "6.5",
+        "unit": "m²",
+        "unit_price": "29.50",
+        "discount": null,
+        "amount": "191.75",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Cemento cola flexible C2",
+        "quantity": "5",
+        "unit": "saco",
+        "unit_price": "14.43",
+        "discount": null,
+        "amount": "72.15",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Cemento gris en saco de 25 kg",
+        "quantity": "11",
+        "unit": "saco",
+        "unit_price": "7.03",
+        "discount": null,
+        "amount": "77.33",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Oficial de primera albañil",
+        "quantity": "32",
+        "unit": "h",
+        "unit_price": "27.50",
+        "discount": null,
+        "amount": "880.00",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Peón de albañil",
+        "quantity": "13",
+        "unit": "h",
+        "unit_price": "21.00",
+        "discount": null,
+        "amount": "273.00",
+        "vat_rate": "21"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "21",
+        "base": "2242.25",
+        "amount": "470.87"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "2242.25",
+    "vat_rate": "21",
+    "vat_amount": "470.87",
+    "withholding": null,
+    "guarantee": null,
+    "total": "2713.12",
+    "amount_due": "2713.12"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Prudencia Franch Águila"
+    },
+    {
+      "kind": "nif",
+      "value": "50774958C"
+    },
+    {
+      "kind": "direccion",
+      "value": "Plaza José Antonio Moliner, 2, 1.º B, 39313 Polanco (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "465 14 65 95"
+    },
+    {
+      "kind": "email",
+      "value": "reformasyalbanileriagarrido@correo.example"
+    },
+    {
+      "kind": "iban",
+      "value": "ES98 0000 6561 8819 0436 4394"
+    }
+  ]
+}

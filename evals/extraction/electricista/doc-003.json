@@ -1,0 +1,131 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-003",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-003.pdf",
+  "document_type": "factura",
+  "layout": "word_exportado",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Isaías Viñas Garzón",
+      "tax_id": "52723779M",
+      "address": "Cañada de Narcisa Estrada, 63, 3.º D, 39100 Santa Cruz de Bezana (Cantabria)"
+    },
+    "number": "F-2025-0002",
+    "date": "2025-02-03",
+    "valid_until": null,
+    "due_date": "2025-02-18",
+    "lines": [
+      {
+        "concept": "Cuadro general de mando y protección",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "265.83",
+        "discount": null,
+        "amount": "265.83",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Interruptor diferencial 40 A 30 mA",
+        "quantity": "2",
+        "unit": "ud",
+        "unit_price": "63.87",
+        "discount": null,
+        "amount": "127.74",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Magnetotérmico 16 A",
+        "quantity": "5",
+        "unit": "ud",
+        "unit_price": "15.14",
+        "discount": null,
+        "amount": "75.70",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "7",
+        "unit": "h",
+        "unit_price": "32.00",
+        "discount": null,
+        "amount": "224.00",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Certificado de instalación eléctrica (CIE)",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "151.50",
+        "discount": null,
+        "amount": "151.50",
+        "vat_rate": "21"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "21",
+        "base": "844.77",
+        "amount": "177.40"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "844.77",
+    "vat_rate": "21",
+    "vat_amount": "177.40",
+    "withholding": null,
+    "guarantee": null,
+    "total": "1022.17",
+    "amount_due": "1022.17"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Isaías Viñas Garzón"
+    },
+    {
+      "kind": "nif",
+      "value": "52723779M"
+    },
+    {
+      "kind": "direccion",
+      "value": "Cañada de Narcisa Estrada, 63, 3.º D, 39100 Santa Cruz de Bezana (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "iban",
+      "value": "ES61 0000 2534 2671 0652 9292"
+    }
+  ]
+}

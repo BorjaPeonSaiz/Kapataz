@@ -1,0 +1,216 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-033",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-033.pdf",
+  "document_type": "factura",
+  "layout": "programa_generico",
+  "scanned": false,
+  "pages": 2,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [
+    {
+      "kind": "linea_partida",
+      "field": "lines[6]",
+      "detail": "Una línea empieza en una página y sigue en la siguiente: en una tabla, el concepto continúa sin cantidad ni precio; en texto corrido, la frase continúa con el resto de la línea. Los importes cuadran.",
+      "pages": [
+        1,
+        2
+      ],
+      "printed": null,
+      "correct": null
+    }
+  ],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Victoriano Garrido Sandoval",
+      "tax_id": "52381187K",
+      "address": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    "customer": {
+      "name": "Construcciones Borrás S.L.",
+      "tax_id": "B39410469",
+      "address": "Paseo Pánfilo Iglesia, 62, 2.º A, 39008 Santander (Cantabria)"
+    },
+    "number": "FA-2025-0018",
+    "date": "2025-08-26",
+    "valid_until": null,
+    "due_date": "2025-10-25",
+    "lines": [
+      {
+        "concept": "Demolición de tabique. Demolición de tabique de ladrillo con medios manuales, con carga de escombros sobre contenedor.",
+        "quantity": "29.25",
+        "unit": "m²",
+        "unit_price": "9.71",
+        "discount": null,
+        "amount": "284.02",
+        "vat_rate": null
+      },
+      {
+        "concept": "Tabique de ladrillo hueco doble. Tabique de ladrillo hueco doble de 7 cm recibido con mortero de cemento M-5, aplomado y con sus mochetas.",
+        "quantity": "269.25",
+        "unit": "m²",
+        "unit_price": "23.50",
+        "discount": null,
+        "amount": "6327.38",
+        "vat_rate": null
+      },
+      {
+        "concept": "Enfoscado de mortero. Enfoscado maestreado y fratasado con mortero de cemento M-5 en paramentos verticales.",
+        "quantity": "447.75",
+        "unit": "m²",
+        "unit_price": "13.84",
+        "discount": null,
+        "amount": "6196.86",
+        "vat_rate": null
+      },
+      {
+        "concept": "Trasdosado de placa de yeso laminado. Trasdosado autoportante con placa de yeso laminado de 15 mm, perfilería de 48 mm y aislamiento de lana mineral.",
+        "quantity": "175.5",
+        "unit": "m²",
+        "unit_price": "22.00",
+        "discount": null,
+        "amount": "3861.00",
+        "vat_rate": null
+      },
+      {
+        "concept": "Recrecido de mortero autonivelante. Recrecido de mortero autonivelante de 4 cm de espesor medio, con banda perimetral.",
+        "quantity": "102.25",
+        "unit": "m²",
+        "unit_price": "13.29",
+        "discount": null,
+        "amount": "1358.90",
+        "vat_rate": null
+      },
+      {
+        "concept": "Solado de gres porcelánico. Solado de gres porcelánico recibido con cemento cola, rejuntado y limpieza final; pieza aportada por el cliente.",
+        "quantity": "203",
+        "unit": "m²",
+        "unit_price": "27.00",
+        "discount": null,
+        "amount": "5481.00",
+        "vat_rate": null
+      },
+      {
+        "concept": "Alicatado de paredes. Alicatado con azulejo cerámico recibido con cemento cola, cortes y rejuntado; pieza aportada por el cliente.",
+        "quantity": "85",
+        "unit": "m²",
+        "unit_price": "25.50",
+        "discount": null,
+        "amount": "2167.50",
+        "vat_rate": null
+      },
+      {
+        "concept": "Impermeabilización de terraza. Impermeabilización con lámina asfáltica de doble capa y protección con mortero.",
+        "quantity": "59.25",
+        "unit": "m²",
+        "unit_price": "32.00",
+        "discount": null,
+        "amount": "1896.00",
+        "vat_rate": null
+      },
+      {
+        "concept": "Solera de hormigón. Solera de hormigón HM-20 de 15 cm de espesor con mallazo electrosoldado, vertida y reglada.",
+        "quantity": "61",
+        "unit": "m²",
+        "unit_price": "19.87",
+        "discount": null,
+        "amount": "1212.07",
+        "vat_rate": null
+      },
+      {
+        "concept": "Colocación de bordillo. Bordillo de hormigón prefabricado recibido sobre base de hormigón y rejuntado.",
+        "quantity": "42.75",
+        "unit": "m",
+        "unit_price": "16.94",
+        "discount": null,
+        "amount": "724.19",
+        "vat_rate": null
+      },
+      {
+        "concept": "Oficial de primera albañil. Hora de oficial de primera albañil con herramienta propia.",
+        "quantity": "121",
+        "unit": "h",
+        "unit_price": "26.50",
+        "discount": null,
+        "amount": "3206.50",
+        "vat_rate": null
+      },
+      {
+        "concept": "Peón de albañil. Hora de peón para acarreo de material, limpieza y ayudas.",
+        "quantity": "60.5",
+        "unit": "h",
+        "unit_price": "20.50",
+        "discount": null,
+        "amount": "1240.25",
+        "vat_rate": null
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": null,
+        "base": "33955.67",
+        "amount": "0.00"
+      }
+    ],
+    "reverse_charge": true,
+    "base": "33955.67",
+    "vat_rate": null,
+    "vat_amount": "0.00",
+    "withholding": {
+      "rate": "1",
+      "amount": "339.56"
+    },
+    "guarantee": {
+      "rate": "5",
+      "amount": "1697.78"
+    },
+    "total": "33616.11",
+    "amount_due": "31918.33"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Construcciones Borrás S.L."
+    },
+    {
+      "kind": "nif",
+      "value": "B39410469"
+    },
+    {
+      "kind": "direccion",
+      "value": "Paseo Pánfilo Iglesia, 62, 2.º A, 39008 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "465 14 65 95"
+    },
+    {
+      "kind": "email",
+      "value": "reformasyalbanileriagarrido@correo.example"
+    },
+    {
+      "kind": "nombre",
+      "value": "Reformas y Albañilería Garrido"
+    },
+    {
+      "kind": "iban",
+      "value": "ES98 0000 6561 8819 0436 4394"
+    }
+  ]
+}

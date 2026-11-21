@@ -1,0 +1,140 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-040",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-040.pdf",
+  "document_type": "factura",
+  "layout": "logotipo_pie_extenso",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Eugenia Manzanares Nogués",
+      "tax_id": "38914427Z",
+      "address": "Camino de Clara Carreras, 84, 1.º A, 39008 Santander (Cantabria)"
+    },
+    "number": "F-2025-0026",
+    "date": "2025-09-08",
+    "valid_until": null,
+    "due_date": "2025-09-23",
+    "lines": [
+      {
+        "concept": "Punto de luz sencillo",
+        "quantity": "4",
+        "unit": "ud",
+        "unit_price": "41.50",
+        "discount": null,
+        "amount": "166.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Base de enchufe 16 A",
+        "quantity": "6",
+        "unit": "ud",
+        "unit_price": "32.00",
+        "discount": null,
+        "amount": "192.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Cable H07V-K 2,5 mm²",
+        "quantity": "45",
+        "unit": "m",
+        "unit_price": "1.03",
+        "discount": null,
+        "amount": "46.35",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "3.5",
+        "unit": "h",
+        "unit_price": "34.00",
+        "discount": null,
+        "amount": "119.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Lámpara de techo (solo suministro)",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "86.50",
+        "discount": null,
+        "amount": "86.50",
+        "vat_rate": "21"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "10",
+        "base": "523.35",
+        "amount": "52.34"
+      },
+      {
+        "rate": "21",
+        "base": "86.50",
+        "amount": "18.17"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "609.85",
+    "vat_rate": null,
+    "vat_amount": "70.51",
+    "withholding": null,
+    "guarantee": null,
+    "total": "680.36",
+    "amount_due": "680.36"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Eugenia Manzanares Nogués"
+    },
+    {
+      "kind": "nif",
+      "value": "38914427Z"
+    },
+    {
+      "kind": "direccion",
+      "value": "Camino de Clara Carreras, 84, 1.º A, 39008 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "nombre",
+      "value": "Electricidad Batlle"
+    },
+    {
+      "kind": "iban",
+      "value": "ES61 0000 2534 2671 0652 9292"
+    }
+  ]
+}

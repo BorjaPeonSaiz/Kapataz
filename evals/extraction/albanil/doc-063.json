@@ -1,0 +1,125 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-063",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-063.pdf",
+  "document_type": "factura",
+  "layout": "texto_sin_tabla",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Victoriano Garrido Sandoval",
+      "tax_id": "52381187K",
+      "address": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    "customer": {
+      "name": "Edificaciones Cuadrado S.L.",
+      "tax_id": "B39145198",
+      "address": "Urbanización de Arsenio Boix, 82, 2.º A, 39011 Santander (Cantabria)"
+    },
+    "number": "FA-2026-0005",
+    "date": "2026-01-19",
+    "valid_until": null,
+    "due_date": "2026-03-20",
+    "lines": [
+      {
+        "concept": "Solado de gres porcelánico",
+        "quantity": "222",
+        "unit": "m²",
+        "unit_price": "28.50",
+        "discount": null,
+        "amount": "6327.00",
+        "vat_rate": null
+      },
+      {
+        "concept": "Alicatado de paredes",
+        "quantity": "127",
+        "unit": "m²",
+        "unit_price": "28.50",
+        "discount": null,
+        "amount": "3619.50",
+        "vat_rate": null
+      },
+      {
+        "concept": "Recrecido de mortero autonivelante",
+        "quantity": "96",
+        "unit": "m²",
+        "unit_price": "11.95",
+        "discount": null,
+        "amount": "1147.20",
+        "vat_rate": null
+      },
+      {
+        "concept": "Oficial de primera albañil",
+        "quantity": "12",
+        "unit": "h",
+        "unit_price": "28.50",
+        "discount": null,
+        "amount": "342.00",
+        "vat_rate": null
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": null,
+        "base": "11435.70",
+        "amount": "0.00"
+      }
+    ],
+    "reverse_charge": true,
+    "base": "11435.70",
+    "vat_rate": null,
+    "vat_amount": "0.00",
+    "withholding": {
+      "rate": "1",
+      "amount": "114.36"
+    },
+    "guarantee": null,
+    "total": "11321.34",
+    "amount_due": "11321.34"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Edificaciones Cuadrado S.L."
+    },
+    {
+      "kind": "nif",
+      "value": "B39145198"
+    },
+    {
+      "kind": "direccion",
+      "value": "Urbanización de Arsenio Boix, 82, 2.º A, 39011 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "465 14 65 95"
+    },
+    {
+      "kind": "email",
+      "value": "reformasyalbanileriagarrido@correo.example"
+    },
+    {
+      "kind": "iban",
+      "value": "ES98 0000 6561 8819 0436 4394"
+    }
+  ]
+}

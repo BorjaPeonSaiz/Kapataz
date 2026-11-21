@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-033",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-033.pdf",
+  "document_type": "factura",
+  "layout": "tabla_clasica",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Comunidad de Propietarios Acceso de Evita Sastre 31",
+      "tax_id": "H39532841",
+      "address": "Acceso de Evita Sastre, 31, 39001 Santander (Cantabria)"
+    },
+    "number": "F-2025-0020",
+    "date": "2025-07-21",
+    "valid_until": null,
+    "due_date": "2025-08-05",
+    "lines": [
+      {
+        "concept": "Revisión de la instalación de la comunidad",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "167.50",
+        "discount": null,
+        "amount": "167.50",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "3.5",
+        "unit": "h",
+        "unit_price": "35.00",
+        "discount": null,
+        "amount": "122.50",
+        "vat_rate": "10"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "10",
+        "base": "290.00",
+        "amount": "29.00"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "290.00",
+    "vat_rate": "10",
+    "vat_amount": "29.00",
+    "withholding": null,
+    "guarantee": null,
+    "total": "319.00",
+    "amount_due": "319.00"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Comunidad de Propietarios Acceso de Evita Sastre 31"
+    },
+    {
+      "kind": "nif",
+      "value": "H39532841"
+    },
+    {
+      "kind": "direccion",
+      "value": "Acceso de Evita Sastre, 31, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "iban",
+      "value": "ES61 0000 2534 2671 0652 9292"
+    }
+  ]
+}

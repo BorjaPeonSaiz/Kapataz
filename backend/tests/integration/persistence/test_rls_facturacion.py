@@ -82,6 +82,15 @@ KNOWN_BUSINESS_TABLES = frozenset(
 ACCOUNT_LINKS = frozenset({"fk_tenants_parent_tenant_id_tenants"})
 
 _CURRENT_TENANT = "(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid"
+# demo_space_from_parent (0004): solo INSERT, sin USING (no filtra lecturas), y
+# solo un espacio de demostración cuyo padre es la cuenta fijada.
+_DEMO_SPACE_POLICY = [
+    "PERMISSIVE",
+    "INSERT",
+    "public",
+    None,
+    f"(((kind)::text = 'demo'::text) AND (parent_tenant_id = {_CURRENT_TENANT}))",
+]
 
 
 def _tenant_column(table: str) -> str:
@@ -304,12 +313,11 @@ def test_toda_tabla_de_negocio_tiene_rls_y_la_politica_de_la_cuenta(database):
         rls, not_null, policies = found[table]
         expected = f"({_tenant_column(table)} = {_CURRENT_TENANT})"
         # Una sola política, para todas las órdenes y todos los roles, que
-        # filtra y comprueba por la cuenta fijada en la transacción.
-        if (
-            not rls
-            or not not_null
-            or policies != [["PERMISSIVE", "ALL", "public", expected, expected]]
-        ):
+        # filtra y comprueba por la cuenta fijada en la transacción. En tenants,
+        # además, la de solo INSERT del espacio de demostración (0004).
+        isolation = ["PERMISSIVE", "ALL", "public", expected, expected]
+        wanted = [_DEMO_SPACE_POLICY, isolation] if table == "tenants" else [isolation]
+        if not rls or not not_null or policies != wanted:
             problems[table] = (rls, not_null, policies)
     assert problems == {}, f"Tablas de negocio sin RLS o con otra política: {problems}"
 

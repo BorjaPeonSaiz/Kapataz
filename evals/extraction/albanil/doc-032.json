@@ -1,0 +1,162 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-032",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-032.pdf",
+  "document_type": "factura",
+  "layout": "programa_generico",
+  "scanned": true,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Victoriano Garrido Sandoval",
+      "tax_id": "52381187K",
+      "address": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    "customer": {
+      "name": "Anselmo Roig Téllez",
+      "tax_id": "35575619R",
+      "address": "Avenida Ángela Noguera, 21, 1.º A, 39011 Santander (Cantabria)"
+    },
+    "number": "FA-2025-0017",
+    "date": "2025-08-18",
+    "valid_until": null,
+    "due_date": "2025-09-02",
+    "lines": [
+      {
+        "concept": "Demolición de tabique",
+        "quantity": "8",
+        "unit": "m²",
+        "unit_price": "9.46",
+        "discount": null,
+        "amount": "75.68",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Contenedor y retirada de escombros",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "183.50",
+        "discount": null,
+        "amount": "183.50",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Alicatado de paredes",
+        "quantity": "24.5",
+        "unit": "m²",
+        "unit_price": "25.50",
+        "discount": null,
+        "amount": "624.75",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Solado de gres porcelánico",
+        "quantity": "5.5",
+        "unit": "m²",
+        "unit_price": "29.50",
+        "discount": null,
+        "amount": "162.25",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Cemento cola flexible C2",
+        "quantity": "10",
+        "unit": "saco",
+        "unit_price": "15.76",
+        "discount": null,
+        "amount": "157.60",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Cemento gris en saco de 25 kg",
+        "quantity": "10",
+        "unit": "saco",
+        "unit_price": "6.98",
+        "discount": null,
+        "amount": "69.80",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Oficial de primera albañil",
+        "quantity": "21",
+        "unit": "h",
+        "unit_price": "29.00",
+        "discount": null,
+        "amount": "609.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Peón de albañil",
+        "quantity": "17",
+        "unit": "h",
+        "unit_price": "21.00",
+        "discount": null,
+        "amount": "357.00",
+        "vat_rate": "10"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "10",
+        "base": "2239.58",
+        "amount": "223.96"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "2239.58",
+    "vat_rate": "10",
+    "vat_amount": "223.96",
+    "withholding": null,
+    "guarantee": null,
+    "total": "2463.54",
+    "amount_due": "2463.54"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Anselmo Roig Téllez"
+    },
+    {
+      "kind": "nif",
+      "value": "35575619R"
+    },
+    {
+      "kind": "direccion",
+      "value": "Avenida Ángela Noguera, 21, 1.º A, 39011 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "465 14 65 95"
+    },
+    {
+      "kind": "email",
+      "value": "reformasyalbanileriagarrido@correo.example"
+    },
+    {
+      "kind": "nombre",
+      "value": "Reformas y Albañilería Garrido"
+    },
+    {
+      "kind": "iban",
+      "value": "ES98 0000 6561 8819 0436 4394"
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-064",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-064.pdf",
+  "document_type": "factura",
+  "layout": "programa_generico",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Germán Llopis Quirós",
+      "tax_id": "31733735Z",
+      "address": "Via de Zaira Bartolomé, 66, 5.º dcha., 39470 Piélagos (Cantabria)"
+    },
+    "number": "F-2026-0001",
+    "date": "2026-01-12",
+    "valid_until": null,
+    "due_date": "2026-01-27",
+    "lines": [
+      {
+        "concept": "Cuadro general de mando y protección",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "238.22",
+        "discount": null,
+        "amount": "238.22",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Interruptor diferencial 40 A 30 mA",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "72.12",
+        "discount": null,
+        "amount": "72.12",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Magnetotérmico 16 A",
+        "quantity": "4",
+        "unit": "ud",
+        "unit_price": "13.67",
+        "discount": null,
+        "amount": "54.68",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Toma de tierra con pica",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "89.00",
+        "discount": null,
+        "amount": "89.00",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "7",
+        "unit": "h",
+        "unit_price": "36.00",
+        "discount": null,
+        "amount": "252.00",
+        "vat_rate": "21"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "21",
+        "base": "706.02",
+        "amount": "148.26"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "706.02",
+    "vat_rate": "21",
+    "vat_amount": "148.26",
+    "withholding": null,
+    "guarantee": null,
+    "total": "854.28",
+    "amount_due": "854.28"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Germán Llopis Quirós"
+    },
+    {
+      "kind": "nif",
+      "value": "31733735Z"
+    },
+    {
+      "kind": "direccion",
+      "value": "Via de Zaira Bartolomé, 66, 5.º dcha., 39470 Piélagos (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "nombre",
+      "value": "Electricidad Batlle"
+    },
+    {
+      "kind": "iban",
+      "value": "ES61 0000 2534 2671 0652 9292"
+    }
+  ]
+}

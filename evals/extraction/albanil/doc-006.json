@@ -1,0 +1,113 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-006",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-006.pdf",
+  "document_type": "presupuesto",
+  "layout": "programa_generico",
+  "scanned": true,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Victoriano Garrido Sandoval",
+      "tax_id": "52381187K",
+      "address": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    "customer": {
+      "name": "Promociones Montserrat S.L.",
+      "tax_id": "B39151113",
+      "address": "Acceso Elías Requena, 96, 3.º D, 39313 Polanco (Cantabria)"
+    },
+    "number": "PA-2025-0003",
+    "date": "2025-03-24",
+    "valid_until": "2025-04-23",
+    "due_date": null,
+    "lines": [
+      {
+        "concept": "Solado de gres porcelánico",
+        "quantity": "87.5",
+        "unit": "m²",
+        "unit_price": "25.50",
+        "discount": null,
+        "amount": "2231.25",
+        "vat_rate": null
+      },
+      {
+        "concept": "Alicatado de paredes",
+        "quantity": "141",
+        "unit": "m²",
+        "unit_price": "25.00",
+        "discount": null,
+        "amount": "3525.00",
+        "vat_rate": null
+      },
+      {
+        "concept": "Oficial de primera albañil",
+        "quantity": "12",
+        "unit": "h",
+        "unit_price": "28.50",
+        "discount": null,
+        "amount": "342.00",
+        "vat_rate": null
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": null,
+        "base": "6098.25",
+        "amount": "0.00"
+      }
+    ],
+    "reverse_charge": true,
+    "base": "6098.25",
+    "vat_rate": null,
+    "vat_amount": "0.00",
+    "withholding": null,
+    "guarantee": null,
+    "total": "6098.25",
+    "amount_due": "6098.25"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Promociones Montserrat S.L."
+    },
+    {
+      "kind": "nif",
+      "value": "B39151113"
+    },
+    {
+      "kind": "direccion",
+      "value": "Acceso Elías Requena, 96, 3.º D, 39313 Polanco (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "465 14 65 95"
+    },
+    {
+      "kind": "email",
+      "value": "reformasyalbanileriagarrido@correo.example"
+    },
+    {
+      "kind": "nombre",
+      "value": "Reformas y Albañilería Garrido"
+    }
+  ]
+}

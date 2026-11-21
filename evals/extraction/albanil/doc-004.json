@@ -1,0 +1,126 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-004",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-004.pdf",
+  "document_type": "factura",
+  "layout": "logotipo_pie_extenso",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Victoriano Garrido Sandoval",
+      "tax_id": "52381187K",
+      "address": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    "customer": {
+      "name": "Prudencia Franch Águila",
+      "tax_id": "50774958C",
+      "address": "Plaza José Antonio Moliner, 2, 1.º B, 39313 Polanco (Cantabria)"
+    },
+    "number": "FA-2025-0002",
+    "date": "2025-03-11",
+    "valid_until": null,
+    "due_date": "2025-03-26",
+    "lines": [
+      {
+        "concept": "Enfoscado de mortero",
+        "quantity": "33",
+        "unit": "m²",
+        "unit_price": "14.96",
+        "discount": null,
+        "amount": "493.68",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Cemento gris en saco de 25 kg",
+        "quantity": "9",
+        "unit": "saco",
+        "unit_price": "6.07",
+        "discount": null,
+        "amount": "54.63",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Arena de río lavada",
+        "quantity": "1",
+        "unit": "m³",
+        "unit_price": "34.78",
+        "discount": null,
+        "amount": "34.78",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Oficial de primera albañil",
+        "quantity": "16",
+        "unit": "h",
+        "unit_price": "26.50",
+        "discount": null,
+        "amount": "424.00",
+        "vat_rate": "10"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "10",
+        "base": "1007.09",
+        "amount": "100.71"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "1007.09",
+    "vat_rate": "10",
+    "vat_amount": "100.71",
+    "withholding": null,
+    "guarantee": null,
+    "total": "1107.80",
+    "amount_due": "1107.80"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Prudencia Franch Águila"
+    },
+    {
+      "kind": "nif",
+      "value": "50774958C"
+    },
+    {
+      "kind": "direccion",
+      "value": "Plaza José Antonio Moliner, 2, 1.º B, 39313 Polanco (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "465 14 65 95"
+    },
+    {
+      "kind": "email",
+      "value": "reformasyalbanileriagarrido@correo.example"
+    },
+    {
+      "kind": "nombre",
+      "value": "Reformas y Albañilería Garrido"
+    },
+    {
+      "kind": "iban",
+      "value": "ES98 0000 6561 8819 0436 4394"
+    }
+  ]
+}

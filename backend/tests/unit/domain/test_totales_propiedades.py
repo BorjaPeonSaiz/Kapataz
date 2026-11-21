@@ -11,7 +11,7 @@ aparte con ``Decimal`` y ``ROUND_HALF_UP`` (comprobando que el producto es
 exacto) o con aritmética entera de céntimos.
 """
 
-from decimal import ROUND_HALF_UP, Decimal, Inexact, localcontext
+from decimal import ROUND_HALF_UP, Context, Decimal, Inexact, localcontext
 from uuid import uuid4
 
 import pytest
@@ -112,13 +112,21 @@ line_lists = st.lists(lines(), max_size=MAX_LINES)
 # ------------------------------------------------------------ oráculos
 
 
+def _oracle_context() -> Context:
+    """Contexto limpio: sin los indicadores que otra prueba del hilo haya dejado levantados.
+
+    ``localcontext()`` sin argumento copia el contexto actual con sus indicadores; si
+    una operación anterior del hilo levantó ``Inexact``, el oráculo fallaría sin motivo.
+    """
+    return Context(prec=ORACLE_PRECISION)
+
+
 def _round(value: Decimal) -> Money:
     return Money(value.quantize(CENT, rounding=ROUND_HALF_UP))
 
 
 def _expected_line_base(line: LineItem) -> Money:
-    with localcontext() as ctx:
-        ctx.prec = ORACLE_PRECISION
+    with localcontext(_oracle_context()) as ctx:
         exact = line.quantity.value * line.unit_price.amount
         if line.discount is not None:
             exact = exact * (100 - line.discount.value) / 100
@@ -127,8 +135,7 @@ def _expected_line_base(line: LineItem) -> Money:
 
 
 def _share(base: Money, percent: Decimal) -> Money:
-    with localcontext() as ctx:
-        ctx.prec = ORACLE_PRECISION
+    with localcontext(_oracle_context()) as ctx:
         exact = base.amount * percent / 100
         assert not ctx.flags[Inexact]
         return _round(exact)

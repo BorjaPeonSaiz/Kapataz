@@ -1,0 +1,122 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-076",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-076.pdf",
+  "document_type": "factura",
+  "layout": "word_exportado",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Emelina Belda Bejarano",
+      "tax_id": "20400775M",
+      "address": "Ronda de Jacinta Quintanilla, 78, 5.º dcha., 39100 Santa Cruz de Bezana (Cantabria)"
+    },
+    "number": "F-2026-0009",
+    "date": "2026-05-21",
+    "valid_until": null,
+    "due_date": "2026-06-05",
+    "lines": [
+      {
+        "concept": "Cuadro general de mando y protección",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "261.43",
+        "discount": null,
+        "amount": "261.43",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Interruptor diferencial 40 A 30 mA",
+        "quantity": "2",
+        "unit": "ud",
+        "unit_price": "65.66",
+        "discount": null,
+        "amount": "131.32",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Magnetotérmico 16 A",
+        "quantity": "5",
+        "unit": "ud",
+        "unit_price": "14.90",
+        "discount": null,
+        "amount": "74.50",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "8",
+        "unit": "h",
+        "unit_price": "34.50",
+        "discount": null,
+        "amount": "276.00",
+        "vat_rate": "21"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "21",
+        "base": "743.25",
+        "amount": "156.08"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "743.25",
+    "vat_rate": "21",
+    "vat_amount": "156.08",
+    "withholding": null,
+    "guarantee": null,
+    "total": "899.33",
+    "amount_due": "899.33"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Emelina Belda Bejarano"
+    },
+    {
+      "kind": "nif",
+      "value": "20400775M"
+    },
+    {
+      "kind": "direccion",
+      "value": "Ronda de Jacinta Quintanilla, 78, 5.º dcha., 39100 Santa Cruz de Bezana (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "iban",
+      "value": "ES61 0000 2534 2671 0652 9292"
+    }
+  ]
+}

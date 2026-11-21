@@ -33,15 +33,24 @@ packages = ["src/kapataz"]
 [dependency-groups]
 dev = [
     "bandit>=1.9.4",
+    # Faker, ReportLab, pypdfium2 y Pillow van fijados: sus datos y su salida
+    # cambian entre versiones, y los documentos sintéticos versionados (ADR-020)
+    # dependen de ellas (los escaneados, de la rasterización y del JPEG).
+    "faker==40.54.0",
     "freezegun>=1.5.5",
     "httpx>=0.28.1",
     "hypothesis>=6.170.15",
     "import-linter>=2.16",
+    "jsonschema>=4.26.0",
     "mypy>=2.4.1",
+    "pillow==13.0.0",
     "pip-audit>=2.10.1",
+    "pypdfium2==5.15.2",
     "pytest>=9.2.0",
     "pytest-cov>=7.1.0",
+    "reportlab==5.1.0",
     "ruff>=0.17.4",
+    "types-reportlab>=5.1.0.20261104",
 ]
 
 # ---------------------------------------------------------------- ruff
@@ -139,6 +148,17 @@ mypy_path = "src"
 files = ["src/kapataz", "tools"]
 plugins = ["pydantic.mypy"]
 
+# pypdfium2 no publica tipos: solo lo usa el generador de datos sintéticos (tools/).
+[[tool.mypy.overrides]]
+module = ["pypdfium2", "pypdfium2.*"]
+ignore_missing_imports = true
+
+# asyncpg no publica tipos: solo tools/seed_demo.py lo importa, para capturar los
+# errores de conexión que SQLAlchemy no envuelve (S3-08).
+[[tool.mypy.overrides]]
+module = ["asyncpg", "asyncpg.*"]
+ignore_missing_imports = true
+
 [tool.pydantic-mypy]
 init_forbid_extra = true
 init_typed = true
@@ -201,6 +221,30 @@ forbidden_modules = [
     "httpx",
 ]
 
+[[tool.importlinter.contracts]]
+name = "La API no usa los casos de uso de administración (S3-09)"
+type = "forbidden"
+source_modules = ["kapataz.api"]
+forbidden_modules = ["kapataz.application.use_cases.admin"]
+
+# El núcleo crea el espacio de la cuenta que recibe. La API llega a él solo a
+# través de LoadDemoSpace, que toma la cuenta del usuario autenticado: se
+# admite el import indirecto y se prohíbe el directo.
+[[tool.importlinter.contracts]]
+name = "La API carga el espacio de demostración solo de la cuenta de la sesión (S3-R-03)"
+type = "forbidden"
+source_modules = ["kapataz.api"]
+forbidden_modules = ["kapataz.application.use_cases.demo_space_loader"]
+allow_indirect_imports = true
+
+# tools/ no es un paquete de kapataz: sus módulos se ven como externos
+# (include_external_packages), con el nombre con el que se importarían.
+[[tool.importlinter.contracts]]
+name = "La app no importa el generador sintético de tools/ (ADR-020)"
+type = "forbidden"
+source_modules = ["kapataz"]
+forbidden_modules = ["synthetic", "gen_synthetic", "seed_demo", "tools"]
+
 # ---------------------------------------------------------------- bandit
 
 [tool.bandit]
@@ -212,7 +256,8 @@ exclude_dirs = ["tests", ".venv"]
 minversion = "9.0"
 testpaths = ["tests"]
 addopts = ["--strict-markers", "--strict-config", "-ra"]
-pythonpath = ["."]
+# tools/ está en la ruta para importar el generador de datos sintéticos (synthetic).
+pythonpath = [".", "tools"]
 xfail_strict = true
 filterwarnings = [
     "error",

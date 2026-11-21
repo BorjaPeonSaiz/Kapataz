@@ -1,0 +1,143 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-066",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-066.pdf",
+  "document_type": "factura",
+  "layout": "texto_sin_tabla",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Victoriano Garrido Sandoval",
+      "tax_id": "52381187K",
+      "address": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    "customer": {
+      "name": "Clínica Dental Arévalo S.L.",
+      "tax_id": "B39944962",
+      "address": "Pasadizo de Marcio Valdés, 46, 39008 Santander (Cantabria)"
+    },
+    "number": "FA-2026-0007",
+    "date": "2026-03-04",
+    "valid_until": null,
+    "due_date": "2026-05-03",
+    "lines": [
+      {
+        "concept": "Demolición de tabique",
+        "quantity": "15",
+        "unit": "m²",
+        "unit_price": "9.71",
+        "discount": null,
+        "amount": "145.65",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Contenedor y retirada de escombros",
+        "quantity": "2",
+        "unit": "ud",
+        "unit_price": "180.50",
+        "discount": null,
+        "amount": "361.00",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Tabique de ladrillo hueco doble",
+        "quantity": "24",
+        "unit": "m²",
+        "unit_price": "23.50",
+        "discount": null,
+        "amount": "564.00",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Trasdosado de placa de yeso laminado",
+        "quantity": "52.5",
+        "unit": "m²",
+        "unit_price": "22.50",
+        "discount": null,
+        "amount": "1181.25",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Solado de gres porcelánico",
+        "quantity": "72.5",
+        "unit": "m²",
+        "unit_price": "26.50",
+        "discount": null,
+        "amount": "1921.25",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Oficial de primera albañil",
+        "quantity": "56",
+        "unit": "h",
+        "unit_price": "27.00",
+        "discount": null,
+        "amount": "1512.00",
+        "vat_rate": "21"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "21",
+        "base": "5685.15",
+        "amount": "1193.88"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "5685.15",
+    "vat_rate": "21",
+    "vat_amount": "1193.88",
+    "withholding": {
+      "rate": "1",
+      "amount": "56.85"
+    },
+    "guarantee": null,
+    "total": "6822.18",
+    "amount_due": "6822.18"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Clínica Dental Arévalo S.L."
+    },
+    {
+      "kind": "nif",
+      "value": "B39944962"
+    },
+    {
+      "kind": "direccion",
+      "value": "Pasadizo de Marcio Valdés, 46, 39008 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "465 14 65 95"
+    },
+    {
+      "kind": "email",
+      "value": "reformasyalbanileriagarrido@correo.example"
+    },
+    {
+      "kind": "iban",
+      "value": "ES98 0000 6561 8819 0436 4394"
+    }
+  ]
+}
