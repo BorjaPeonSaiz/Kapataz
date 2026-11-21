@@ -38,13 +38,14 @@ from kapataz.application.ports.repositories import (
     TenantNotSetError,
 )
 from kapataz.domain.accounts.email_address import EmailAddress
-from kapataz.domain.accounts.errors import EmailAlreadyRegisteredError
+from kapataz.domain.accounts.errors import EmailAlreadyRegisteredError, TenantAlreadyExistsError
 from kapataz.domain.accounts.model import (
     EmailVerification,
     Session,
     SessionId,
     Tenant,
     TenantId,
+    TenantKind,
     User,
     UserId,
 )
@@ -143,10 +144,34 @@ class MemoryAccounts:
         self._uow = uow
 
     async def add_tenant(self, tenant: Tenant) -> None:
-        if self._uow.tenant_id != tenant.id:
+        if tenant.kind is TenantKind.DEMO:
+            # Como el trigger tenants_check_hierarchy y la política
+            # demo_space_from_parent (0004): el padre es la cuenta fijada y es
+            # normal, y no tiene ya otro espacio.
+            parent = (
+                None
+                if tenant.parent_tenant_id != self._uow.tenant_id
+                else self._s.tenants.get(tenant.parent_tenant_id)
+            )
+            if parent is None or parent.kind is not TenantKind.STANDARD:
+                msg = "La cuenta padre no existe, no es la fijada o no es normal (KZF14)."
+                raise PermissionError(msg)
+            if any(t.parent_tenant_id == parent.id for t in self._s.tenants.values()):
+                msg = "La cuenta padre ya tiene espacio de demostración."
+                raise TenantAlreadyExistsError(msg)
+        elif self._uow.tenant_id != tenant.id:
             msg = "RLS: la cuenta fijada no coincide con la fila (WITH CHECK)."
             raise PermissionError(msg)
+        if tenant.id in self._s.tenants:
+            msg = "Ya hay una cuenta con ese id."
+            raise TenantAlreadyExistsError(msg)
         self._s.tenants[tenant.id] = tenant
+
+    async def get_tenant(self, tenant_id: TenantId) -> Tenant | None:
+        # Como la política de tenants: solo se ve la cuenta fijada.
+        if self._uow.tenant_id != tenant_id:
+            return None
+        return self._s.tenants.get(tenant_id)
 
     async def add_user(self, user: User) -> None:
         if any(u.email == user.email for u in self._s.users.values()):

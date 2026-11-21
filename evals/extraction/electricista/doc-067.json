@@ -1,0 +1,117 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-067",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-067.pdf",
+  "document_type": "factura",
+  "layout": "logotipo_pie_extenso",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Melisa Llabrés Salas",
+      "tax_id": "49356914H",
+      "address": "Plaza de Marcio Guillén, 24, 2.º A, 39600 Camargo (Cantabria)"
+    },
+    "number": "F-2026-0004",
+    "date": "2026-03-06",
+    "valid_until": null,
+    "due_date": "2026-03-21",
+    "lines": [
+      {
+        "concept": "Desplazamiento a domicilio",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "27.50",
+        "discount": null,
+        "amount": "27.50",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "1",
+        "unit": "h",
+        "unit_price": "30.50",
+        "discount": null,
+        "amount": "30.50",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Magnetotérmico 16 A",
+        "quantity": "2",
+        "unit": "ud",
+        "unit_price": "15.29",
+        "discount": null,
+        "amount": "30.58",
+        "vat_rate": "10"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "10",
+        "base": "88.58",
+        "amount": "8.86"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "88.58",
+    "vat_rate": "10",
+    "vat_amount": "8.86",
+    "withholding": null,
+    "guarantee": null,
+    "total": "97.44",
+    "amount_due": "97.44"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Melisa Llabrés Salas"
+    },
+    {
+      "kind": "nif",
+      "value": "49356914H"
+    },
+    {
+      "kind": "direccion",
+      "value": "Plaza de Marcio Guillén, 24, 2.º A, 39600 Camargo (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "nombre",
+      "value": "Electricidad Batlle"
+    },
+    {
+      "kind": "iban",
+      "value": "ES61 0000 2534 2671 0652 9292"
+    }
+  ]
+}

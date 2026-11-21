@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-036",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-036.pdf",
+  "document_type": "factura",
+  "layout": "word_exportado",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Comunidad de Propietarios Glorieta de José Antonio Solera 28",
+      "tax_id": "H39914916",
+      "address": "Glorieta de José Antonio Solera, 28, 39005 Santander (Cantabria)"
+    },
+    "number": "F-2025-0023",
+    "date": "2025-08-11",
+    "valid_until": null,
+    "due_date": "2025-08-26",
+    "lines": [
+      {
+        "concept": "Desplazamiento a domicilio",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "24.00",
+        "discount": null,
+        "amount": "24.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "1.5",
+        "unit": "h",
+        "unit_price": "32.50",
+        "discount": null,
+        "amount": "48.75",
+        "vat_rate": "10"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "10",
+        "base": "72.75",
+        "amount": "7.28"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "72.75",
+    "vat_rate": "10",
+    "vat_amount": "7.28",
+    "withholding": null,
+    "guarantee": null,
+    "total": "80.03",
+    "amount_due": "80.03"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Comunidad de Propietarios Glorieta de José Antonio Solera 28"
+    },
+    {
+      "kind": "nif",
+      "value": "H39914916"
+    },
+    {
+      "kind": "direccion",
+      "value": "Glorieta de José Antonio Solera, 28, 39005 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "iban",
+      "value": "ES61 0000 2534 2671 0652 9292"
+    }
+  ]
+}

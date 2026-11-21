@@ -1,0 +1,126 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-073",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-073.pdf",
+  "document_type": "factura",
+  "layout": "programa_generico",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Comunidad de Propietarios Acceso de Evita Sastre 31",
+      "tax_id": "H39532841",
+      "address": "Acceso de Evita Sastre, 31, 39001 Santander (Cantabria)"
+    },
+    "number": "F-2026-0007",
+    "date": "2026-04-13",
+    "valid_until": null,
+    "due_date": "2026-04-28",
+    "lines": [
+      {
+        "concept": "Revisión de la instalación de la comunidad",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "183.50",
+        "discount": null,
+        "amount": "183.50",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Detector de presencia",
+        "quantity": "2",
+        "unit": "ud",
+        "unit_price": "41.05",
+        "discount": null,
+        "amount": "82.10",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Foco empotrable LED",
+        "quantity": "9",
+        "unit": "ud",
+        "unit_price": "15.01",
+        "discount": null,
+        "amount": "135.09",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "3.5",
+        "unit": "h",
+        "unit_price": "34.00",
+        "discount": null,
+        "amount": "119.00",
+        "vat_rate": "21"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "21",
+        "base": "519.69",
+        "amount": "109.13"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "519.69",
+    "vat_rate": "21",
+    "vat_amount": "109.13",
+    "withholding": null,
+    "guarantee": null,
+    "total": "628.82",
+    "amount_due": "628.82"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Comunidad de Propietarios Acceso de Evita Sastre 31"
+    },
+    {
+      "kind": "nif",
+      "value": "H39532841"
+    },
+    {
+      "kind": "direccion",
+      "value": "Acceso de Evita Sastre, 31, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "nombre",
+      "value": "Electricidad Batlle"
+    },
+    {
+      "kind": "iban",
+      "value": "ES61 0000 2534 2671 0652 9292"
+    }
+  ]
+}

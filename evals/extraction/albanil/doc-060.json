@@ -1,0 +1,167 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-060",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-060.pdf",
+  "document_type": "factura",
+  "layout": "texto_sin_tabla",
+  "scanned": true,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Victoriano Garrido Sandoval",
+      "tax_id": "52381187K",
+      "address": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    "customer": {
+      "name": "Prudencia Franch Águila",
+      "tax_id": "61440367F",
+      "address": "Acceso de Plácido Valbuena, 51, 3.º D, 39750 Colindres (Cantabria)"
+    },
+    "number": "FA-2026-0002",
+    "date": "2026-01-15",
+    "valid_until": null,
+    "due_date": "2026-01-30",
+    "lines": [
+      {
+        "concept": "Demolición de tabique",
+        "quantity": "6",
+        "unit": "m²",
+        "unit_price": "10.21",
+        "discount": null,
+        "amount": "61.26",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Contenedor y retirada de escombros",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "189.50",
+        "discount": null,
+        "amount": "189.50",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Alicatado de paredes",
+        "quantity": "17.5",
+        "unit": "m²",
+        "unit_price": "26.00",
+        "discount": null,
+        "amount": "455.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Solado de gres porcelánico",
+        "quantity": "8",
+        "unit": "m²",
+        "unit_price": "26.50",
+        "discount": null,
+        "amount": "212.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Cemento cola flexible C2",
+        "quantity": "5",
+        "unit": "saco",
+        "unit_price": "13.77",
+        "discount": null,
+        "amount": "68.85",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Cemento gris en saco de 25 kg",
+        "quantity": "11",
+        "unit": "saco",
+        "unit_price": "6.71",
+        "discount": null,
+        "amount": "73.81",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Oficial de primera albañil",
+        "quantity": "28",
+        "unit": "h",
+        "unit_price": "25.00",
+        "discount": null,
+        "amount": "700.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Peón de albañil",
+        "quantity": "9",
+        "unit": "h",
+        "unit_price": "22.00",
+        "discount": null,
+        "amount": "198.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Trabajos adicionales no presupuestados: oficial de primera albañil",
+        "quantity": "4",
+        "unit": "h",
+        "unit_price": "29.00",
+        "discount": null,
+        "amount": "116.00",
+        "vat_rate": "10"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "10",
+        "base": "2074.42",
+        "amount": "207.44"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "2074.42",
+    "vat_rate": "10",
+    "vat_amount": "207.44",
+    "withholding": null,
+    "guarantee": null,
+    "total": "2281.86",
+    "amount_due": "2281.86"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Prudencia Franch Águila"
+    },
+    {
+      "kind": "nif",
+      "value": "61440367F"
+    },
+    {
+      "kind": "direccion",
+      "value": "Acceso de Plácido Valbuena, 51, 3.º D, 39750 Colindres (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "465 14 65 95"
+    },
+    {
+      "kind": "email",
+      "value": "reformasyalbanileriagarrido@correo.example"
+    },
+    {
+      "kind": "iban",
+      "value": "ES98 0000 6561 8819 0436 4394"
+    }
+  ]
+}

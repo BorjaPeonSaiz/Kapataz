@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-015",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-015.pdf",
+  "document_type": "otro",
+  "layout": "word_exportado",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": null,
+  "other": {
+    "kind": "parte_de_trabajo",
+    "description": "Parte de trabajo del propio profesional, sin importes."
+  },
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Comunidad de Propietarios Glorieta de José Antonio Solera 28"
+    },
+    {
+      "kind": "nif",
+      "value": "H39914916"
+    },
+    {
+      "kind": "direccion",
+      "value": "Glorieta de José Antonio Solera, 28, 39005 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    }
+  ]
+}

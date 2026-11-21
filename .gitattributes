@@ -10,3 +10,9 @@ Dockerfile text eol=lf
 *.yaml text eol=lf
 .env*.example text eol=lf
 *.conf text eol=lf
+
+# Documentos sintéticos (ADR-020). Los PDF son binarios: sin esta línea, git
+# podría tomarlos por texto y cambiarles los finales de línea. Los JSON de la
+# verdad de referencia van siempre con LF porque el manifiesto guarda su SHA-256.
+*.pdf binary
+evals/**/*.json text eol=lf

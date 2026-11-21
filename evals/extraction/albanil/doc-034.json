@@ -1,0 +1,221 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-034",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-034.pdf",
+  "document_type": "presupuesto",
+  "layout": "programa_generico",
+  "scanned": false,
+  "pages": 2,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Victoriano Garrido Sandoval",
+      "tax_id": "52381187K",
+      "address": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    "customer": {
+      "name": "Construcciones Borrás S.L.",
+      "tax_id": "B39410469",
+      "address": "Paseo Pánfilo Iglesia, 62, 2.º A, 39008 Santander (Cantabria)"
+    },
+    "number": "PA-2025-0013",
+    "date": "2025-08-27",
+    "valid_until": "2025-09-26",
+    "due_date": null,
+    "lines": [
+      {
+        "concept": "Demolición de tabique. Demolición de tabique de ladrillo con medios manuales, con carga de escombros sobre contenedor.",
+        "quantity": "25.5",
+        "unit": "m²",
+        "unit_price": "9.49",
+        "discount": null,
+        "amount": "242.00",
+        "vat_rate": null
+      },
+      {
+        "concept": "Tabique de ladrillo hueco doble. Tabique de ladrillo hueco doble de 7 cm recibido con mortero de cemento M-5, aplomado y con sus mochetas.",
+        "quantity": "592",
+        "unit": "m²",
+        "unit_price": "24.00",
+        "discount": null,
+        "amount": "14208.00",
+        "vat_rate": null
+      },
+      {
+        "concept": "Enfoscado de mortero. Enfoscado maestreado y fratasado con mortero de cemento M-5 en paramentos verticales.",
+        "quantity": "712",
+        "unit": "m²",
+        "unit_price": "13.80",
+        "discount": null,
+        "amount": "9825.60",
+        "vat_rate": null
+      },
+      {
+        "concept": "Trasdosado de placa de yeso laminado. Trasdosado autoportante con placa de yeso laminado de 15 mm, perfilería de 48 mm y aislamiento de lana mineral.",
+        "quantity": "205.5",
+        "unit": "m²",
+        "unit_price": "23.50",
+        "discount": null,
+        "amount": "4829.25",
+        "vat_rate": null
+      },
+      {
+        "concept": "Recrecido de mortero autonivelante. Recrecido de mortero autonivelante de 4 cm de espesor medio, con banda perimetral.",
+        "quantity": "271.5",
+        "unit": "m²",
+        "unit_price": "12.78",
+        "discount": null,
+        "amount": "3469.77",
+        "vat_rate": null
+      },
+      {
+        "concept": "Solado de gres porcelánico. Solado de gres porcelánico recibido con cemento cola, rejuntado y limpieza final; pieza aportada por el cliente.",
+        "quantity": "206",
+        "unit": "m²",
+        "unit_price": "30.00",
+        "discount": null,
+        "amount": "6180.00",
+        "vat_rate": null
+      },
+      {
+        "concept": "Alicatado de paredes. Alicatado con azulejo cerámico recibido con cemento cola, cortes y rejuntado; pieza aportada por el cliente.",
+        "quantity": "158",
+        "unit": "m²",
+        "unit_price": "27.00",
+        "discount": null,
+        "amount": "4266.00",
+        "vat_rate": null
+      },
+      {
+        "concept": "Impermeabilización de terraza. Impermeabilización con lámina asfáltica de doble capa y protección con mortero.",
+        "quantity": "95.5",
+        "unit": "m²",
+        "unit_price": "29.00",
+        "discount": null,
+        "amount": "2769.50",
+        "vat_rate": null
+      },
+      {
+        "concept": "Solera de hormigón. Solera de hormigón HM-20 de 15 cm de espesor con mallazo electrosoldado, vertida y reglada.",
+        "quantity": "187.5",
+        "unit": "m²",
+        "unit_price": "18.12",
+        "discount": null,
+        "amount": "3397.50",
+        "vat_rate": null
+      },
+      {
+        "concept": "Colocación de bordillo. Bordillo de hormigón prefabricado recibido sobre base de hormigón y rejuntado.",
+        "quantity": "101.5",
+        "unit": "m",
+        "unit_price": "15.52",
+        "discount": null,
+        "amount": "1575.28",
+        "vat_rate": null
+      },
+      {
+        "concept": "Ayudas de albañilería a instalaciones. Apertura y tapado de rozas, recibido de cajas y pasos de instalaciones de fontanería y electricidad.",
+        "quantity": "1",
+        "unit": "pa",
+        "unit_price": "486.00",
+        "discount": null,
+        "amount": "486.00",
+        "vat_rate": null
+      },
+      {
+        "concept": "Andamio tubular. Montaje, alquiler semanal y desmontaje de andamio tubular homologado.",
+        "quantity": "8",
+        "unit": "semana",
+        "unit_price": "196.50",
+        "discount": null,
+        "amount": "1572.00",
+        "vat_rate": null
+      },
+      {
+        "concept": "Contenedor y retirada de escombros. Contenedor de 5 m³, transporte y canon de vertedero autorizado.",
+        "quantity": "8",
+        "unit": "ud",
+        "unit_price": "186.50",
+        "discount": null,
+        "amount": "1492.00",
+        "vat_rate": null
+      },
+      {
+        "concept": "Oficial de primera albañil. Hora de oficial de primera albañil con herramienta propia.",
+        "quantity": "187",
+        "unit": "h",
+        "unit_price": "27.50",
+        "discount": null,
+        "amount": "5142.50",
+        "vat_rate": null
+      },
+      {
+        "concept": "Peón de albañil. Hora de peón para acarreo de material, limpieza y ayudas.",
+        "quantity": "155",
+        "unit": "h",
+        "unit_price": "20.50",
+        "discount": null,
+        "amount": "3177.50",
+        "vat_rate": null
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": null,
+        "base": "62632.90",
+        "amount": "0.00"
+      }
+    ],
+    "reverse_charge": true,
+    "base": "62632.90",
+    "vat_rate": null,
+    "vat_amount": "0.00",
+    "withholding": null,
+    "guarantee": null,
+    "total": "62632.90",
+    "amount_due": "62632.90"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Construcciones Borrás S.L."
+    },
+    {
+      "kind": "nif",
+      "value": "B39410469"
+    },
+    {
+      "kind": "direccion",
+      "value": "Paseo Pánfilo Iglesia, 62, 2.º A, 39008 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "465 14 65 95"
+    },
+    {
+      "kind": "email",
+      "value": "reformasyalbanileriagarrido@correo.example"
+    },
+    {
+      "kind": "nombre",
+      "value": "Reformas y Albañilería Garrido"
+    }
+  ]
+}

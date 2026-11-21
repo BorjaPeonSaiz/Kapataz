@@ -1,0 +1,163 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-047",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-047.pdf",
+  "document_type": "presupuesto",
+  "layout": "tabla_clasica",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Emelina Belda Bejarano",
+      "tax_id": "20400775M",
+      "address": "Ronda de Jacinta Quintanilla, 78, 5.º dcha., 39100 Santa Cruz de Bezana (Cantabria)"
+    },
+    "number": "P-2025-0015",
+    "date": "2025-10-20",
+    "valid_until": "2025-11-19",
+    "due_date": null,
+    "lines": [
+      {
+        "concept": "Punto de luz sencillo",
+        "quantity": "2",
+        "unit": "ud",
+        "unit_price": "36.00",
+        "discount": null,
+        "amount": "72.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Base de enchufe 16 A",
+        "quantity": "4",
+        "unit": "ud",
+        "unit_price": "36.00",
+        "discount": null,
+        "amount": "144.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Toma de cocina 25 A",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "60.00",
+        "discount": null,
+        "amount": "60.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Foco empotrable LED",
+        "quantity": "4",
+        "unit": "ud",
+        "unit_price": "15.62",
+        "discount": null,
+        "amount": "62.48",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Cable H07V-K 2,5 mm²",
+        "quantity": "45",
+        "unit": "m",
+        "unit_price": "0.95",
+        "discount": null,
+        "amount": "42.75",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Cable H07V-K 6 mm²",
+        "quantity": "10",
+        "unit": "m",
+        "unit_price": "1.94",
+        "discount": null,
+        "amount": "19.40",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Tubo corrugado de 20 mm",
+        "quantity": "37",
+        "unit": "m",
+        "unit_price": "0.61",
+        "discount": null,
+        "amount": "22.57",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Magnetotérmico 16 A",
+        "quantity": "2",
+        "unit": "ud",
+        "unit_price": "13.17",
+        "discount": null,
+        "amount": "26.34",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "4",
+        "unit": "h",
+        "unit_price": "30.50",
+        "discount": null,
+        "amount": "122.00",
+        "vat_rate": "10"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "10",
+        "base": "571.54",
+        "amount": "57.15"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "571.54",
+    "vat_rate": "10",
+    "vat_amount": "57.15",
+    "withholding": null,
+    "guarantee": null,
+    "total": "628.69",
+    "amount_due": "628.69"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Emelina Belda Bejarano"
+    },
+    {
+      "kind": "nif",
+      "value": "20400775M"
+    },
+    {
+      "kind": "direccion",
+      "value": "Ronda de Jacinta Quintanilla, 78, 5.º dcha., 39100 Santa Cruz de Bezana (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    }
+  ]
+}

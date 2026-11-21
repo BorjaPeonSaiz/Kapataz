@@ -1,0 +1,114 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-076",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-076.pdf",
+  "document_type": "factura",
+  "layout": "logotipo_pie_extenso",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Victoriano Garrido Sandoval",
+      "tax_id": "52381187K",
+      "address": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    "customer": {
+      "name": "Construcciones Borrás S.L.",
+      "tax_id": "B39410469",
+      "address": "Paseo Pánfilo Iglesia, 62, 2.º A, 39008 Santander (Cantabria)"
+    },
+    "number": "FA-2026-0013",
+    "date": "2026-06-25",
+    "valid_until": null,
+    "due_date": "2026-08-24",
+    "lines": [
+      {
+        "concept": "Tabique de ladrillo hueco doble",
+        "quantity": "70.42",
+        "unit": "m²",
+        "unit_price": "25.00",
+        "discount": null,
+        "amount": "1760.50",
+        "vat_rate": null
+      },
+      {
+        "concept": "Enfoscado de mortero",
+        "quantity": "126.7",
+        "unit": "m²",
+        "unit_price": "13.79",
+        "discount": null,
+        "amount": "1747.19",
+        "vat_rate": null
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": null,
+        "base": "3507.69",
+        "amount": "0.00"
+      }
+    ],
+    "reverse_charge": true,
+    "base": "3507.69",
+    "vat_rate": null,
+    "vat_amount": "0.00",
+    "withholding": {
+      "rate": "1",
+      "amount": "35.08"
+    },
+    "guarantee": {
+      "rate": "5",
+      "amount": "175.38"
+    },
+    "total": "3472.61",
+    "amount_due": "3297.23"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Construcciones Borrás S.L."
+    },
+    {
+      "kind": "nif",
+      "value": "B39410469"
+    },
+    {
+      "kind": "direccion",
+      "value": "Paseo Pánfilo Iglesia, 62, 2.º A, 39008 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "465 14 65 95"
+    },
+    {
+      "kind": "email",
+      "value": "reformasyalbanileriagarrido@correo.example"
+    },
+    {
+      "kind": "nombre",
+      "value": "Reformas y Albañilería Garrido"
+    },
+    {
+      "kind": "iban",
+      "value": "ES98 0000 6561 8819 0436 4394"
+    }
+  ]
+}

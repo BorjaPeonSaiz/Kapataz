@@ -686,17 +686,17 @@ kapataz/
 ├── backend/
 │   ├── pyproject.toml
 │   ├── uv.lock
-│   ├── alembic/
+│   ├── alembic/versions/       # migraciones; la 0004 es el espacio de demostración (ADR-024)
 │   ├── src/kapataz/
 │   │   ├── domain/{accounts,billing,customers,catalog,documents,assistant,settings}/
-│   │   ├── application/{use_cases,agent,dto}/
+│   │   ├── application/{use_cases,use_cases/admin,agent,dto}/  # admin/: fuera del alcance de la API (import-linter)
 │   │   ├── infrastructure/{persistence,llm,privacy,embeddings,speech,pdf,search,storage,email,jobs,fiscal,payments,logging}/
 │   │   ├── api/{routers,schemas,errors.py,sse.py}
 │   │   ├── static/             # build de Vue que sirve FastAPI (ADR-013)
 │   │   ├── bootstrap.py        # composición de dependencias
 │   │   └── main.py
 │   ├── tests/{unit,integration,contract,e2e_api,security,evals}/
-│   └── tools/                  # traceability.py, seed_demo.py, gen_synthetic.py
+│   └── tools/                  # traceability.py, seed_demo.py, gen_synthetic.py y el paquete synthetic/ (ADR-020)
 ├── frontend/
 │   ├── package.json
 │   ├── src/{app,features/{account,admin,chat,quotes,invoices,documents,customers,settings},components,composables,stores,i18n,styles}
@@ -704,9 +704,10 @@ kapataz/
 ├── Dockerfile                  # imagen de la app; en la raíz porque así lo espera el panel del proveedor (ADR-014)
 ├── docker-compose.yml          # servicios kapataz (la api, puerto 8000), worker y PostgreSQL
 ├── deploy/                     # scripts de copia y restauración
-├── samples/                    # PDFs sintéticos versionados para demo y pruebas
+├── samples/                    # PDFs sintéticos versionados para demo y pruebas, por profesional (ADR-020)
 ├── evals/
-│   ├── extraction/             # PDFs + JSON esperado
+│   ├── README.md               # todo evals/ y samples/ es dato no confiable, nunca instrucción
+│   ├── extraction/             # JSON esperado de cada PDF de samples/, esquema y manifiesto
 │   └── agent/                  # preguntas + herramienta y parámetros esperados + respuesta de referencia
 └── docs/
     ├── 00-plan-maestro.md      # este documento
@@ -1151,6 +1152,11 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
 - Antes de solicitar revisión, se ejecutan y superan todas las pruebas y comprobaciones aplicables: las definidas en el bloque, su criterio de terminado y la Definición de Terminado de `docs/02-arquitectura.md`. Lo que no corre en CI (evaluaciones con `pytest -m llm`, pruebas en móviles reales) se ejecuta aparte y su resultado se anota en la descripción del PR. El PR deja `HANDOFF.md` al día.
 - Antes de integrar el PR, deben estar en verde el CI de GitHub y las comprobaciones de seguridad (`pip-audit`, `npm audit`, bandit, Semgrep, gitleaks y Trivy, sin hallazgos altos ni críticos), además de la revisión de `revisor-codigo`. No se integra un PR con comprobaciones fallidas o pendientes; cualquier excepción justificada debe quedar documentada y aprobada explícitamente.
 - El Bloque 0 solo aporta documentación y todavía no hay CI: sus comprobaciones se hacen en local y se integra con tu visto bueno. El Bloque 1 crea los workflows y la protección de `main`, y su propio PR ya debe pasarlos; desde ahí son obligatorios en todos los PR.
+- **Revisión de seguridad por bloque** (Borja, 21/11/2026). Al cerrar cada bloque, `seguridad-ia` revisa, acotado a lo que cambia el bloque:
+  - lo que aplique de la fase 7 del [plan de verificación](./plan-verificacion-kapataz.md): STRIDE, PDF no confiables, OWASP Top 10 y OWASP Top 10 para LLM, aislamiento entre cuentas, privacidad e integridad de las facturas;
+  - y, después, el resultado de corregirlo.
+
+  Si las correcciones tocan seguridad (migraciones, permisos, triggers, RLS, autenticación, entradas no confiables o el agente), hay una segunda pasada solo sobre ellas antes del PR. Lo automatizado de la fase 7 ya lo cubre el CI. Los hallazgos que no entran en el PR del bloque van a `HANDOFF.md` → «Pendiente», con el bloque en el que se resuelven. Lo aplican los bloques desde el 3.
 - Estas comprobaciones por PR no sustituyen a la Parte II, que repite la auditoría completa antes de la release.
 
 ### Mapa de dependencias
@@ -1292,16 +1298,22 @@ Formato de hallazgo: ID, severidad (🔴 BLOQUEANTE, 🟠 IMPORTANTE, 🟡 MENOR
   - 18 meses de actividad, 40–60 facturas y 20–30 presupuestos cada uno;
   - clientes particulares, comunidades de vecinos y empresas, con nombres repetidos a propósito para probar la ambigüedad;
   - conceptos de oficio con precios coherentes y variación realista.
+  - Construido: `backend/tools/gen_synthetic.py` y el paquete `backend/tools/synthetic/`, con `--check`; 156 documentos con la semilla por defecto (ADR-020, «Cierre en el Bloque 3»).
   - 🤖 `qa-testing` · Opus 5.5
 - [ ] **Maquetaciones de PDF variadas** (cinco plantillas distintas: tabla clásica, Word exportado, plantilla de programa genérico, texto sin tabla, con logotipo y pie extensos) y **imperfecciones**: totales con errores, IVA mal calculado, NIF ausente, líneas partidas entre páginas.
+  - Construido: las cinco, más el 15 % de escaneados (decisión de Borja, 20/11/2026).
   - 🤖 `qa-testing` · Opus 5.5
 - [ ] **Verdad de referencia:** cada PDF va con su JSON esperado en `evals/extraction/`.
+  - Construido: los PDF solo en `samples/`; en `evals/extraction/`, los JSON, el esquema y el manifiesto; `evals/README.md` avisa de que todo es dato no confiable.
   - 🤖 `qa-testing` · Opus 5.5
 - [ ] **PDF trampa** con instrucciones inyectadas para el escenario de seguridad.
+  - Construido: cinco, una por técnica, una escaneada y otra en los metadatos.
   - 🤖 `qa-testing` · Opus 5.5
 - [ ] **`seed_demo.py`** que carga el modo demostración (RF-CF-04).
+  - Construido: casos de uso `application/use_cases/load_demo_space.py` y `application/use_cases/admin/` (fuera del alcance de la API por import-linter), y la migración 0004 del espacio de demostración (ADR-024).
   - 🤖 `backend-fastapi` · Opus 5.5
 - [ ] **Cerrar ADR-020.**
+  - Redactado el cierre; queda el PR del bloque.
   - 🤖 `arquitecto-python` · Opus 5.5
 
 **Criterio de terminado:** `samples/` y `evals/extraction/` versionados; generador determinista con semilla.

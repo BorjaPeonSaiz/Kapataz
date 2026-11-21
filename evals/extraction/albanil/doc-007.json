@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-007",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-007.pdf",
+  "document_type": "otro",
+  "layout": "programa_generico",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": null,
+  "other": {
+    "kind": "factura_proveedor",
+    "description": "Factura recibida de un proveedor: no la emite el profesional."
+  },
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Contenedores Font S.L."
+    },
+    {
+      "kind": "nif",
+      "value": "B39485974"
+    },
+    {
+      "kind": "direccion",
+      "value": "Camino Carla Rey, 49, 39400 Los Corrales de Buelna (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "492 00 65 75"
+    },
+    {
+      "kind": "email",
+      "value": "pedidosfont@correo.example"
+    }
+  ]
+}

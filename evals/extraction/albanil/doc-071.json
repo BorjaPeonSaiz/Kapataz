@@ -1,0 +1,116 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-071",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-071.pdf",
+  "document_type": "factura",
+  "layout": "tabla_clasica",
+  "scanned": true,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Victoriano Garrido Sandoval",
+      "tax_id": "52381187K",
+      "address": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    "customer": {
+      "name": "Promociones Montserrat S.L.",
+      "tax_id": "B39151113",
+      "address": "Acceso Elías Requena, 96, 3.º D, 39313 Polanco (Cantabria)"
+    },
+    "number": "FA-2026-0010",
+    "date": "2026-05-18",
+    "valid_until": null,
+    "due_date": "2026-07-17",
+    "lines": [
+      {
+        "concept": "Tabique de ladrillo hueco doble",
+        "quantity": "346",
+        "unit": "m²",
+        "unit_price": "24.50",
+        "discount": null,
+        "amount": "8477.00",
+        "vat_rate": null
+      },
+      {
+        "concept": "Enfoscado de mortero",
+        "quantity": "573",
+        "unit": "m²",
+        "unit_price": "15.37",
+        "discount": null,
+        "amount": "8807.01",
+        "vat_rate": null
+      },
+      {
+        "concept": "Oficial de primera albañil",
+        "quantity": "43",
+        "unit": "h",
+        "unit_price": "26.00",
+        "discount": null,
+        "amount": "1118.00",
+        "vat_rate": null
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": null,
+        "base": "18402.01",
+        "amount": "0.00"
+      }
+    ],
+    "reverse_charge": true,
+    "base": "18402.01",
+    "vat_rate": null,
+    "vat_amount": "0.00",
+    "withholding": {
+      "rate": "1",
+      "amount": "184.02"
+    },
+    "guarantee": null,
+    "total": "18217.99",
+    "amount_due": "18217.99"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Promociones Montserrat S.L."
+    },
+    {
+      "kind": "nif",
+      "value": "B39151113"
+    },
+    {
+      "kind": "direccion",
+      "value": "Acceso Elías Requena, 96, 3.º D, 39313 Polanco (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "465 14 65 95"
+    },
+    {
+      "kind": "email",
+      "value": "reformasyalbanileriagarrido@correo.example"
+    },
+    {
+      "kind": "iban",
+      "value": "ES98 0000 6561 8819 0436 4394"
+    }
+  ]
+}

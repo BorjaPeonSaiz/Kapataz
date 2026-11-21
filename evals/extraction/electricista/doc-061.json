@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-061",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-061.pdf",
+  "document_type": "presupuesto",
+  "layout": "tabla_clasica",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Comunidad de Propietarios Acceso de Evita Sastre 13",
+      "tax_id": "H39897079",
+      "address": "Acceso de Evita Sastre, 13, 39001 Santander (Cantabria)"
+    },
+    "number": "P-2025-0019",
+    "date": "2025-12-29",
+    "valid_until": "2026-01-28",
+    "due_date": null,
+    "lines": [
+      {
+        "concept": "Cuadro general de mando y protección",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "240.35",
+        "discount": null,
+        "amount": "240.35",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Interruptor diferencial 40 A 30 mA",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "61.06",
+        "discount": null,
+        "amount": "61.06",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Magnetotérmico 16 A",
+        "quantity": "4",
+        "unit": "ud",
+        "unit_price": "14.43",
+        "discount": null,
+        "amount": "57.72",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "5.5",
+        "unit": "h",
+        "unit_price": "31.50",
+        "discount": null,
+        "amount": "173.25",
+        "vat_rate": "21"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "21",
+        "base": "532.38",
+        "amount": "111.80"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "532.38",
+    "vat_rate": "21",
+    "vat_amount": "111.80",
+    "withholding": null,
+    "guarantee": null,
+    "total": "644.18",
+    "amount_due": "644.18"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Comunidad de Propietarios Acceso de Evita Sastre 13"
+    },
+    {
+      "kind": "nif",
+      "value": "H39897079"
+    },
+    {
+      "kind": "direccion",
+      "value": "Acceso de Evita Sastre, 13, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    }
+  ]
+}

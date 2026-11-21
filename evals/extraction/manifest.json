@@ -1,0 +1,1806 @@
+{
+  "schema_version": "1.0.0",
+  "seed": 20251120,
+  "period": {
+    "start": "2025-01-01",
+    "end": "2026-06-30"
+  },
+  "generator_versions": {
+    "faker": "40.54.0",
+    "reportlab": "5.1.0",
+    "pypdfium2": "5.15.2",
+    "pillow": "13.0.0"
+  },
+  "fingerprints": {
+    "sha256": "SHA-256 de los bytes del fichero.",
+    "content_sha256": "SHA-256 del PDF completo en forma canónica: flujos Flate descomprimidos, datos de las imágenes JPEG sustituidos por un marcador, sin /Length ni desplazamientos de la tabla de referencias. No depende de zlib ni de libjpeg; los píxeles de los escaneados se comparan aparte.",
+    "dataset_sha256": "SHA-256 de las líneas «sha256  ruta» de todos los ficheros, en orden."
+  },
+  "dataset_sha256": "71b4c5bc538a02085fd4bd594494735af05e5ba7b8d231b21af32253e99ac9c7",
+  "summary": {
+    "professionals": {
+      "electricista": {
+        "documents": 80,
+        "by_type": {
+          "factura": 53,
+          "otro": 4,
+          "presupuesto": 23
+        },
+        "by_layout": {
+          "carta": 1,
+          "logotipo_pie_extenso": 15,
+          "programa_generico": 16,
+          "tabla_clasica": 17,
+          "texto_sin_tabla": 15,
+          "word_exportado": 16
+        },
+        "scanned": 12,
+        "seeded_errors": {
+          "base_no_cuadra": 1,
+          "cuota_iva_no_cuadra": 2,
+          "linea_partida": 2,
+          "nif_ausente": 2,
+          "total_no_cuadra": 2
+        },
+        "traps": {
+          "concepto_de_linea": 1,
+          "pie_visible": 1
+        },
+        "bytes": 4535757
+      },
+      "albanil": {
+        "documents": 76,
+        "by_type": {
+          "factura": 47,
+          "otro": 4,
+          "presupuesto": 25
+        },
+        "by_layout": {
+          "logotipo_pie_extenso": 14,
+          "programa_generico": 15,
+          "tabla_clasica": 18,
+          "texto_sin_tabla": 13,
+          "word_exportado": 16
+        },
+        "scanned": 11,
+        "seeded_errors": {
+          "base_no_cuadra": 1,
+          "cuota_iva_no_cuadra": 2,
+          "linea_partida": 2,
+          "nif_ausente": 2,
+          "total_no_cuadra": 2
+        },
+        "traps": {
+          "metadatos": 1,
+          "pie_visible_escaneado": 1,
+          "texto_oculto": 1
+        },
+        "bytes": 4406829
+      }
+    },
+    "samples_bytes": 8942586
+  },
+  "files": [
+    {
+      "path": "evals/extraction/albanil/doc-001.json",
+      "sha256": "d75a7a70cfa5a3ffe255b6fca9c629d2c0fb88847867e2e1dfde558b1c0ffacd",
+      "bytes": 2788
+    },
+    {
+      "path": "evals/extraction/albanil/doc-002.json",
+      "sha256": "b47837b69be5219541156526725666d90c8a042314fd4df76e29761b2d121f45",
+      "bytes": 2823
+    },
+    {
+      "path": "evals/extraction/albanil/doc-003.json",
+      "sha256": "eb42b0310d2094a2b97693b99176df404c5278a181b5ad3a46561c48f1575e46",
+      "bytes": 2879
+    },
+    {
+      "path": "evals/extraction/albanil/doc-004.json",
+      "sha256": "814d51561fa5d770b15c84ccec15a92231f0895efdae278e6af1dcabc26ae4db",
+      "bytes": 2955
+    },
+    {
+      "path": "evals/extraction/albanil/doc-005.json",
+      "sha256": "e42e2446ac37fd27204c00498ee30bc4905000a8aa1664f3e601ffd7656fcae2",
+      "bytes": 2957
+    },
+    {
+      "path": "evals/extraction/albanil/doc-006.json",
+      "sha256": "c88021c78e378cc3730a4571f0e6191727dbe8878f61b8c688e3bab257a814c2",
+      "bytes": 2652
+    },
+    {
+      "path": "evals/extraction/albanil/doc-007.json",
+      "sha256": "6c6550d6f89012ffd2b3d56a9baac91cd7b8ef05066c5ce17733c044c51cd1b9",
+      "bytes": 1169
+    },
+    {
+      "path": "evals/extraction/albanil/doc-008.json",
+      "sha256": "19457d21f5980540735229b3f7ccb7873641c837517a7e01a3ea977676086822",
+      "bytes": 2593
+    },
+    {
+      "path": "evals/extraction/albanil/doc-009.json",
+      "sha256": "36a95b619dc5bd09f1142e011bf6a38298b4a72481f044eae0400fc134e26eda",
+      "bytes": 2783
+    },
+    {
+      "path": "evals/extraction/albanil/doc-010.json",
+      "sha256": "999a955b876271fccb76ec78cb2187d8de4818e263ac2e0cc8b7f943a2a454b2",
+      "bytes": 2782
+    },
+    {
+      "path": "evals/extraction/albanil/doc-011.json",
+      "sha256": "c59fa906071fe50ba141eb782556966c15dbaab8373be92e5dcd5ba9d3de0a0e",
+      "bytes": 1190
+    },
+    {
+      "path": "evals/extraction/albanil/doc-012.json",
+      "sha256": "4cbe49d6869ae80caaa3a3904ee3647ca255b83eb56bdd9b2905759f1260e7dc",
+      "bytes": 2681
+    },
+    {
+      "path": "evals/extraction/albanil/doc-013.json",
+      "sha256": "6cb9e0431f90588204de774af1b918fa22a1be59d51d4ad98463733cb801b0f6",
+      "bytes": 2330
+    },
+    {
+      "path": "evals/extraction/albanil/doc-014.json",
+      "sha256": "e2a40a8fb77d9241299ce2e6e10633e073545aa64b1f0044b9212ad8d856881c",
+      "bytes": 3491
+    },
+    {
+      "path": "evals/extraction/albanil/doc-015.json",
+      "sha256": "c4f1214a9188b469a694e6bb9a20e680154e289bfc4180936ecd347163a77981",
+      "bytes": 2691
+    },
+    {
+      "path": "evals/extraction/albanil/doc-016.json",
+      "sha256": "2f253e14e5e883c697bb5046ae610bc02e0c0948097b86acad83bcbb60a8d5fe",
+      "bytes": 4054
+    },
+    {
+      "path": "evals/extraction/albanil/doc-017.json",
+      "sha256": "7593be07695f13fcb34277f1999fdb2886f2e4f3fcbfc6b9c684493bdfaa1080",
+      "bytes": 2931
+    },
+    {
+      "path": "evals/extraction/albanil/doc-018.json",
+      "sha256": "71d47405167ea06590949a29e4ab6538b270ffde5d5f2f774a88cf813f6f94e7",
+      "bytes": 2884
+    },
+    {
+      "path": "evals/extraction/albanil/doc-019.json",
+      "sha256": "feebb1b5ca489ee349ea664cfa822019949f3c7de76eefc151dbefbac012d380",
+      "bytes": 2478
+    },
+    {
+      "path": "evals/extraction/albanil/doc-020.json",
+      "sha256": "a2da6aed6166665da5ddb38deaf6c3d7ea96e0dd1121031c00eb6f15a57e262d",
+      "bytes": 2454
+    },
+    {
+      "path": "evals/extraction/albanil/doc-021.json",
+      "sha256": "288426b3da60b5139502ca4a47e2844a7e9f4dc753de1d89d06b88a1be70b6c8",
+      "bytes": 2684
+    },
+    {
+      "path": "evals/extraction/albanil/doc-022.json",
+      "sha256": "1fa54cc82ec261246c67f6370d80944e6786fe239a60970ee557149da1e64663",
+      "bytes": 3077
+    },
+    {
+      "path": "evals/extraction/albanil/doc-023.json",
+      "sha256": "e9425fd6e60a66a75c32c3eeaaa3b6977cab39e4c8483fb75760815451dcf62d",
+      "bytes": 3767
+    },
+    {
+      "path": "evals/extraction/albanil/doc-024.json",
+      "sha256": "88e2823d8202c839badba06cfd945de61caf05904151451c1532cb9897a0fc8f",
+      "bytes": 1178
+    },
+    {
+      "path": "evals/extraction/albanil/doc-025.json",
+      "sha256": "9b810b4e00e8966f8cf63cf5c195bc9f331a21301584f54c584ee3058a9ac7e8",
+      "bytes": 3676
+    },
+    {
+      "path": "evals/extraction/albanil/doc-026.json",
+      "sha256": "0e00962f2ce9109e1f5a86df3f4bd7f84851d41ed196c42943f9b7afc762125d",
+      "bytes": 2550
+    },
+    {
+      "path": "evals/extraction/albanil/doc-027.json",
+      "sha256": "29e9015ddf3c7e66f4ae7f0e41eef1555e94df00b24ecad332bd852e3ec0d2e7",
+      "bytes": 2718
+    },
+    {
+      "path": "evals/extraction/albanil/doc-028.json",
+      "sha256": "2da1818250e61420e08a2354e3aa173e6a202229c59643dab0356c55d6632d1b",
+      "bytes": 6737
+    },
+    {
+      "path": "evals/extraction/albanil/doc-029.json",
+      "sha256": "ca37e8d4601a83f7ba15ec11fac28e2f1372c8abe942ab2b17d108063fa4dffc",
+      "bytes": 2849
+    },
+    {
+      "path": "evals/extraction/albanil/doc-030.json",
+      "sha256": "d37baabb4ba1920d67ae1d20cf8d5fd9a0eda860af2cf28b4004f042c7aa9320",
+      "bytes": 3864
+    },
+    {
+      "path": "evals/extraction/albanil/doc-031.json",
+      "sha256": "70a6e3419b42bb5be212076c9b15ebe01a0ba9fc5ebdb2e1a13c71980b10112f",
+      "bytes": 2551
+    },
+    {
+      "path": "evals/extraction/albanil/doc-032.json",
+      "sha256": "85641b25109604494769b584ab2511b8c409c131a8d4379908f2b5fc7e012a8c",
+      "bytes": 3842
+    },
+    {
+      "path": "evals/extraction/albanil/doc-033.json",
+      "sha256": "9c3009c2d790af88afbf206ece9a04ac37ae8d5254fbb20b761d2936cf9c9058",
+      "bytes": 6374
+    },
+    {
+      "path": "evals/extraction/albanil/doc-034.json",
+      "sha256": "13c04c3e4a3262c16bd7f80bb45ff150c0c6ba1fc6ffc59abd213838b7ca25b4",
+      "bytes": 6736
+    },
+    {
+      "path": "evals/extraction/albanil/doc-035.json",
+      "sha256": "c680b997187869a25e0701ac2efb8376aef6d0458b5dae07a7ffe8166106843b",
+      "bytes": 2530
+    },
+    {
+      "path": "evals/extraction/albanil/doc-036.json",
+      "sha256": "4f998ed829a78042414d6d01b5e5a68a3f354205e2f9e7ffe99224e0b8857d3b",
+      "bytes": 6479
+    },
+    {
+      "path": "evals/extraction/albanil/doc-037.json",
+      "sha256": "4178a43ffec5c438cded73e1d2b816852668e8555b86f12cef7d43598060b534",
+      "bytes": 3267
+    },
+    {
+      "path": "evals/extraction/albanil/doc-038.json",
+      "sha256": "ab8d826a0390ca44eca986cfde98e16713e93f2b52e61b3ef1bc54eb0d49428a",
+      "bytes": 2776
+    },
+    {
+      "path": "evals/extraction/albanil/doc-039.json",
+      "sha256": "60be967623c4993d6d3311f63571b7a92823f756a919273b41e85c35d79e1ee2",
+      "bytes": 1099
+    },
+    {
+      "path": "evals/extraction/albanil/doc-040.json",
+      "sha256": "6d6076c1bcc860090dbeecd5b287fa5babd4a78f51c47217bf40c6af9025ad4b",
+      "bytes": 3656
+    },
+    {
+      "path": "evals/extraction/albanil/doc-041.json",
+      "sha256": "5213ef5b1e798a0454b555624d99b5185739e048a5ef17feb4fa198eb11f26f8",
+      "bytes": 3225
+    },
+    {
+      "path": "evals/extraction/albanil/doc-042.json",
+      "sha256": "c2869b092cb8fa3907ebbee016085fa3786c67e96665f4798a6f46009d59f0c4",
+      "bytes": 6823
+    },
+    {
+      "path": "evals/extraction/albanil/doc-043.json",
+      "sha256": "eb01dfec5492ed73ec3723b1f301f862f82fcc7ee7d4eb2a795b3b983b463124",
+      "bytes": 5852
+    },
+    {
+      "path": "evals/extraction/albanil/doc-044.json",
+      "sha256": "5e625e274eb6559edc74cb2e3965cdc6d5a12c8d149f97bbe61d436811b537a5",
+      "bytes": 2768
+    },
+    {
+      "path": "evals/extraction/albanil/doc-045.json",
+      "sha256": "19cdd7a64bf83e7fca37f0bedcaf5f8ab9dd4d1993e1f4dcc79dc6c7f5e3baee",
+      "bytes": 2881
+    },
+    {
+      "path": "evals/extraction/albanil/doc-046.json",
+      "sha256": "20900e08cd47879dfa9bdcacf6cbf2a5c42c447fcd4d6be5dc797d68e111b627",
+      "bytes": 6557
+    },
+    {
+      "path": "evals/extraction/albanil/doc-047.json",
+      "sha256": "592ad3699d7e9974e9f915f7e90b3900b9e0367e7cb46c40d607ed0f87496349",
+      "bytes": 2739
+    },
+    {
+      "path": "evals/extraction/albanil/doc-048.json",
+      "sha256": "5b21967ed806f416725e4672b9194b80f4dbc0e862c4ac2ffdffa1387fc326c8",
+      "bytes": 3063
+    },
+    {
+      "path": "evals/extraction/albanil/doc-049.json",
+      "sha256": "5fb565036a0a129c0bece1c9c9ec86abacb6f766b2923cf8577d965c449fb80d",
+      "bytes": 5856
+    },
+    {
+      "path": "evals/extraction/albanil/doc-050.json",
+      "sha256": "f579b224134655a634e543911367bb558ac334aa0ef8fa806b98563c22c59459",
+      "bytes": 2921
+    },
+    {
+      "path": "evals/extraction/albanil/doc-051.json",
+      "sha256": "3e230f236098d33c9d7c026ccc57c555adc47d808478bbcbae77f0d579187257",
+      "bytes": 2678
+    },
+    {
+      "path": "evals/extraction/albanil/doc-052.json",
+      "sha256": "b72820d9cf03e58b5d6d70144ffbd1478d3623d1514cc95d0d45290125aac956",
+      "bytes": 7257
+    },
+    {
+      "path": "evals/extraction/albanil/doc-053.json",
+      "sha256": "b3882ba8a61e63cf2030b3a762c8cff08f01546f4a00ddbae85e7498e31a7b39",
+      "bytes": 3994
+    },
+    {
+      "path": "evals/extraction/albanil/doc-054.json",
+      "sha256": "f175439cf0af49306d4bcc1c3329bc0ad4d533409b58c26c52b5924b517eb1c5",
+      "bytes": 2965
+    },
+    {
+      "path": "evals/extraction/albanil/doc-055.json",
+      "sha256": "6daedd904ba70294d9af1c4f7df0d917cae09b2c9aca3cf3085847b219cc00a2",
+      "bytes": 3765
+    },
+    {
+      "path": "evals/extraction/albanil/doc-056.json",
+      "sha256": "a8d9082b02889032b433131e2c3ad2ddb03a3220c7776275bf8e2f0c24e2552b",
+      "bytes": 3687
+    },
+    {
+      "path": "evals/extraction/albanil/doc-057.json",
+      "sha256": "4e926e1bc93f5e4b089fad754d84ff95586bfcbee3eac8e94509fb9314421385",
+      "bytes": 2710
+    },
+    {
+      "path": "evals/extraction/albanil/doc-058.json",
+      "sha256": "ad3fccab040911ee0840e0888558dabae77a4d97f513c7526fcb53970ef7b424",
+      "bytes": 3274
+    },
+    {
+      "path": "evals/extraction/albanil/doc-059.json",
+      "sha256": "411aa560b50558228ff756d504b09508650c78a8f0b08cfc45e40974453fff8b",
+      "bytes": 2711
+    },
+    {
+      "path": "evals/extraction/albanil/doc-060.json",
+      "sha256": "308752fc7cf4d9423255ee411999907deb2300f01dfdb3c43d15e242cd47de8c",
+      "bytes": 4028
+    },
+    {
+      "path": "evals/extraction/albanil/doc-061.json",
+      "sha256": "4b2b859bbd833248563af85de423e153ed0cd8d509022a38762d2946acb6b83a",
+      "bytes": 3752
+    },
+    {
+      "path": "evals/extraction/albanil/doc-062.json",
+      "sha256": "28d10cd9e9bfbc6ba20ab9c7f465e4d8c472def0678e2afffd7ab8d7d786f006",
+      "bytes": 2473
+    },
+    {
+      "path": "evals/extraction/albanil/doc-063.json",
+      "sha256": "1668bda09946ba4d8adffea0b840bd408e35a95fc6f10526084d2e043682fb39",
+      "bytes": 2946
+    },
+    {
+      "path": "evals/extraction/albanil/doc-064.json",
+      "sha256": "41902a10f885b08a286df39e6435dc4273fa0bc3bbb62f40fa78bceee8e6deaf",
+      "bytes": 3489
+    },
+    {
+      "path": "evals/extraction/albanil/doc-065.json",
+      "sha256": "4ba33d37214390dd81c48a4d9eeff0e16683dd3d979332d497cb60db48a4d23d",
+      "bytes": 3680
+    },
+    {
+      "path": "evals/extraction/albanil/doc-066.json",
+      "sha256": "91fffcd5ef86ecc38130d4b18a74ff04087796bf1558ae247473271c9590e0ec",
+      "bytes": 3397
+    },
+    {
+      "path": "evals/extraction/albanil/doc-067.json",
+      "sha256": "0e40b1f8c6c9f086df5ac73047a846f42caf2d29ef3aebf49415959edd8e93ab",
+      "bytes": 3758
+    },
+    {
+      "path": "evals/extraction/albanil/doc-068.json",
+      "sha256": "c39b00e468cf0217463e7d64de57e887a4094ccf00d04d23d825ced68155b613",
+      "bytes": 2778
+    },
+    {
+      "path": "evals/extraction/albanil/doc-069.json",
+      "sha256": "c5558beeeade1a4e22c66d038ba9a603fcf0e00260776f64cf11a39751532e07",
+      "bytes": 3270
+    },
+    {
+      "path": "evals/extraction/albanil/doc-070.json",
+      "sha256": "e1d70cfc990f431cfa2815af0b6d4d85aa36b5270136d0312bd9c80322021471",
+      "bytes": 2586
+    },
+    {
+      "path": "evals/extraction/albanil/doc-071.json",
+      "sha256": "6d866bb1c1eb24dbdcea4578ce172fd7339a8a9053caeb63db64784ae92d589f",
+      "bytes": 2694
+    },
+    {
+      "path": "evals/extraction/albanil/doc-072.json",
+      "sha256": "27e7e35f3082f865373bfc9393aa35a9b52e03602203341c6e05a535ca029e4b",
+      "bytes": 2773
+    },
+    {
+      "path": "evals/extraction/albanil/doc-073.json",
+      "sha256": "9f8cd1976fd562643eef1464123c3c050fae4d30962cee83dc463c9418d2a53f",
+      "bytes": 2523
+    },
+    {
+      "path": "evals/extraction/albanil/doc-074.json",
+      "sha256": "3d55e9858a5c74f14db58886c81b053701d69500f1429ac79dc0922972779aeb",
+      "bytes": 2802
+    },
+    {
+      "path": "evals/extraction/albanil/doc-075.json",
+      "sha256": "9121ce4eacdb73d0c2d09f16dd4df3dc3cc4c8f0ab4bc9a2411b9b92092269c4",
+      "bytes": 4002
+    },
+    {
+      "path": "evals/extraction/albanil/doc-076.json",
+      "sha256": "63b776c622579f1e86e96a96e8f6f49e7381d7296802b449e1f7caf607331aa1",
+      "bytes": 2616
+    },
+    {
+      "path": "evals/extraction/electricista/doc-001.json",
+      "sha256": "5d2d43600a1b970794a4a9454eec63a8e5b4e70de3a0776dd18bbc2a245a3028",
+      "bytes": 2963
+    },
+    {
+      "path": "evals/extraction/electricista/doc-002.json",
+      "sha256": "cbd9accec08ed40f2eef8280faba48071a0756f8af8018105093b640ec694d9e",
+      "bytes": 3116
+    },
+    {
+      "path": "evals/extraction/electricista/doc-003.json",
+      "sha256": "5f86b0210ac96ebc8545866125ca251fd7c7320586a23045f9aa9207cca7f6e7",
+      "bytes": 3135
+    },
+    {
+      "path": "evals/extraction/electricista/doc-004.json",
+      "sha256": "6c29c55eb6cc36813ffb0f1398f721abe03aa1ef94074dd24c79c8ad05100054",
+      "bytes": 3549
+    },
+    {
+      "path": "evals/extraction/electricista/doc-005.json",
+      "sha256": "571951850f360aa972e1b52f2a8bf9d3330d1d1288c5ea6db1bd37a3a6c7e5c1",
+      "bytes": 2820
+    },
+    {
+      "path": "evals/extraction/electricista/doc-006.json",
+      "sha256": "432bee3e27a765638ca4be13ee5694e1f2d6231c4c6bfb725196fe672a813c63",
+      "bytes": 2824
+    },
+    {
+      "path": "evals/extraction/electricista/doc-007.json",
+      "sha256": "10c4d2bf383d5035e501cebcb467ce1c502b2c2bc2a378b7e0052f1daad4eafb",
+      "bytes": 6646
+    },
+    {
+      "path": "evals/extraction/electricista/doc-008.json",
+      "sha256": "62ffaeb18ea46148a57e1f522a02168787a49c874597269a708eed89719de716",
+      "bytes": 6721
+    },
+    {
+      "path": "evals/extraction/electricista/doc-009.json",
+      "sha256": "9c8815a4f18380d6559f9c928799da47931701313a01bacef9980bbaa8c4bb71",
+      "bytes": 2583
+    },
+    {
+      "path": "evals/extraction/electricista/doc-010.json",
+      "sha256": "dc564ee58e38f1b0fa08a9dfe0a2021046e4125d440cbc9784b38eddb19def79",
+      "bytes": 3875
+    },
+    {
+      "path": "evals/extraction/electricista/doc-011.json",
+      "sha256": "3762c1335e1b3b109960854c81296644af22c44da9484f58ea464d26bedb7481",
+      "bytes": 3238
+    },
+    {
+      "path": "evals/extraction/electricista/doc-012.json",
+      "sha256": "cb9bd46b5ffe77122cffe9eea10954fe230646f2fbbca01ee14dad13bc166684",
+      "bytes": 3066
+    },
+    {
+      "path": "evals/extraction/electricista/doc-013.json",
+      "sha256": "267f85a4a38192527b57184e570a9af833c540a5da2dab7b2abb54027755c189",
+      "bytes": 3953
+    },
+    {
+      "path": "evals/extraction/electricista/doc-014.json",
+      "sha256": "14910e5b73384a111fd1246264b95dc9a9dd740a1475ad43c20dab3af41ea37b",
+      "bytes": 3075
+    },
+    {
+      "path": "evals/extraction/electricista/doc-015.json",
+      "sha256": "5e508584472d2d89ed6b659560ce86b1c92b6115c9137952731fbe34c72b24a2",
+      "bytes": 1211
+    },
+    {
+      "path": "evals/extraction/electricista/doc-016.json",
+      "sha256": "7e3fdc20df5002d2eab3d2f8b45f96c98cf70e943ecfaaccfb233d89dcb926a4",
+      "bytes": 2780
+    },
+    {
+      "path": "evals/extraction/electricista/doc-017.json",
+      "sha256": "193e81f38aff81d229ed4be3c51d8596a19ce4735b41fe6cc71eabc5d55ac6a3",
+      "bytes": 7101
+    },
+    {
+      "path": "evals/extraction/electricista/doc-018.json",
+      "sha256": "707761dc68d9090b6c1e0e962f4e870f1532617312908380288506c9facfb178",
+      "bytes": 3589
+    },
+    {
+      "path": "evals/extraction/electricista/doc-019.json",
+      "sha256": "24b5ac2fd9d64cfaf75d651b292a24d3478bc88ac0ab53b8e1e3faaab826f15b",
+      "bytes": 1166
+    },
+    {
+      "path": "evals/extraction/electricista/doc-020.json",
+      "sha256": "5a632fb6a0e4bd3cd44b474d82fef0fdb5264489acdb755cdd7713e3c3c93f49",
+      "bytes": 2364
+    },
+    {
+      "path": "evals/extraction/electricista/doc-021.json",
+      "sha256": "bcb92695bf52dc1cebedca366e1c0dcf6547c5e574e863f72ba8aa2b9d5de494",
+      "bytes": 3144
+    },
+    {
+      "path": "evals/extraction/electricista/doc-022.json",
+      "sha256": "92786aacc29136985b4a60c74dbef3878023c405e37b0c0d58de62878f9641f5",
+      "bytes": 1182
+    },
+    {
+      "path": "evals/extraction/electricista/doc-023.json",
+      "sha256": "59af17792b5a99420e112d6ae4d643fcedc368ffaddb9ec8b689d5a4315488c3",
+      "bytes": 3340
+    },
+    {
+      "path": "evals/extraction/electricista/doc-024.json",
+      "sha256": "f2d7f71d1660014087ed0c12f1f5a42130cf20611c0144d863f645c4980b377c",
+      "bytes": 2523
+    },
+    {
+      "path": "evals/extraction/electricista/doc-025.json",
+      "sha256": "fd8d4492b5acd1541ab8014debd153293041e6f32cb454d4379a2c634b311b28",
+      "bytes": 2483
+    },
+    {
+      "path": "evals/extraction/electricista/doc-026.json",
+      "sha256": "c621d981bb106aa98579091d16202ba96d646c9f3cbd50cd19697b68a7b15da4",
+      "bytes": 3094
+    },
+    {
+      "path": "evals/extraction/electricista/doc-027.json",
+      "sha256": "690551eb73044d4bbfbd9cc0dfdcbe03e347bb16003de1293a28e161c95beec0",
+      "bytes": 3211
+    },
+    {
+      "path": "evals/extraction/electricista/doc-028.json",
+      "sha256": "e1b26ff6b008e587d9c96ad65c5ba93d486b73c4150109e70fa776bc400aac43",
+      "bytes": 6712
+    },
+    {
+      "path": "evals/extraction/electricista/doc-029.json",
+      "sha256": "aa12c7918ca3d0531d47e475963f595a013779a203d0b495ca88b7eb455cf088",
+      "bytes": 3331
+    },
+    {
+      "path": "evals/extraction/electricista/doc-030.json",
+      "sha256": "bc175c2307b545869224029079461a4021f07cff7f56330565ae3e68b50dc21e",
+      "bytes": 2710
+    },
+    {
+      "path": "evals/extraction/electricista/doc-031.json",
+      "sha256": "54fea1e89debf24a6f78104b19e3fb1858bcf8f7ed07aa7be4b968c5e09a0c35",
+      "bytes": 2663
+    },
+    {
+      "path": "evals/extraction/electricista/doc-032.json",
+      "sha256": "e09b4d6682b91be4a1c406e77499dc6344437b8da46ee3c98a06abb27a8b85da",
+      "bytes": 3480
+    },
+    {
+      "path": "evals/extraction/electricista/doc-033.json",
+      "sha256": "25a7a1c37ffea4ee3194a2bec29ef7599697da4cde9beba201e8183c47d13730",
+      "bytes": 2462
+    },
+    {
+      "path": "evals/extraction/electricista/doc-034.json",
+      "sha256": "52342b16537e85b8a85267462c4d0ef5076f7aa9ab0612b7635c1515041d9a7a",
+      "bytes": 2831
+    },
+    {
+      "path": "evals/extraction/electricista/doc-035.json",
+      "sha256": "1a45024127a34caf0af9b2f7b537b4e45ca1c7e396589c8d85f8dc1638d1d794",
+      "bytes": 2448
+    },
+    {
+      "path": "evals/extraction/electricista/doc-036.json",
+      "sha256": "ae48ed54a5a303f50278f7f4f19a13fb2fc2ed8eb3f20bf4941548b9d63a2a91",
+      "bytes": 2476
+    },
+    {
+      "path": "evals/extraction/electricista/doc-037.json",
+      "sha256": "be69b881e8eb0d7fb70da2f599569112f77435824fa99c9d0f295793ff50ba73",
+      "bytes": 3767
+    },
+    {
+      "path": "evals/extraction/electricista/doc-038.json",
+      "sha256": "c17aa036cfe90e47c30440a6cc134901938f18b7710d844d2d7b4cc1b70df4cc",
+      "bytes": 2676
+    },
+    {
+      "path": "evals/extraction/electricista/doc-039.json",
+      "sha256": "714e7930b6bb1678a754e47cf09207ed316294cafbd0f00adc93a0c439e809b2",
+      "bytes": 7020
+    },
+    {
+      "path": "evals/extraction/electricista/doc-040.json",
+      "sha256": "b79d34467a62fe968eb36690758db134743f086a78ec136dd35d515e5a7843e2",
+      "bytes": 3243
+    },
+    {
+      "path": "evals/extraction/electricista/doc-041.json",
+      "sha256": "f046715ca7288e56b1eab693c91cd7db077866151d74694629a942274cecbe25",
+      "bytes": 3331
+    },
+    {
+      "path": "evals/extraction/electricista/doc-042.json",
+      "sha256": "6b7b64111d1feca26a244081f918484984dc7a63a0aaa4a55d28992635957500",
+      "bytes": 6708
+    },
+    {
+      "path": "evals/extraction/electricista/doc-043.json",
+      "sha256": "96c5abd31e1c346eab9abf8ce4e1a7a3279b65ef951aa2246081d707a8a0f820",
+      "bytes": 2625
+    },
+    {
+      "path": "evals/extraction/electricista/doc-044.json",
+      "sha256": "d96851f25389bea200f8b2f0261cfd0c834de256773443fdac4e46fd881f3b96",
+      "bytes": 3924
+    },
+    {
+      "path": "evals/extraction/electricista/doc-045.json",
+      "sha256": "130ca6c7b954d8e1c4debf38c7d11a35c9ae7956bf7a597770bed360d8886acc",
+      "bytes": 2899
+    },
+    {
+      "path": "evals/extraction/electricista/doc-046.json",
+      "sha256": "dbf7ed9d78f117a85d489fd27a31b28b30287c5698d9fa42d2c9881f2e74895d",
+      "bytes": 2579
+    },
+    {
+      "path": "evals/extraction/electricista/doc-047.json",
+      "sha256": "3357ca30987df08b1dc0338c876d79fb8643a7fde5860c4e6e1f60342091093a",
+      "bytes": 3868
+    },
+    {
+      "path": "evals/extraction/electricista/doc-048.json",
+      "sha256": "bbb429224897d462711e3e59a00502d959591573e09555fa8131ca207c712bb6",
+      "bytes": 2827
+    },
+    {
+      "path": "evals/extraction/electricista/doc-049.json",
+      "sha256": "53f360ac4da5e2bb6e6e7e48f9a3090fd67664d237bdbd52d2bc234371e464fd",
+      "bytes": 2736
+    },
+    {
+      "path": "evals/extraction/electricista/doc-050.json",
+      "sha256": "616ac56fe12d08f2c2add212289c8ee8a885935ba8f32381e18aaec08da9320f",
+      "bytes": 3927
+    },
+    {
+      "path": "evals/extraction/electricista/doc-051.json",
+      "sha256": "2bdf04612c83a845d27f6bd9b0f86fd6cef298b0e40a2a563e14629036065f62",
+      "bytes": 2898
+    },
+    {
+      "path": "evals/extraction/electricista/doc-052.json",
+      "sha256": "ca69a99db1d0aaac4a4c69378cd666c5a1a2c26ac784955b5f79878d588e66ce",
+      "bytes": 3475
+    },
+    {
+      "path": "evals/extraction/electricista/doc-053.json",
+      "sha256": "947866af9db454be5d3857ea4e1a77d5105b15aaedad3b787f1fbae552b12ca3",
+      "bytes": 3255
+    },
+    {
+      "path": "evals/extraction/electricista/doc-054.json",
+      "sha256": "21b5a5d600f08757d9ce9dc295e77ec1e75c71026d05ee146f6a410dca89643f",
+      "bytes": 2580
+    },
+    {
+      "path": "evals/extraction/electricista/doc-055.json",
+      "sha256": "da669e74f2ac7fae40c7523cb6dcabb283afad312052235b77669d8166cbf4b9",
+      "bytes": 3292
+    },
+    {
+      "path": "evals/extraction/electricista/doc-056.json",
+      "sha256": "6b10cb9a6b558ecb71e179b478c25a156e4cf45eb89a4cdec8096657b39f6e81",
+      "bytes": 2719
+    },
+    {
+      "path": "evals/extraction/electricista/doc-057.json",
+      "sha256": "1a0e409a37932f02b903326affef7778c7727830cf2810bbb2881856c58038c7",
+      "bytes": 2686
+    },
+    {
+      "path": "evals/extraction/electricista/doc-058.json",
+      "sha256": "82521711ee7a2be88e8623436206602fe7cf205a03e3986d97a94da32cf21616",
+      "bytes": 2920
+    },
+    {
+      "path": "evals/extraction/electricista/doc-059.json",
+      "sha256": "5c609a8325b532dbe6f10081a80c07116aaba7c89bfde3ab2fd23143c133904e",
+      "bytes": 3265
+    },
+    {
+      "path": "evals/extraction/electricista/doc-060.json",
+      "sha256": "bf845bb9a780a7ae6509c9c13c7662114eec25908041955c088d75432ed51b35",
+      "bytes": 3373
+    },
+    {
+      "path": "evals/extraction/electricista/doc-061.json",
+      "sha256": "1da32a98abe5126df72d73be93de055277a07280935240be3498bbbab961280a",
+      "bytes": 2825
+    },
+    {
+      "path": "evals/extraction/electricista/doc-062.json",
+      "sha256": "99bd50e818b6e3eb1aef6a07a8062aa2ce20f460c85cc8000382f5063ee39f68",
+      "bytes": 3360
+    },
+    {
+      "path": "evals/extraction/electricista/doc-063.json",
+      "sha256": "20f340171de5d634fd62a64ceaf9685aa27027f5fe10cfb196603b62c520341e",
+      "bytes": 3213
+    },
+    {
+      "path": "evals/extraction/electricista/doc-064.json",
+      "sha256": "72e8a1b195d4882f709a25f2c567e82cbbd0af80ca207d39e74b6323af3bcdc8",
+      "bytes": 3166
+    },
+    {
+      "path": "evals/extraction/electricista/doc-065.json",
+      "sha256": "2381df4c1d94fa58eaa85ecbc236ea9f8b4c464f4b2d38016dd69354b492f38d",
+      "bytes": 3177
+    },
+    {
+      "path": "evals/extraction/electricista/doc-066.json",
+      "sha256": "dae538b2c1c109ab632d17fcbf72f56fa60aea13a5528112c640f19ba6b97550",
+      "bytes": 2616
+    },
+    {
+      "path": "evals/extraction/electricista/doc-067.json",
+      "sha256": "9cd9e9b83e574f41ae624cf592fe5ab721d0b32522fba7a1b3275e31baee7287",
+      "bytes": 2686
+    },
+    {
+      "path": "evals/extraction/electricista/doc-068.json",
+      "sha256": "9de1db0a08c651fa87381dce243d5f2626bccc011277282c85e77c2457074010",
+      "bytes": 2362
+    },
+    {
+      "path": "evals/extraction/electricista/doc-069.json",
+      "sha256": "b0c920152554e3dcd09f6aca65427b3222cc4bd25e5270b0c90b29165a16e193",
+      "bytes": 2896
+    },
+    {
+      "path": "evals/extraction/electricista/doc-070.json",
+      "sha256": "ee642a14de468e5fd6430855f0bd1f2be6ad7875ff2ab095c9841cdee8b22450",
+      "bytes": 1412
+    },
+    {
+      "path": "evals/extraction/electricista/doc-071.json",
+      "sha256": "1597e5d76fcf469fa64fe5164d6929b6aab2c5f6a92f7dead3dc709f8f1e99aa",
+      "bytes": 2617
+    },
+    {
+      "path": "evals/extraction/electricista/doc-072.json",
+      "sha256": "e1c77c1effb03e23ddade856af410ebd51922dd51c4315540651e69729d4d579",
+      "bytes": 2440
+    },
+    {
+      "path": "evals/extraction/electricista/doc-073.json",
+      "sha256": "f80f9e3face6e90e1a628587814a3657a225559133cac6a21b35d7004fd4bd75",
+      "bytes": 2975
+    },
+    {
+      "path": "evals/extraction/electricista/doc-074.json",
+      "sha256": "d7ea13aa8e6c541506a77a5e76e02ee92c16e7fd951187955423c7576f66a991",
+      "bytes": 2444
+    },
+    {
+      "path": "evals/extraction/electricista/doc-075.json",
+      "sha256": "37a768a0171629158cc0fcb16c0be85f4e4be8ee082680c6488fda59bd4b9034",
+      "bytes": 2464
+    },
+    {
+      "path": "evals/extraction/electricista/doc-076.json",
+      "sha256": "70b93b142f7c07d754f4fd0daeb9a7650fa9dc9b044f7cec3a41696f7f245ae7",
+      "bytes": 2903
+    },
+    {
+      "path": "evals/extraction/electricista/doc-077.json",
+      "sha256": "177bf3130010aca3b7086411ec0348ba84d468fa3ef0422f3db1122fd6a7e314",
+      "bytes": 3790
+    },
+    {
+      "path": "evals/extraction/electricista/doc-078.json",
+      "sha256": "20ba5c2f16fe4307f20f146e5e1aa1304adcd0918eb139a8b320bb218531c8c6",
+      "bytes": 3102
+    },
+    {
+      "path": "evals/extraction/electricista/doc-079.json",
+      "sha256": "8a88ce05dab0c01506a397aca089b09d9eb8fbafc93b6d32769f2e7bf2d66890",
+      "bytes": 3400
+    },
+    {
+      "path": "evals/extraction/electricista/doc-080.json",
+      "sha256": "d176a0c002bde9b019b8a5c0fb46e4ce9340379c025911558d5c84caa38aa259",
+      "bytes": 3247
+    },
+    {
+      "path": "evals/extraction/extraction.schema.v1.json",
+      "sha256": "97023d5848394b7b568f9acdf5c0a55cdb2caedc05df7302db75b20bfd7deec5",
+      "bytes": 18240
+    },
+    {
+      "path": "samples/albanil/doc-001.pdf",
+      "sha256": "9ac66b6ac80db3b3dc77cc494464ca41e27eba8fe2232e89fb71443a30d84db0",
+      "content_sha256": "8a1a4ae4bb28dcd7c8fb4609546236ea858a62d17d951cd69046f8ced87f4209",
+      "bytes": 43962
+    },
+    {
+      "path": "samples/albanil/doc-002.pdf",
+      "sha256": "87cac892bb12be866b1c1285ea730c72fbec1c13df908f18caf82c6b369f1253",
+      "content_sha256": "c0cd76a944ba8aee4df047f0d1e0993690a6142e2a764ebac53b98366e5c8c29",
+      "bytes": 43975
+    },
+    {
+      "path": "samples/albanil/doc-003.pdf",
+      "sha256": "aeceb34a535cd0f69136cbee39f89ea5eefca397d02404f4f7f527c7ff0a86e8",
+      "content_sha256": "51e87a92a88e928f456f212e7963e94f06a76123571ce7aa4698030b1d7e268f",
+      "bytes": 67156
+    },
+    {
+      "path": "samples/albanil/doc-004.pdf",
+      "sha256": "95595e606c37da4b7b519a291d4cbf5c051b314c0a4a70928503d32230b8c5ec",
+      "content_sha256": "c4847df702eab46090b3a830d9aecba99097bbdfe95f833d383f1872a4147ebb",
+      "bytes": 67091
+    },
+    {
+      "path": "samples/albanil/doc-005.pdf",
+      "sha256": "43c501499246a4b14451204bceaa3b51c69f1dea30f1aa657fb5be37c25043c3",
+      "content_sha256": "cb1c0ab7ad86da33f276637cd179bf43317f0b624b86835c14249b89db3b1ccb",
+      "bytes": 67132
+    },
+    {
+      "path": "samples/albanil/doc-006.pdf",
+      "sha256": "1715783808f39d2f471e36e50df1722fdc7a5a4a93836c2f61e749f8e16f5d06",
+      "content_sha256": "afde3a16fc319a5f7b9c318438d24c45ba20c8b0ebc50c29e9d77a15a3411d0e",
+      "bytes": 114592
+    },
+    {
+      "path": "samples/albanil/doc-007.pdf",
+      "sha256": "d47685540fffe2da76bdf092bd7a890f32b2d624b3411c6eb3104e971e7543df",
+      "content_sha256": "3c2e67eae6c69e347ffb2834ae7e601c23c37779c23583f9fd0eb277ca724fa9",
+      "bytes": 43262
+    },
+    {
+      "path": "samples/albanil/doc-008.pdf",
+      "sha256": "4e698f4fc0b94e46007b19d2fa5b8210a6729549101d6d155a3cd3b91b291e9a",
+      "content_sha256": "44f9b4b43f78fc4fb883c4ab15434af2fcda5be58635c4b722ddb2ca583cbf1a",
+      "bytes": 113721
+    },
+    {
+      "path": "samples/albanil/doc-009.pdf",
+      "sha256": "2a74d1a404af8b90219ed21d01202f64d3af1821166264d2dbf0a592c4c8857a",
+      "content_sha256": "acf9a065eaa74dd25b4b1863822568fdc16603632c6c0815af450aefe2e50f86",
+      "bytes": 44491
+    },
+    {
+      "path": "samples/albanil/doc-010.pdf",
+      "sha256": "c7ea259a8278d16135a469dfe503e2c4cba84e3615dbe22c9da0b94ab3345e3f",
+      "content_sha256": "3ca789a4a26cd4f5e450fcaa0e0d73db4528b9a64cb1ac80c446da181817e641",
+      "bytes": 44258
+    },
+    {
+      "path": "samples/albanil/doc-011.pdf",
+      "sha256": "30bfddcb1b34e654aa7f99fe6b1f14141657240ed31a1c8763d4ce70e0aebc79",
+      "content_sha256": "b0f17c49b1b74cb74bc6edf273cb49564a48fa7f6b0dc1eb1d8e8a960c03755e",
+      "bytes": 42609
+    },
+    {
+      "path": "samples/albanil/doc-012.pdf",
+      "sha256": "c59f2feea56cbae99ba17e203fb97b0377b57fb979dc07d33a55695bb3e769d8",
+      "content_sha256": "f13ecbbb20e77ad2ea58ef5a1429cb221d59c9ed3dda3cc91e0d6e551410cd56",
+      "bytes": 66889
+    },
+    {
+      "path": "samples/albanil/doc-013.pdf",
+      "sha256": "3bf3d447ac4e003de828bb10fefbb8b2b4215556527231cd2b1431e01163861a",
+      "content_sha256": "e93d7964799ceb8df0f26431bc6f8db0188a91b7d5ad8960095637010f19ffc5",
+      "bytes": 43915
+    },
+    {
+      "path": "samples/albanil/doc-014.pdf",
+      "sha256": "dfb7ff9fe2716303ba5294f8b687ed1dc71899428931ffa7ed9c4289be491683",
+      "content_sha256": "f24c8c960563ff819292aec38b05eab76173b1db1aee680115be8b0ad5cc3e64",
+      "bytes": 66993
+    },
+    {
+      "path": "samples/albanil/doc-015.pdf",
+      "sha256": "18e29e07aa8e3acd08599d646ed1a5d20407a2a42a2c6237641472aaba75d934",
+      "content_sha256": "0d4dbc159a9264761db1bfa4be835c00e27539cc203fda073a1009facc96ecfd",
+      "bytes": 44452
+    },
+    {
+      "path": "samples/albanil/doc-016.pdf",
+      "sha256": "2c4e6aee74d64a5f39049c536109e17c5fb5f19b3ff8c8ac3874b36f2aa003d0",
+      "content_sha256": "e3cabda69b86101b26bc0acb1fdbc797fa885af095e8bf6f3e632b6041a3df9c",
+      "bytes": 44226
+    },
+    {
+      "path": "samples/albanil/doc-017.pdf",
+      "sha256": "dd2e0abe7cb9aedf59e2f23e046d2e8b445057885e0c216c2770ac0c94885e2a",
+      "content_sha256": "98a5e6d55f7d857ad5965e78831714a22d675302ec3b9c12108a024ca66bec4c",
+      "bytes": 43073
+    },
+    {
+      "path": "samples/albanil/doc-018.pdf",
+      "sha256": "8c0b39d2d5887e3d49d95dac5329c08d964ce6944b807f86c5278b7e64cbed48",
+      "content_sha256": "ec9c06cf46f385adaac26bb2abd4a4806dd27548b34eed9a4f45b85343f84181",
+      "bytes": 43971
+    },
+    {
+      "path": "samples/albanil/doc-019.pdf",
+      "sha256": "2abe0506adcb3dffbaf7051dc06cc482478ffdda3a103f0ac4477001fb309da7",
+      "content_sha256": "a310032dd49e413bf24c15dc8d5d2bcc011a5bc48a3c69e0e95a4a9dcb62a491",
+      "bytes": 44360
+    },
+    {
+      "path": "samples/albanil/doc-020.pdf",
+      "sha256": "085c8fd09ebb51f4fa563f43af40c2e591110254e283b0bcb1d569154a74e7ef",
+      "content_sha256": "b8eb47a3360025662be378ba9bdf3de52150810fcf319faee8db8c3aadb7741a",
+      "bytes": 44192
+    },
+    {
+      "path": "samples/albanil/doc-021.pdf",
+      "sha256": "2531a69f00b74f5b076a03d99be44fba0d0512045aaf9abf5d3a5c99554d192b",
+      "content_sha256": "2c2f812f40f67ef5020e92ecf497abda8b9ae1f946cfbbb71925577b3e3f292f",
+      "bytes": 43983
+    },
+    {
+      "path": "samples/albanil/doc-022.pdf",
+      "sha256": "22021b25c912926c29690c64c97b852d754552f1656134d1e6fccf197a5fd28d",
+      "content_sha256": "8c6d5a9b5985c62f34e93a273103e66c685af7458496b2f9ec0d211c6d7ce14b",
+      "bytes": 44255
+    },
+    {
+      "path": "samples/albanil/doc-023.pdf",
+      "sha256": "a2b4ba9f0e1dac3cbab092df8f11ccb7446bbfec113c9339004d2326ba291823",
+      "content_sha256": "a460276d00df9112cf508e57fed9ec170921c10080ac33f211936e6d468fe8a5",
+      "bytes": 44140
+    },
+    {
+      "path": "samples/albanil/doc-024.pdf",
+      "sha256": "4496f067af8f0c96c09b9deba65dcdea4bc111b0b4efe62cec4950e03e488c72",
+      "content_sha256": "8824be00adb8b5fb1764ca6b5bde60dd970a094f4dd1c25c246e4a9706d9b1ee",
+      "bytes": 43287
+    },
+    {
+      "path": "samples/albanil/doc-025.pdf",
+      "sha256": "c8ce078c405226eaf5c7f820974c35f9ea4b7e87fc1f4fceb384a3b143811f34",
+      "content_sha256": "c7c42870e1843f078a87b4dc232071cb886b06b699e49a8c19027e925cbc9c11",
+      "bytes": 43317
+    },
+    {
+      "path": "samples/albanil/doc-026.pdf",
+      "sha256": "52297b633d308b64fa6c907982c8adb143e6f1afe75ae3e3a8c4c635913489a9",
+      "content_sha256": "be92280002e273edef85425f1ca4180486bc0d14063495ec84a5ad07a735ec97",
+      "bytes": 66952
+    },
+    {
+      "path": "samples/albanil/doc-027.pdf",
+      "sha256": "df7cc3953a572417d82403e8013d735a834a9d3b6b9873e43481919c47c31103",
+      "content_sha256": "c113dc9cf990aede5b8ff99505872b674e4f591fc59ff3523808f8522697c63b",
+      "bytes": 43403
+    },
+    {
+      "path": "samples/albanil/doc-028.pdf",
+      "sha256": "938d6ca85ee348c8261d3f36714beb6e8d6ec80c83138f2a240b013c757e8cc6",
+      "content_sha256": "cea375bc4cb5438710f95d844168fc77e062974da576c98a923435c299dc74a7",
+      "bytes": 46194
+    },
+    {
+      "path": "samples/albanil/doc-029.pdf",
+      "sha256": "d43511f455c01023a7eb20ad0040d5295a3505bb1ab638b8523169d3c9130965",
+      "content_sha256": "fbda2ef0840903d730226f424f77c24380f228c50f07f1ede3bda58040cef22d",
+      "bytes": 44332
+    },
+    {
+      "path": "samples/albanil/doc-030.pdf",
+      "sha256": "e3f25988db5e3d6316a97fcb5f5c77c413d86966afa18fe66da7272eeccd1eda",
+      "content_sha256": "1ca0051d3b1e6f92682045331d02d38f148b858a6a46b212e04b81a7730264dd",
+      "bytes": 44301
+    },
+    {
+      "path": "samples/albanil/doc-031.pdf",
+      "sha256": "ea9a0826e3d181c3bd77a4478f61fc7174077e37bfa9048d3fdab051a462da93",
+      "content_sha256": "c26329bc19b420e0e3060359e5cb45a487b352e197674ee75a3affd5f55bd5ea",
+      "bytes": 66955
+    },
+    {
+      "path": "samples/albanil/doc-032.pdf",
+      "sha256": "593a498f67f98754b3bf0598a4f022d474aa575fdcb4d131e55a858ff42b71b1",
+      "content_sha256": "f6eb46e439bae3f0afad539c6284090ff192db9c9a9aa27572561f98e29bec2e",
+      "bytes": 116093
+    },
+    {
+      "path": "samples/albanil/doc-033.pdf",
+      "sha256": "241f8fe2027d7b31bc200048c3a21d49f496babe27ee01a3555f735f9b2739ae",
+      "content_sha256": "75a6f2a6922fa54ae46436e5f9ff2dcdbb7f28fc61e6eea0a3815a72396e4329",
+      "bytes": 46344
+    },
+    {
+      "path": "samples/albanil/doc-034.pdf",
+      "sha256": "fdb6ad6291b505ced3f1bd1d010e75a7ddb3727e44357d1f62e6ee0f0dbc40ac",
+      "content_sha256": "6172fad188dd7be8280d07f4153b817d6a818a71591421e6e44306f354775529",
+      "bytes": 46190
+    },
+    {
+      "path": "samples/albanil/doc-035.pdf",
+      "sha256": "cb46172f1115597a189d2dc5a7ee414ce5ab45dc127279341673d0bc609c5e11",
+      "content_sha256": "9cff55a0d1165e9e0f8228385c207637d9b086fb19869fded62e74f7a6ff9cdc",
+      "bytes": 44352
+    },
+    {
+      "path": "samples/albanil/doc-036.pdf",
+      "sha256": "3d71afe571ad3b05ece94242fdfc74df536b22426b055e8391d802ba2770a932",
+      "content_sha256": "a2fd37b062083078c6a137b6352059c79edb21087a7be4ec9a87c03c728041b4",
+      "bytes": 45972
+    },
+    {
+      "path": "samples/albanil/doc-037.pdf",
+      "sha256": "fc7f26c77a7f61d049849979c03761b1072763e034914763590d3f3a259fd5fa",
+      "content_sha256": "7f23969c67b76ff60446657dcbe42ed21f2d7f6f8fdabddce1600996df54e3b9",
+      "bytes": 44469
+    },
+    {
+      "path": "samples/albanil/doc-038.pdf",
+      "sha256": "7f05d52f78b4c90824e34e791c3282d606daed153a8c51eac194de76e510ca30",
+      "content_sha256": "8f66d142edbfb39651642372e0fb9db249d1f7a7161696d70fce4f386b34f0b6",
+      "bytes": 44376
+    },
+    {
+      "path": "samples/albanil/doc-039.pdf",
+      "sha256": "069121bf0fb8120ed3991013704fec48c011b323b538801db717d02b3d67bff9",
+      "content_sha256": "1d48025e26749a2e055a1d1b342a6bc955f710720cb45439f6b30f9cbefde261",
+      "bytes": 43675
+    },
+    {
+      "path": "samples/albanil/doc-040.pdf",
+      "sha256": "c6353ac03816c3f22f279ec6defd2cc8a7acdb551b30ddb0468b434435af1aca",
+      "content_sha256": "390e63533a789ed16081d1d6f73d0ef825efb3afd4d548155a9ebeef28adcb13",
+      "bytes": 44111
+    },
+    {
+      "path": "samples/albanil/doc-041.pdf",
+      "sha256": "aa340dca0a0744a56ee7315daf22ded53f7df7d63f4edfb8e52d002ea0ee6f17",
+      "content_sha256": "75ca225b7faf8355fc97364e2714cefddaad1d1c3dd57f29fef68970b30196e9",
+      "bytes": 43914
+    },
+    {
+      "path": "samples/albanil/doc-042.pdf",
+      "sha256": "a2173aed554f63afb22675007a8def7da9296a2ecf86018cce79d189e47f2734",
+      "content_sha256": "04847cceadb4e52e264f7d1c5805ef3f9d17c3ce7e84db7fa051d746a4e414ff",
+      "bytes": 45290
+    },
+    {
+      "path": "samples/albanil/doc-043.pdf",
+      "sha256": "7b49291cc4f8a7d3f67465286ecc0936b9426ea4f8d8adbd4cbcd266e29e6d1a",
+      "content_sha256": "8fefcf1e064711323629300170ef6aec4f1caadf9524c364f817264ce2ffce86",
+      "bytes": 45870
+    },
+    {
+      "path": "samples/albanil/doc-044.pdf",
+      "sha256": "cd666bb3e37ed218b36c11b9443c0aab8ecc42581e6565021cfbfd9a25c15051",
+      "content_sha256": "abb18da20d615e241f4bfad3519ebbd7791a87646d397985f741550275815b24",
+      "bytes": 44662
+    },
+    {
+      "path": "samples/albanil/doc-045.pdf",
+      "sha256": "fdcd27f6cda9b5eea9856950068e87f74135e5fa13ee1df228ad018550d58fad",
+      "content_sha256": "a3b70d7552634ed85fd8d80555659e10a5242114cd9c453623a729580adb675f",
+      "bytes": 43974
+    },
+    {
+      "path": "samples/albanil/doc-046.pdf",
+      "sha256": "c97ea0c660d995d7a2d3f266057e1eed5137645f4eb2cac688bc1a66b2c24d53",
+      "content_sha256": "a0bc75ec8e15f116a94864229af8f353d0799895f9cd98bef124acd0b6e67eb7",
+      "bytes": 45889
+    },
+    {
+      "path": "samples/albanil/doc-047.pdf",
+      "sha256": "93d2c2001a1955b1fbb2ceccf0142f697322e38e216c18b9fc35c2f1d9ca64a0",
+      "content_sha256": "ce26454da41ae7744c993c6e8a2ba7f07bf7aa025c87944ef21b8ecc0cd730a0",
+      "bytes": 43112
+    },
+    {
+      "path": "samples/albanil/doc-048.pdf",
+      "sha256": "57261206416e29d73d1d6cf485c8c981e28f671f75ca7c8bf62ad842c409ee77",
+      "content_sha256": "c269c6d05552d5839a97adb37ad09f2681c9f6486bc7a84d6f3eaac648f8db5a",
+      "bytes": 120455
+    },
+    {
+      "path": "samples/albanil/doc-049.pdf",
+      "sha256": "1bdb23dec64d09369c6b6431d0659af3a24d8a7405db04143eb65c0ba2a9c748",
+      "content_sha256": "7b5c49c4e392172a2d99a589a2a3c6c3925c6ee0bff46d5e16e57fb3b79dbb82",
+      "bytes": 45871
+    },
+    {
+      "path": "samples/albanil/doc-050.pdf",
+      "sha256": "21b4676ea0d7563d65721ca60c76bdda23615d5c5dff9d02b9b301746f48672a",
+      "content_sha256": "0193d58575a093b8ad244f86b770af138deda435626af0302182a21736ed1d8e",
+      "bytes": 43357
+    },
+    {
+      "path": "samples/albanil/doc-051.pdf",
+      "sha256": "ecc7c74d4f40fa45e13555f03ea4ee0a8d4fdd9fd7acdcca0f25397232488e60",
+      "content_sha256": "50a0fa84776a825b6243861f3bd259ec1bb0323e52701cfffd678e35c156f32c",
+      "bytes": 66869
+    },
+    {
+      "path": "samples/albanil/doc-052.pdf",
+      "sha256": "f3489125b37f59bb1afaa7577e91fee2fc7fb7d7bb39f9b1f332d0ec6bf893de",
+      "content_sha256": "735f0826f1a96b7bbe3e9bb2fa6eb95945392716113a039243099d1fefde756b",
+      "bytes": 46720
+    },
+    {
+      "path": "samples/albanil/doc-053.pdf",
+      "sha256": "589bd68a3dcfa798ff8fb68f433d040251d7cea0e76f63e55446917d9d11244e",
+      "content_sha256": "55bc764b2383a71860f15f030172f2df8ee3e7fad09340e3da884162c17c57f0",
+      "bytes": 119297
+    },
+    {
+      "path": "samples/albanil/doc-054.pdf",
+      "sha256": "a7d677cc633935f40625c409e4277f18349b286462bf108fb8a96ab3779001ff",
+      "content_sha256": "543d4f05451a4d49bd7c19decf8afd445017f79baf656f9f5fd731539d049034",
+      "bytes": 113489
+    },
+    {
+      "path": "samples/albanil/doc-055.pdf",
+      "sha256": "f896ac2b8ad953cd9077c1dfe34f59260edba138005bc570fdb94282e4f18e46",
+      "content_sha256": "e93af8de7808ca60fc7cba7f288a8a64aa873c6838906bbe9297d263ae8d24f2",
+      "bytes": 66997
+    },
+    {
+      "path": "samples/albanil/doc-056.pdf",
+      "sha256": "8b1cb1baa1f6cdb69f5e0a26523e59375c1ccb4bf4a4c702040b3b5ad11abca0",
+      "content_sha256": "9b84bc6e6d85bcec9b0a0c076b51d5b0a24e64bbd49f15244c42143d72a86398",
+      "bytes": 44217
+    },
+    {
+      "path": "samples/albanil/doc-057.pdf",
+      "sha256": "2974c8c42356c005fc0873b13cd520cc4a502e91d781522afa28a24525b5f60a",
+      "content_sha256": "72dc68c206d0f651fce67cc973cf7c3cc09cf6d43c16c0c4fb4510e6eb130248",
+      "bytes": 44245
+    },
+    {
+      "path": "samples/albanil/doc-058.pdf",
+      "sha256": "bf1fee72846222a04ee89d2e2ac2607958db51c8581747adcf39bcc29cf0604f",
+      "content_sha256": "98a7afb67333072110a84f232cd66af1036b8042a3ee8d27fd539c16e6edf511",
+      "bytes": 43202
+    },
+    {
+      "path": "samples/albanil/doc-059.pdf",
+      "sha256": "92074813c6d5f6bce25277f4dc44d20d8b698fdb6b602c2fda2fc85856723ecb",
+      "content_sha256": "2afb8936db8d5458e0c6cb955a06d8fcb5800db7eebf79296da2ca0fde3468e0",
+      "bytes": 44036
+    },
+    {
+      "path": "samples/albanil/doc-060.pdf",
+      "sha256": "b55abf5fb1a86ec16fe071dbbe6deae0f6028df63e31c8576de398261f6357f8",
+      "content_sha256": "4cf9416631256b7283daffd9f3c542ff356981517ad88dc7fff24c90d1dfeeae",
+      "bytes": 116683
+    },
+    {
+      "path": "samples/albanil/doc-061.pdf",
+      "sha256": "58dc5cb87cbe718bcc7474f792599779d651a4bc098478460f723762720cb349",
+      "content_sha256": "de7addf57db0e20fd095ec6d60021bcd9749e7e70685b225c15c3a1a2ad69a66",
+      "bytes": 67112
+    },
+    {
+      "path": "samples/albanil/doc-062.pdf",
+      "sha256": "80fe83e5ca05a6e403907c644689903dce82860e2e2c05f423d59793820cdc7b",
+      "content_sha256": "012955b4be696b65706a58b0b7ec71ff8e4ded8d305f0bdaf8e08c8bd6614d5e",
+      "bytes": 43879
+    },
+    {
+      "path": "samples/albanil/doc-063.pdf",
+      "sha256": "70eaf02b164e56f59487e47f700285a1facda06d08b122993a974e00ec866ad3",
+      "content_sha256": "a1621e1ab8aa545afd2d832421ffe5bc81a8790d5d24132b991dc92916971c9c",
+      "bytes": 43078
+    },
+    {
+      "path": "samples/albanil/doc-064.pdf",
+      "sha256": "58348223094404937380f3568f7332e18c9b560d0018057878d3bad4060aae69",
+      "content_sha256": "9487ba818a20113022981ac3d3b262bd5b77c49fdb6fedb8faa89112199c2627",
+      "bytes": 66989
+    },
+    {
+      "path": "samples/albanil/doc-065.pdf",
+      "sha256": "c4d7b8faa36b019acdad112dbf421504ecb6bf1ed9a41356f055b8bcd57ef7f8",
+      "content_sha256": "bba9a7ed8e730578a6986e735ccb232c63e8770df734b1bc280ef612aa18b29b",
+      "bytes": 112865
+    },
+    {
+      "path": "samples/albanil/doc-066.pdf",
+      "sha256": "181cfb250850898300c1aa626dd78d395825e602ec9932179c070a83063d9130",
+      "content_sha256": "f7d36f13723705573b46d2cbf8cd8fa046414fe496c9b879a6e0aed9b5804bda",
+      "bytes": 43127
+    },
+    {
+      "path": "samples/albanil/doc-067.pdf",
+      "sha256": "d358feaae79a06206d1e37e32db7b1a0713e2c77269203b905340d43fb4a6997",
+      "content_sha256": "78d174c1e12e8d40b5feaea573ac167bb6b1d1379b3860d323f759841672559b",
+      "bytes": 44676
+    },
+    {
+      "path": "samples/albanil/doc-068.pdf",
+      "sha256": "53a3455112d56789f82c18ea5d800a9f5dbece2feab1d82d29963bc27173a623",
+      "content_sha256": "54bc526863df282bad5c2e9e392a7c48b018ff23e098d99a5c47d8818a8aad1c",
+      "bytes": 44097
+    },
+    {
+      "path": "samples/albanil/doc-069.pdf",
+      "sha256": "10f5b0e2965e8596ad1a6f597e0e4b6e3733cd98f4a222ccf3407980a3efeb7e",
+      "content_sha256": "f1b272ca0ce6f247a10f36b19903c17425be90eecc4936435c8032a952bf83f1",
+      "bytes": 44063
+    },
+    {
+      "path": "samples/albanil/doc-070.pdf",
+      "sha256": "dc81a3c3b6af4f04c04ba552ae161f00c618ac0b9e3f2b8d0c4146d8cdc9e65c",
+      "content_sha256": "5a1b3d58175d2db31fc930960c24992d15ec69b5c06f0460f558f372d979f266",
+      "bytes": 108909
+    },
+    {
+      "path": "samples/albanil/doc-071.pdf",
+      "sha256": "252efbff21e058eaba1194e46ab3fcf1a6636f04b21637e6b9fe5ccb19e270e3",
+      "content_sha256": "a9191d7cff112895dc39a7f802807a92c255f8fa2fe114e200b0fa2973cf20ba",
+      "bytes": 109836
+    },
+    {
+      "path": "samples/albanil/doc-072.pdf",
+      "sha256": "d975776937c3807f32f254f37c7439d11dd9423aec12da255a157abc52ffcf71",
+      "content_sha256": "a8b31b862e0f4ba0cb322674fb2eecc18ec61d2f7ec6f896ef39e932d7abc782",
+      "bytes": 43209
+    },
+    {
+      "path": "samples/albanil/doc-073.pdf",
+      "sha256": "34314b18f6a7110c5d3d2dc7e8fa4dd9f9cbdd141f57063243bf425f8cdb598f",
+      "content_sha256": "1269d6d9203047e92e682b7dbfdea7aeb234d6429e8c018b681a7f493ed00748",
+      "bytes": 110459
+    },
+    {
+      "path": "samples/albanil/doc-074.pdf",
+      "sha256": "2e5c89986aa4369818cb98637cb77519b5fe95fd955546d374789272bfec684d",
+      "content_sha256": "9e7b2c92057ecd33445ed0f3895d5d91084695c68988bb8446beb2cdd7d1b3c3",
+      "bytes": 43208
+    },
+    {
+      "path": "samples/albanil/doc-075.pdf",
+      "sha256": "7f784ed1a263e1f70933adf0c03fa795a2ee5b5a3835edaa924f2953831c01ac",
+      "content_sha256": "24b29f6a7e940cb2d6d13315cc738babb9ab5daee7ce32daaf23480c3370b779",
+      "bytes": 44950
+    },
+    {
+      "path": "samples/albanil/doc-076.pdf",
+      "sha256": "80acafd2d048f5e12451d9b778c624968a53f54f43d1d458d544bb75b0b9c42f",
+      "content_sha256": "9fb31b440ba2809ef004000f709cfc4aa23aec971139fd5172ab0caff85827ca",
+      "bytes": 67202
+    },
+    {
+      "path": "samples/electricista/doc-001.pdf",
+      "sha256": "54bccbf9863364dfa56f925065f12b6d4009f49cf1be8990a1d82a7675bbd9b8",
+      "content_sha256": "56fde05a356507ed6c69dc6be1a433ca524f2cb548313134c03ac9415d06a541",
+      "bytes": 43559
+    },
+    {
+      "path": "samples/electricista/doc-002.pdf",
+      "sha256": "9034ae30ba0b70d7679642ef07d3a5a5c35dc9a87f394375417a5249f160b6db",
+      "content_sha256": "d3224f5c8098a07d0a0466c7479f20432170f2dca023f23e2b9b236012c1a948",
+      "bytes": 118019
+    },
+    {
+      "path": "samples/electricista/doc-003.pdf",
+      "sha256": "1046e907f620bd5cd165396d66c4ff605d5d1e3be934ef081733e1b37f364ffc",
+      "content_sha256": "546e65fa6f4ddc193e2e97758069cac51286dc0ae11eef8ce655601da476f52c",
+      "bytes": 43754
+    },
+    {
+      "path": "samples/electricista/doc-004.pdf",
+      "sha256": "9ce6ba00ae6d9aaf11b92022c08e2a7980cf994a042719446a6272a1c6ef68b3",
+      "content_sha256": "4e36e99a8ad4f4f761a58fd712d552012741110744061274a413be336af91f64",
+      "bytes": 43641
+    },
+    {
+      "path": "samples/electricista/doc-005.pdf",
+      "sha256": "becc43ce14eec2d2599cc39bed66045717f2a5d67db36129f2c071fc051bbffb",
+      "content_sha256": "231460d410830bf5b7c9d85edefccc96c1fd166013065335559e4f59a8209287",
+      "bytes": 42810
+    },
+    {
+      "path": "samples/electricista/doc-006.pdf",
+      "sha256": "68ce83d9e16eda48a2ec6ce96a3ad3778bd6ee397154022e03fb6f778ca99378",
+      "content_sha256": "7ad4850e2d48682fbcf3c9b933aa73a7bc9f2cdc94be032405ef78808cc8273f",
+      "bytes": 42814
+    },
+    {
+      "path": "samples/electricista/doc-007.pdf",
+      "sha256": "a0a6df5d9f21b7e1d1245f0c371024461ce0ee74b3acfebc7da7e6ffb6a68045",
+      "content_sha256": "30c8f8bf660a310bc7935349a16b1adf9abe22d3e74f7ebde28847c6a0828dfb",
+      "bytes": 68591
+    },
+    {
+      "path": "samples/electricista/doc-008.pdf",
+      "sha256": "43f507152fe79a700fa1eeebd625f9689943f4c13c3cf4edf0759cd73f588cd7",
+      "content_sha256": "b4eae42f0aa6784c4f8fdcdf050c870bcebb29f12afad229ff8dff3597a40ed1",
+      "bytes": 45886
+    },
+    {
+      "path": "samples/electricista/doc-009.pdf",
+      "sha256": "694fe166f2189101d9ee0d9b3c956e9729fc285a7693836aa0a6a1e0fc5b481b",
+      "content_sha256": "a890b802dfd4dff19bf1c50a75bb9207efc026f70d9e89a63a4a2e0de00078cf",
+      "bytes": 65633
+    },
+    {
+      "path": "samples/electricista/doc-010.pdf",
+      "sha256": "55570773bcd13441ee4a3ccbcca31e87f25862d3a7ce6fde856ea23a01167e01",
+      "content_sha256": "39883b9080147cc28f2c41bdc8873fef8deb3437347a564f79d469b3bc7e8b42",
+      "bytes": 43038
+    },
+    {
+      "path": "samples/electricista/doc-011.pdf",
+      "sha256": "adce7f12e48f81133a3c838665c44d8cf4da16169d061a2e83d7a42affd533f9",
+      "content_sha256": "309172c5e3e40c1bee4b58161607983cab62275069421e14236f117064d20ec2",
+      "bytes": 43690
+    },
+    {
+      "path": "samples/electricista/doc-012.pdf",
+      "sha256": "eeb63e6dd4d5fe752d84d28eff0093115dcca807385747f4d9369ca98dcabbc0",
+      "content_sha256": "2a800ff7667c794408554cc8fb30d50df2486fddb567b2b7adbc50d39ea3c0e5",
+      "bytes": 43671
+    },
+    {
+      "path": "samples/electricista/doc-013.pdf",
+      "sha256": "3d6daf31e9922a5ef5e3e512170a7709830574e3c51d6768af7cb3ed91595a25",
+      "content_sha256": "7c751b5c88ca449f643e32175eb67d9bb272feb3fee49947a1a4f35507c68990",
+      "bytes": 42958
+    },
+    {
+      "path": "samples/electricista/doc-014.pdf",
+      "sha256": "4e1db04cce1697ae7ceef33aa20847f34bdc20df71acaf4bd29cd61e51533602",
+      "content_sha256": "6782d739d87720875ba091f1a84d53e675c1ef17acb44a28b2f4c87c9b78ca29",
+      "bytes": 103666
+    },
+    {
+      "path": "samples/electricista/doc-015.pdf",
+      "sha256": "bab9bf782a07cc78084f8e5b9352f5cc43c2ac8c38fd66358ad4980a27fe6627",
+      "content_sha256": "64c8ca56ea24194680701294b4c47a397e31e7e2daf21431b96a74f13292e3e8",
+      "bytes": 42602
+    },
+    {
+      "path": "samples/electricista/doc-016.pdf",
+      "sha256": "f5204816b63c3b6e36dd51fa9e3ad096bb52613a0cd3ceb87ef7f046c8e3bdfe",
+      "content_sha256": "63ccb68b68a285c8adbcfb3aa443e47d6ceb850dbb11df2deb167e1657a62809",
+      "bytes": 43857
+    },
+    {
+      "path": "samples/electricista/doc-017.pdf",
+      "sha256": "41beac9644153bead2375e87aecf2606ce2a63a45d1e89acb6d6f2f0ef2a76e2",
+      "content_sha256": "7cc225ccff9e007f422a3620faccf1fe3e89366cb287895e9f74bb0d557d05a3",
+      "bytes": 46023
+    },
+    {
+      "path": "samples/electricista/doc-018.pdf",
+      "sha256": "a2699e359a01c785a5100b4152ba3fcf200b648eab3b7f78280edff2ecb0b141",
+      "content_sha256": "33aefb6f4c40ac8076cfdfb1035946d6948bb003d14833793d17e33761f9d5a8",
+      "bytes": 42827
+    },
+    {
+      "path": "samples/electricista/doc-019.pdf",
+      "sha256": "7310e0e52a377536404c7f56534d6ec1de69e8ad95296e54d211337d64b43849",
+      "content_sha256": "e93ae63a3f5385a542b034769c30def4428a31ae898a6c795805aded241dce02",
+      "bytes": 43109
+    },
+    {
+      "path": "samples/electricista/doc-020.pdf",
+      "sha256": "a147f2957f42279071eed82cdadafb418edf0c5fda15f9edde7191ed0f2fc0be",
+      "content_sha256": "e8d28eab4edd64623e688f3a295848566fe9fd2eba969885b40819ff9cd09a53",
+      "bytes": 43754
+    },
+    {
+      "path": "samples/electricista/doc-021.pdf",
+      "sha256": "41998680e3dfa49f08c70c56a9fd66f8e974310ea5b1564b37fca47f5620e256",
+      "content_sha256": "278b9e640f790a37a605b91ff8b84900873811988efb3330cc61a33ff7670053",
+      "bytes": 43588
+    },
+    {
+      "path": "samples/electricista/doc-022.pdf",
+      "sha256": "b1285bfe9cbe0573293a4f0c41e308e8e30b281095eb2b0d8230c4d1cec83cd3",
+      "content_sha256": "8b70a3776e312ecf208b6e900f3fe791b6aa2a24567582619a397d141e735362",
+      "bytes": 43332
+    },
+    {
+      "path": "samples/electricista/doc-023.pdf",
+      "sha256": "63f4ad0e32669fb76f9fc911ed201c993d0c83aa0c03b6d29a1a85a659e1b171",
+      "content_sha256": "4717172c5bbb1f27e5a862d72381d71c9f54be3deaf3769165661b5931786f9c",
+      "bytes": 43607
+    },
+    {
+      "path": "samples/electricista/doc-024.pdf",
+      "sha256": "c778597c6080b366136fabc5ea124468d4245785da1880566dfdf474c0b29b14",
+      "content_sha256": "ae2c03ab89717e524796cc752b290462302d198752d34529309bb808e5a04bc0",
+      "bytes": 65788
+    },
+    {
+      "path": "samples/electricista/doc-025.pdf",
+      "sha256": "a38dba08d6aaa57de0776f13da08e239a1feb8f57444dad349860afef75328f0",
+      "content_sha256": "1323f82675861fe1bda90b0552d0b3363026988eb51dadb2f4e6d898d533c8c9",
+      "bytes": 42630
+    },
+    {
+      "path": "samples/electricista/doc-026.pdf",
+      "sha256": "503dd573d5fcfee4df79738d18530014497f28cd5f813179c1eed526cf03a97d",
+      "content_sha256": "045f1344a7bfd9f2b3cd4e14520d5e929bb4480bc840d35a5ebd19e157d7c4af",
+      "bytes": 43493
+    },
+    {
+      "path": "samples/electricista/doc-027.pdf",
+      "sha256": "ac62429fdc8baf82a98a95c3985cfdfcd6e0d60b059875a5f4b0d0d9a387291f",
+      "content_sha256": "10772f966d991cc9a8b8953b663415ce8d0b4f4618284b7da0c597238532d92a",
+      "bytes": 65899
+    },
+    {
+      "path": "samples/electricista/doc-028.pdf",
+      "sha256": "30857adbb8603969d241fa3a0e0f3c3ce130f93787eec6da2e0bac3c76fcf41e",
+      "content_sha256": "c3a092e14196eaaf02e5b1fc91da329292ee1665ad2bcc27e42ed69000ccd9b3",
+      "bytes": 46656
+    },
+    {
+      "path": "samples/electricista/doc-029.pdf",
+      "sha256": "dfb5194380301dceccbc9f241192321df1962a6d837fbd7811f3b302b5b84122",
+      "content_sha256": "4a3215a26ff4e4bd90c1393a0ec573d65a1d5d327d37ad7e5f49c25b7e4db0c4",
+      "bytes": 44054
+    },
+    {
+      "path": "samples/electricista/doc-030.pdf",
+      "sha256": "88fdc161698fd9ce8678e875c7ddffe9b5ead7e4e6d783ac6bcb4a76043543d9",
+      "content_sha256": "73992721951d14c57b66208a6049b7e464a94f7bbc76501497b8b483b2c07388",
+      "bytes": 43717
+    },
+    {
+      "path": "samples/electricista/doc-031.pdf",
+      "sha256": "757ec4ee90f4d4020428f474cc2937a3c5e1a1e8e6ef1a75bdf31a3c87afd1d5",
+      "content_sha256": "8e7d529c739b2e39cb0cbf67beccc8ea2f778d526f5efc4c1b6e43ec3d09c8ed",
+      "bytes": 43570
+    },
+    {
+      "path": "samples/electricista/doc-032.pdf",
+      "sha256": "548fcd9371d23cb34e15332782aad6164660ded37ab967697ac990003fb6ab9e",
+      "content_sha256": "0181177e0a32c94ba566b5cf126c1d25db2cb78da8f52037b326b86238f718cd",
+      "bytes": 43486
+    },
+    {
+      "path": "samples/electricista/doc-033.pdf",
+      "sha256": "4c307290e7ab651552c96d3a99e81cde21621fe1ee4432102fadc6f88a38f5b2",
+      "content_sha256": "d13bcd9170ab16de5e100cff02c3d2bceb9b36be38e5eaad7331bc5924405668",
+      "bytes": 43496
+    },
+    {
+      "path": "samples/electricista/doc-034.pdf",
+      "sha256": "e400d97f4e73e322220452310b7d562e8500763ba07cd227cc3889631f16967e",
+      "content_sha256": "c98259413c13672170d521fd18c4d589d65dfb59abb2bcbced8a619c0e49a547",
+      "bytes": 102689
+    },
+    {
+      "path": "samples/electricista/doc-035.pdf",
+      "sha256": "06b087338957256ae2a28a8760b8b424f9c225a5b625aba9017ee98b998ea70e",
+      "content_sha256": "12199e1332b6202c0b24a3430eb74e7e9f28016750f7347fd0b6199af3cf5282",
+      "bytes": 42570
+    },
+    {
+      "path": "samples/electricista/doc-036.pdf",
+      "sha256": "4dde85d5fadb7cf27ee1f27a6a35c9dffb521e469f8ecf6a6157ad1fdba4f94d",
+      "content_sha256": "aa9d770ef9b1e3f31fbc9de0e8b5a38f013f99c99526a08bd5428c9d62814d47",
+      "bytes": 43417
+    },
+    {
+      "path": "samples/electricista/doc-037.pdf",
+      "sha256": "0ce574408993a903e2c4350b0d017537613c8ae4b15d95c61aa83ef0658df0fb",
+      "content_sha256": "cb55855f4d7c9e8988f44345563a97ba1194fe9d5fa872f7f1e30784ca887b89",
+      "bytes": 43697
+    },
+    {
+      "path": "samples/electricista/doc-038.pdf",
+      "sha256": "3a3092b3cf6003d7de1531d8d6ef1904a62aa48f72300c6b8481a3161fd8d35f",
+      "content_sha256": "aa492253f743be568f092d2d1b625cea75bb5c7da5edc3c35e96625a5788dad5",
+      "bytes": 103904
+    },
+    {
+      "path": "samples/electricista/doc-039.pdf",
+      "sha256": "ec61bc828646edc5700159d097e34854f46d53c9892209114d48d59ab294e48a",
+      "content_sha256": "d29bcb698af3178d4567ac449afc35a8bd45594be697afffc1ddd7a02cdfc501",
+      "bytes": 44746
+    },
+    {
+      "path": "samples/electricista/doc-040.pdf",
+      "sha256": "914da7499af7f9715936b8d6b9a1c6ce1b2f31fbb7224d79ce01aa63f15de277",
+      "content_sha256": "58c5d385b36cca09a1128bafe0daff7ae2042bf3708215ec41b4e75c597b919a",
+      "bytes": 66079
+    },
+    {
+      "path": "samples/electricista/doc-041.pdf",
+      "sha256": "a50c2fc02d175a1d8523627da3474afea5cb5e92296828a60fd8f530c7a0e080",
+      "content_sha256": "345700eb8184ec0b9daa9f904aad096cb3fa7c50c7ed77a583cddbdce2c63730",
+      "bytes": 113504
+    },
+    {
+      "path": "samples/electricista/doc-042.pdf",
+      "sha256": "196c32a408695162f8e08e7cde891501fe4d0573090e7e09abf06f0eba388493",
+      "content_sha256": "5db6b17425e766f8336f5dcd3ee7f8f3d35d529fcc342571cb3a57144003d9f5",
+      "bytes": 45827
+    },
+    {
+      "path": "samples/electricista/doc-043.pdf",
+      "sha256": "d5b1be4ff89c1bc0b7d35cb067c2d87dce67ed20075d4c2d0714c4020a002832",
+      "content_sha256": "332e62c394fa4e6dee59fbc58489ed51226f96a5637a626716fcbedf9e360e0d",
+      "bytes": 42812
+    },
+    {
+      "path": "samples/electricista/doc-044.pdf",
+      "sha256": "ba92591b26450c95af208252b806d679dc2abebf577c14624fd4542fd4ce1489",
+      "content_sha256": "7f418dcabbe4191204143e346e9e8f3d3de6352e6c7fddc6544200a923bc5499",
+      "bytes": 43863
+    },
+    {
+      "path": "samples/electricista/doc-045.pdf",
+      "sha256": "cd5d8530374d2a0dde8657d59149ca3beaae45e83269bb5956168296732e4411",
+      "content_sha256": "293388a16d711aae350895400a800c8b3002b972c6607adbf479dfe7feceeb0d",
+      "bytes": 115599
+    },
+    {
+      "path": "samples/electricista/doc-046.pdf",
+      "sha256": "0a3492e51fe7764d38fa93f3d24673e86a9ec1c3995bfa62496db175aa245af2",
+      "content_sha256": "38b699520a7c933d1fac3bd07da5323bdc17ca63528b464bda33e34def7800c3",
+      "bytes": 43570
+    },
+    {
+      "path": "samples/electricista/doc-047.pdf",
+      "sha256": "bcdcf94a2c1e724a5fb215b9fb8f7604f793b1787d6754ee51badc10c027a46c",
+      "content_sha256": "f7a2a97fc4dd5a23f611f6810a3c5a3302ee4915bab408f6cf97271bd09dba74",
+      "bytes": 44489
+    },
+    {
+      "path": "samples/electricista/doc-048.pdf",
+      "sha256": "29f063d602efe1e92adc0f2ac8d7a297d97beb3e459f2bc6752d95873374b23b",
+      "content_sha256": "d205fa8b31d082de606f5e78c775848add32d40380a0e7d3fbcadab5e136f6bd",
+      "bytes": 42790
+    },
+    {
+      "path": "samples/electricista/doc-049.pdf",
+      "sha256": "e2a8464fb68ade2c5d7ea858e396768103d37d4444527bb31b4b90d0f297daaa",
+      "content_sha256": "1fade410e3c64b293ee4c2be30bfd0f91a086823e9cf7894b535f4a8da4e9910",
+      "bytes": 111590
+    },
+    {
+      "path": "samples/electricista/doc-050.pdf",
+      "sha256": "a3967acd55a4303c450e2919cdce7dfc89a798ea6633da3010546307a01358f7",
+      "content_sha256": "b9146e0eb69db72eca1885cd8edf918dc739bdbd246839342fad0a023b83b4bb",
+      "bytes": 44218
+    },
+    {
+      "path": "samples/electricista/doc-051.pdf",
+      "sha256": "9465b2f9992fbd86715c5f0c4f033fd784630aa4d3120632dfaedae4b1e1615e",
+      "content_sha256": "1efa25d0b8cac65e8b2539de88957ce05714f3eb30057d6e5c71bad4c897e994",
+      "bytes": 43448
+    },
+    {
+      "path": "samples/electricista/doc-052.pdf",
+      "sha256": "1df089c75f263b47fbc90e91c10c74a929a6f31e60741c75a18583ae74e8bc63",
+      "content_sha256": "cd45667c3085759f2cd204327ec3feb0a006986fd18949551cf0ad6ec0f7ddcb",
+      "bytes": 65826
+    },
+    {
+      "path": "samples/electricista/doc-053.pdf",
+      "sha256": "799fd0df2f2245da0067fc5e40a4e225a034879941a05834f79482c04d754870",
+      "content_sha256": "990f37ae4068dd5349cfc75ba5c338ebb6a94073d0e72d2687a7970cc5fba893",
+      "bytes": 43353
+    },
+    {
+      "path": "samples/electricista/doc-054.pdf",
+      "sha256": "e7b6b84c6fa860b874b48858fa327029e310c1e4b53ba076c5153a8f09cea0a8",
+      "content_sha256": "e7d538095979464472399de32792e422fe4aabece84a534ef53a1c9cf415e813",
+      "bytes": 44013
+    },
+    {
+      "path": "samples/electricista/doc-055.pdf",
+      "sha256": "daae6d0ce27e3ecb884e2ab20194755835940fe1c2ef8736e84ab3ad99f1c3ef",
+      "content_sha256": "74335265093a6177728e643348cb80b0872d9b85b259af33f22ef23266b8d20f",
+      "bytes": 43547
+    },
+    {
+      "path": "samples/electricista/doc-056.pdf",
+      "sha256": "1e0cc1ac61f235dccd914324fcb9ae5106513fcf9791a5762d1281c8021f86a5",
+      "content_sha256": "745e82ba2f6e780fb028ad6ed9cba4b5a8e056d61b1efae05160913b847ca1d4",
+      "bytes": 43339
+    },
+    {
+      "path": "samples/electricista/doc-057.pdf",
+      "sha256": "c47ff92e98b0b4986f9da08768b6024150dc2b8bc3e803a4e35f8cd7ccd66516",
+      "content_sha256": "f33164ba61a6451b476ea42fd27c0a0ca31e3dce7d4bbefb3ee01fa8937a72b4",
+      "bytes": 94135
+    },
+    {
+      "path": "samples/electricista/doc-058.pdf",
+      "sha256": "233ea0a5baf190782deb4c42a3b0338fb41f0a8879b813cbd2339e96316092b2",
+      "content_sha256": "812e6286ada5cb4b3bc6277ff06266a8f0a2cdafd29ef82849d6b196b9fffb26",
+      "bytes": 43472
+    },
+    {
+      "path": "samples/electricista/doc-059.pdf",
+      "sha256": "d0813504ea02de9fc4207e2f59fac15af48cf9af612386248f71e4ee6254055d",
+      "content_sha256": "0b91b8c622619ee95b5c4445323a125b2aa28c12f38aa726a07d000fd6011410",
+      "bytes": 108381
+    },
+    {
+      "path": "samples/electricista/doc-060.pdf",
+      "sha256": "57a8936459306779b0105a0f037e6c5dcf3eec3761e3b71a4b2c7aedf793bfed",
+      "content_sha256": "481577751e1d242d32c3d1a129b04ec904e2e341e177dd776d8d3a2773a60c03",
+      "bytes": 65924
+    },
+    {
+      "path": "samples/electricista/doc-061.pdf",
+      "sha256": "5fd9ac82b5f95295644d761240b93979ad8a88d01790ad4fd4efff99cda41ac1",
+      "content_sha256": "3507cf5283d5010a748691e4cf6e3ead1c6684280d30dd7f86ad2def32a83b15",
+      "bytes": 43855
+    },
+    {
+      "path": "samples/electricista/doc-062.pdf",
+      "sha256": "b378fc52cc3a3abac11ff163110402fc518e4464f74c84cbc03942fafb9b1cb7",
+      "content_sha256": "3d878e406530c593378a79774e8ec4b1e7b13f4c8889104b90d8b10c230cb233",
+      "bytes": 42891
+    },
+    {
+      "path": "samples/electricista/doc-063.pdf",
+      "sha256": "70f5f6c46ed7f453475db1f868835438ec77d9d82a5973b1ac5a1a6602048b4e",
+      "content_sha256": "bf00ea708b8d7ef56a289660c3f3f6b3b131212cc5007546904cab980f30947b",
+      "bytes": 66046
+    },
+    {
+      "path": "samples/electricista/doc-064.pdf",
+      "sha256": "c6b4b7eeb6519b3907fe3e2b1657f0cb073d6ca032cf2ababa537585254600ba",
+      "content_sha256": "5e5b17372043778b91117888d3c1bc1898af4a5baccb2aa9d7cdd218ea3bf0cb",
+      "bytes": 43412
+    },
+    {
+      "path": "samples/electricista/doc-065.pdf",
+      "sha256": "1625cf569167956d5da801f1d122873e6b5414a7919d3326026e52855370cce0",
+      "content_sha256": "dd96a36d2630433c03d27928ceaf8a1d98609c0c44d68877450e888bbf0a3b17",
+      "bytes": 42756
+    },
+    {
+      "path": "samples/electricista/doc-066.pdf",
+      "sha256": "7e7b775dbd888c50d91df72473e1a5b38f039a0a27d2e55a4ff5944d9c83d6bc",
+      "content_sha256": "bfc796a96f630c751e5f74f0f45c43ab1b3c53bec3849f17e942dfd5d82da531",
+      "bytes": 43852
+    },
+    {
+      "path": "samples/electricista/doc-067.pdf",
+      "sha256": "54256b6986c8601017e1282c6e1c6442247575fdc13c60816a4d3ef0271a8cd4",
+      "content_sha256": "900da1168939ccbf1a6bed70fdd1822f0e6b929582135c1978ab18ace490def8",
+      "bytes": 65731
+    },
+    {
+      "path": "samples/electricista/doc-068.pdf",
+      "sha256": "ab8e02c297771364be0322bab1c8de04983ce0505b40c245d34d89e0a6b2113a",
+      "content_sha256": "6a8d07f4b3f9ec583ea7a2e4c6d0f5c2ab2ae19fb8842632968c57df77613d32",
+      "bytes": 43832
+    },
+    {
+      "path": "samples/electricista/doc-069.pdf",
+      "sha256": "929ad658bc960c89eb6f13061949f57b2d13f88860218623db7bde8bf79b6f41",
+      "content_sha256": "99bfd0e6ab43743cdd686ee626f2f93dd1270711d800e7b121e6bc14bf59da17",
+      "bytes": 112538
+    },
+    {
+      "path": "samples/electricista/doc-070.pdf",
+      "sha256": "3ec59d49ed141eb4d721d406251acdbab389db03a59fd71b6853a0c10d4c137c",
+      "content_sha256": "d2c9249fe932a9f41586adb85e4118b7391d79fe2310e3d5aefae25d27762d9d",
+      "bytes": 111050
+    },
+    {
+      "path": "samples/electricista/doc-071.pdf",
+      "sha256": "620618fc7633282ce4dd02fe2b20d29c859428e484a49a559587f0a5a596586d",
+      "content_sha256": "e837c0be04435e2ac4b72655d8eec97e8dcb492784dc3a2832cea715f1c34583",
+      "bytes": 103230
+    },
+    {
+      "path": "samples/electricista/doc-072.pdf",
+      "sha256": "835ca04cd71279f46d24d887087d7a36a91c62ae582ebcba160481584690f783",
+      "content_sha256": "5b7edcb08d5cfe739a8784ef83fe005b728d705f1e229168c8fca9a1f67a2245",
+      "bytes": 43785
+    },
+    {
+      "path": "samples/electricista/doc-073.pdf",
+      "sha256": "1b1a6af212e6b35856e2883e8bb34b111529d2b0bd8a6a06e84a86e9b5a2b6f5",
+      "content_sha256": "fdc9da76f8cff66c0e773bcc0b44f2b654d933ec18b462432b67045a6f4fbf53",
+      "bytes": 43345
+    },
+    {
+      "path": "samples/electricista/doc-074.pdf",
+      "sha256": "b0d05b1175e673a970cf45a54c95a19ec4fd02de61619802dbaa7e5b95aedf1a",
+      "content_sha256": "f4e6f021110fa2209d7aa4667de2adf3ab48df36387c4360b2af9ea198ced1da",
+      "bytes": 43439
+    },
+    {
+      "path": "samples/electricista/doc-075.pdf",
+      "sha256": "d1cf9ebdfe5038ed5ad75bc5f8b36ca523e52192abb415cd02e9887f9585eb66",
+      "content_sha256": "8e7e08bb2fb9c75bb889d53bd9690dfad7b043331a739722e3ec71a34c9a3575",
+      "bytes": 65649
+    },
+    {
+      "path": "samples/electricista/doc-076.pdf",
+      "sha256": "3fd3946fce30007fab3a602e219720f67c25ab1f8246829e604fc7e2466d80c0",
+      "content_sha256": "55bf9e60a9eaf14276feba7d925bf659738cbda5ded5793fe25327438120bca3",
+      "bytes": 43502
+    },
+    {
+      "path": "samples/electricista/doc-077.pdf",
+      "sha256": "e07410b3375f9967d39f791d3843161357aeb45508acfd45a49d27f6dcfc8a68",
+      "content_sha256": "88c3efb0bd65801ef78a12e1c4e3db16526ada044dfe54426b196afd813f8596",
+      "bytes": 66149
+    },
+    {
+      "path": "samples/electricista/doc-078.pdf",
+      "sha256": "da8b7162df3b1c9c2c0548aad63356cb70e81830b9dbe8cbaa8d577640689f06",
+      "content_sha256": "df0b3d0b8e7be9880eeba5ff4160a54f51ddfc47f062cecf87f194ddcfe81cc6",
+      "bytes": 43931
+    },
+    {
+      "path": "samples/electricista/doc-079.pdf",
+      "sha256": "2efd0eacf5f5e00ca2f2c67c88eb81d6b6c4ae9ec7856ad06e39f4b476386873",
+      "content_sha256": "9d2b0ff3aa6e87693f4144266507ffcbf4d92ec8881c55e17a1620d53aa0b77b",
+      "bytes": 65887
+    },
+    {
+      "path": "samples/electricista/doc-080.pdf",
+      "sha256": "d9320bdf1843283c7b7d218b3cc4583b2acc32430860cf79a87efb8d783e6e94",
+      "content_sha256": "e1229ad8c27b2c139dd3764d9660dd472e4b7c9a705f3a6e0c1700b99fdf33bc",
+      "bytes": 42857
+    }
+  ]
+}

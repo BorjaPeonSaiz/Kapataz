@@ -1,0 +1,113 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-051",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-051.pdf",
+  "document_type": "presupuesto",
+  "layout": "logotipo_pie_extenso",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Victoriano Garrido Sandoval",
+      "tax_id": "52381187K",
+      "address": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    "customer": {
+      "name": "Construcciones Borrás S.L.",
+      "tax_id": "B39410469",
+      "address": "Paseo Pánfilo Iglesia, 62, 2.º A, 39008 Santander (Cantabria)"
+    },
+    "number": "PA-2025-0018",
+    "date": "2025-11-17",
+    "valid_until": "2025-12-17",
+    "due_date": null,
+    "lines": [
+      {
+        "concept": "Solado de gres porcelánico",
+        "quantity": "274",
+        "unit": "m²",
+        "unit_price": "28.50",
+        "discount": null,
+        "amount": "7809.00",
+        "vat_rate": null
+      },
+      {
+        "concept": "Alicatado de paredes",
+        "quantity": "125.5",
+        "unit": "m²",
+        "unit_price": "27.00",
+        "discount": null,
+        "amount": "3388.50",
+        "vat_rate": null
+      },
+      {
+        "concept": "Recrecido de mortero autonivelante",
+        "quantity": "337",
+        "unit": "m²",
+        "unit_price": "12.47",
+        "discount": null,
+        "amount": "4202.39",
+        "vat_rate": null
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": null,
+        "base": "15399.89",
+        "amount": "0.00"
+      }
+    ],
+    "reverse_charge": true,
+    "base": "15399.89",
+    "vat_rate": null,
+    "vat_amount": "0.00",
+    "withholding": null,
+    "guarantee": null,
+    "total": "15399.89",
+    "amount_due": "15399.89"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Construcciones Borrás S.L."
+    },
+    {
+      "kind": "nif",
+      "value": "B39410469"
+    },
+    {
+      "kind": "direccion",
+      "value": "Paseo Pánfilo Iglesia, 62, 2.º A, 39008 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "465 14 65 95"
+    },
+    {
+      "kind": "email",
+      "value": "reformasyalbanileriagarrido@correo.example"
+    },
+    {
+      "kind": "nombre",
+      "value": "Reformas y Albañilería Garrido"
+    }
+  ]
+}

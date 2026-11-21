@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-070",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-070.pdf",
+  "document_type": "otro",
+  "layout": "carta",
+  "scanned": true,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": null,
+  "other": {
+    "kind": "carta_comunidad",
+    "description": "Carta del administrador de una comunidad de propietarios."
+  },
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Administración de Fincas Mari"
+    },
+    {
+      "kind": "direccion",
+      "value": "Plaza de Amor Enríquez, 67, 4.º izda., 39005 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Comunidad de Propietarios Acceso de Evita Sastre 13"
+    },
+    {
+      "kind": "direccion",
+      "value": "Acceso de Evita Sastre, 13, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "490 46 15 69"
+    },
+    {
+      "kind": "email",
+      "value": "administracionmari@correo.example"
+    },
+    {
+      "kind": "nombre",
+      "value": "José Mari Muro Carvajal"
+    }
+  ]
+}

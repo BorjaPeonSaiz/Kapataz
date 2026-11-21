@@ -1,0 +1,107 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-019",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-019.pdf",
+  "document_type": "factura",
+  "layout": "tabla_clasica",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Victoriano Garrido Sandoval",
+      "tax_id": "52381187K",
+      "address": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    "customer": {
+      "name": "Promociones Montserrat S.L.",
+      "tax_id": "B39151113",
+      "address": "Acceso Elías Requena, 96, 3.º D, 39313 Polanco (Cantabria)"
+    },
+    "number": "FA-2025-0008",
+    "date": "2025-06-16",
+    "valid_until": null,
+    "due_date": "2025-08-15",
+    "lines": [
+      {
+        "concept": "Trasdosado de placa de yeso laminado",
+        "quantity": "78.26",
+        "unit": "m²",
+        "unit_price": "21.00",
+        "discount": null,
+        "amount": "1643.46",
+        "vat_rate": null
+      },
+      {
+        "concept": "Oficial de primera albañil",
+        "quantity": "18.06",
+        "unit": "h",
+        "unit_price": "29.50",
+        "discount": null,
+        "amount": "532.77",
+        "vat_rate": null
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": null,
+        "base": "2176.23",
+        "amount": "0.00"
+      }
+    ],
+    "reverse_charge": true,
+    "base": "2176.23",
+    "vat_rate": null,
+    "vat_amount": "0.00",
+    "withholding": {
+      "rate": "1",
+      "amount": "21.76"
+    },
+    "guarantee": null,
+    "total": "2154.47",
+    "amount_due": "2154.47"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Promociones Montserrat S.L."
+    },
+    {
+      "kind": "nif",
+      "value": "B39151113"
+    },
+    {
+      "kind": "direccion",
+      "value": "Acceso Elías Requena, 96, 3.º D, 39313 Polanco (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "465 14 65 95"
+    },
+    {
+      "kind": "email",
+      "value": "reformasyalbanileriagarrido@correo.example"
+    },
+    {
+      "kind": "iban",
+      "value": "ES98 0000 6561 8819 0436 4394"
+    }
+  ]
+}

@@ -1,0 +1,145 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-062",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-062.pdf",
+  "document_type": "factura",
+  "layout": "texto_sin_tabla",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Damián Hervia Serra",
+      "tax_id": "44351713P",
+      "address": "Avenida Eliana Lago, 90, 1.º B, 39011 Santander (Cantabria)"
+    },
+    "number": "F-2025-0040",
+    "date": "2025-12-30",
+    "valid_until": null,
+    "due_date": "2026-01-14",
+    "lines": [
+      {
+        "concept": "Punto de luz sencillo",
+        "quantity": "2",
+        "unit": "ud",
+        "unit_price": "39.00",
+        "discount": null,
+        "amount": "78.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Base de enchufe 16 A",
+        "quantity": "6",
+        "unit": "ud",
+        "unit_price": "32.50",
+        "discount": null,
+        "amount": "195.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Cable H07V-K 2,5 mm²",
+        "quantity": "33",
+        "unit": "m",
+        "unit_price": "0.99",
+        "discount": null,
+        "amount": "32.67",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Tubo corrugado de 20 mm",
+        "quantity": "37",
+        "unit": "m",
+        "unit_price": "0.60",
+        "discount": null,
+        "amount": "22.20",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "4",
+        "unit": "h",
+        "unit_price": "33.50",
+        "discount": null,
+        "amount": "134.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Lámpara de techo (solo suministro)",
+        "quantity": "3",
+        "unit": "ud",
+        "unit_price": "85.50",
+        "discount": null,
+        "amount": "256.50",
+        "vat_rate": "21"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "10",
+        "base": "461.87",
+        "amount": "46.19"
+      },
+      {
+        "rate": "21",
+        "base": "256.50",
+        "amount": "53.87"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "718.37",
+    "vat_rate": null,
+    "vat_amount": "100.06",
+    "withholding": null,
+    "guarantee": null,
+    "total": "818.43",
+    "amount_due": "818.43"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Damián Hervia Serra"
+    },
+    {
+      "kind": "nif",
+      "value": "44351713P"
+    },
+    {
+      "kind": "direccion",
+      "value": "Avenida Eliana Lago, 90, 1.º B, 39011 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "iban",
+      "value": "ES61 0000 2534 2671 0652 9292"
+    }
+  ]
+}

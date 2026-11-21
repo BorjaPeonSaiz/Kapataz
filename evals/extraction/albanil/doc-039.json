@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-039",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-039.pdf",
+  "document_type": "otro",
+  "layout": "tabla_clasica",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": null,
+  "other": {
+    "kind": "hoja_de_pedido",
+    "description": "Hoja de pedido de subcontratación de una constructora."
+  },
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Construcciones y Reformas Borrás S.L."
+    },
+    {
+      "kind": "nif",
+      "value": "B39747399"
+    },
+    {
+      "kind": "direccion",
+      "value": "Paseo de Dolores Aller, 10, 2.º A, 39750 Colindres (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Lupe Marín Hernando"
+    }
+  ]
+}

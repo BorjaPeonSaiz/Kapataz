@@ -1,0 +1,125 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-017",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-017.pdf",
+  "document_type": "factura",
+  "layout": "texto_sin_tabla",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Victoriano Garrido Sandoval",
+      "tax_id": "52381187K",
+      "address": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    "customer": {
+      "name": "Obras y Proyectos Ramón S.L.",
+      "tax_id": "B39822846",
+      "address": "Cuesta Jenny Aparicio, 90, 3.º D, 39400 Los Corrales de Buelna (Cantabria)"
+    },
+    "number": "FA-2025-0007",
+    "date": "2025-06-02",
+    "valid_until": null,
+    "due_date": "2025-08-01",
+    "lines": [
+      {
+        "concept": "Solera de hormigón",
+        "quantity": "194",
+        "unit": "m²",
+        "unit_price": "18.31",
+        "discount": null,
+        "amount": "3552.14",
+        "vat_rate": null
+      },
+      {
+        "concept": "Colocación de bordillo",
+        "quantity": "171.5",
+        "unit": "m",
+        "unit_price": "17.38",
+        "discount": null,
+        "amount": "2980.67",
+        "vat_rate": null
+      },
+      {
+        "concept": "Peón de albañil",
+        "quantity": "56",
+        "unit": "h",
+        "unit_price": "21.50",
+        "discount": null,
+        "amount": "1204.00",
+        "vat_rate": null
+      },
+      {
+        "concept": "Oficial de primera albañil",
+        "quantity": "38",
+        "unit": "h",
+        "unit_price": "25.00",
+        "discount": null,
+        "amount": "950.00",
+        "vat_rate": null
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": null,
+        "base": "8686.81",
+        "amount": "0.00"
+      }
+    ],
+    "reverse_charge": true,
+    "base": "8686.81",
+    "vat_rate": null,
+    "vat_amount": "0.00",
+    "withholding": {
+      "rate": "1",
+      "amount": "86.87"
+    },
+    "guarantee": null,
+    "total": "8599.94",
+    "amount_due": "8599.94"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Obras y Proyectos Ramón S.L."
+    },
+    {
+      "kind": "nif",
+      "value": "B39822846"
+    },
+    {
+      "kind": "direccion",
+      "value": "Cuesta Jenny Aparicio, 90, 3.º D, 39400 Los Corrales de Buelna (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "465 14 65 95"
+    },
+    {
+      "kind": "email",
+      "value": "reformasyalbanileriagarrido@correo.example"
+    },
+    {
+      "kind": "iban",
+      "value": "ES98 0000 6561 8819 0436 4394"
+    }
+  ]
+}

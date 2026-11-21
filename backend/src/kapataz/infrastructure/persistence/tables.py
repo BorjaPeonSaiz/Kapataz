@@ -63,13 +63,15 @@ class TenantRow(Base):
     __table_args__ = (
         CheckConstraint("kind IN ('standard', 'demo')", name="kind"),
         CheckConstraint("(kind = 'demo') = (parent_tenant_id IS NOT NULL)", name="demo_has_parent"),
+        # Un espacio de demostración por cuenta (migración 0004).
+        Index("uq_tenants_parent_tenant_id", "parent_tenant_id", unique=True),
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
     name: Mapped[str | None] = mapped_column(String(200))
     kind: Mapped[str] = mapped_column(String(16))
     parent_tenant_id: Mapped[UUID | None] = mapped_column(
-        ForeignKey("tenants.id", ondelete="CASCADE"), index=True
+        ForeignKey("tenants.id", ondelete="CASCADE")
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 

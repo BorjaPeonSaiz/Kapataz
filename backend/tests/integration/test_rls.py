@@ -82,7 +82,8 @@ def test_tenants_tiene_rls_y_politica(database):
         await engine.dispose()
         return bool(rls), int(policies or 0)
 
-    assert asyncio.run(check()) == (True, 1)
+    # tenant_isolation (0001) y demo_space_from_parent, solo INSERT (0004).
+    assert asyncio.run(check()) == (True, 2)
 
 
 @pytest.mark.req("RNF-13")

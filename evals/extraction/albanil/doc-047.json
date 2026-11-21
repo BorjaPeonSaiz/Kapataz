@@ -1,0 +1,116 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-047",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-047.pdf",
+  "document_type": "factura",
+  "layout": "texto_sin_tabla",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Victoriano Garrido Sandoval",
+      "tax_id": "52381187K",
+      "address": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    "customer": {
+      "name": "Construcciones y Reformas Borrás S.L.",
+      "tax_id": "B39747399",
+      "address": "Paseo de Dolores Aller, 10, 2.º A, 39750 Colindres (Cantabria)"
+    },
+    "number": "FA-2025-0026",
+    "date": "2025-10-13",
+    "valid_until": null,
+    "due_date": "2025-12-12",
+    "lines": [
+      {
+        "concept": "Tabique de ladrillo hueco doble",
+        "quantity": "269.5",
+        "unit": "m²",
+        "unit_price": "22.00",
+        "discount": null,
+        "amount": "5929.00",
+        "vat_rate": null
+      },
+      {
+        "concept": "Enfoscado de mortero",
+        "quantity": "654",
+        "unit": "m²",
+        "unit_price": "13.36",
+        "discount": null,
+        "amount": "8737.44",
+        "vat_rate": null
+      },
+      {
+        "concept": "Ayudas de albañilería a instalaciones",
+        "quantity": "1",
+        "unit": "pa",
+        "unit_price": "448.50",
+        "discount": null,
+        "amount": "448.50",
+        "vat_rate": null
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": null,
+        "base": "15114.94",
+        "amount": "0.00"
+      }
+    ],
+    "reverse_charge": true,
+    "base": "15114.94",
+    "vat_rate": null,
+    "vat_amount": "0.00",
+    "withholding": {
+      "rate": "1",
+      "amount": "151.15"
+    },
+    "guarantee": null,
+    "total": "14963.79",
+    "amount_due": "14963.79"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Construcciones y Reformas Borrás S.L."
+    },
+    {
+      "kind": "nif",
+      "value": "B39747399"
+    },
+    {
+      "kind": "direccion",
+      "value": "Paseo de Dolores Aller, 10, 2.º A, 39750 Colindres (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "465 14 65 95"
+    },
+    {
+      "kind": "email",
+      "value": "reformasyalbanileriagarrido@correo.example"
+    },
+    {
+      "kind": "iban",
+      "value": "ES98 0000 6561 8819 0436 4394"
+    }
+  ]
+}

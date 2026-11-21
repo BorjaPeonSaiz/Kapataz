@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-001",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-001.pdf",
+  "document_type": "presupuesto",
+  "layout": "word_exportado",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Victoriano Garrido Sandoval",
+      "tax_id": "52381187K",
+      "address": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    "customer": {
+      "name": "Edificaciones Cuadrado S.L.",
+      "tax_id": "B39145198",
+      "address": "Urbanización de Arsenio Boix, 82, 2.º A, 39011 Santander (Cantabria)"
+    },
+    "number": "PA-2025-0001",
+    "date": "2025-01-08",
+    "valid_until": "2025-02-07",
+    "due_date": null,
+    "lines": [
+      {
+        "concept": "Solera de hormigón",
+        "quantity": "151",
+        "unit": "m²",
+        "unit_price": "18.15",
+        "discount": null,
+        "amount": "2740.65",
+        "vat_rate": null
+      },
+      {
+        "concept": "Colocación de bordillo",
+        "quantity": "44",
+        "unit": "m",
+        "unit_price": "16.94",
+        "discount": null,
+        "amount": "745.36",
+        "vat_rate": null
+      },
+      {
+        "concept": "Peón de albañil",
+        "quantity": "50",
+        "unit": "h",
+        "unit_price": "21.50",
+        "discount": null,
+        "amount": "1075.00",
+        "vat_rate": null
+      },
+      {
+        "concept": "Oficial de primera albañil",
+        "quantity": "20",
+        "unit": "h",
+        "unit_price": "26.00",
+        "discount": null,
+        "amount": "520.00",
+        "vat_rate": null
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": null,
+        "base": "5081.01",
+        "amount": "0.00"
+      }
+    ],
+    "reverse_charge": true,
+    "base": "5081.01",
+    "vat_rate": null,
+    "vat_amount": "0.00",
+    "withholding": null,
+    "guarantee": null,
+    "total": "5081.01",
+    "amount_due": "5081.01"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Edificaciones Cuadrado S.L."
+    },
+    {
+      "kind": "nif",
+      "value": "B39145198"
+    },
+    {
+      "kind": "direccion",
+      "value": "Urbanización de Arsenio Boix, 82, 2.º A, 39011 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "465 14 65 95"
+    },
+    {
+      "kind": "email",
+      "value": "reformasyalbanileriagarrido@correo.example"
+    }
+  ]
+}

@@ -207,10 +207,18 @@ Reglas fijas:
 
 ### Contrato de import-linter
 
-import-linter hace cumplir estas fronteras en CI. La configuración real llega en el Bloque 1; este es su contenido:
+import-linter hace cumplir estas fronteras en CI. La configuración está en `backend/pyproject.toml` (`[tool.importlinter]`); este es su contenido:
 
 1. **Contrato de capas** (`layers`), de arriba abajo: `kapataz.api`, `kapataz.infrastructure`, `kapataz.application`, `kapataz.domain`. Una capa solo importa las que tiene debajo. Así `application` solo ve `domain`, y `domain` no ve a nadie.
 2. **Contrato de prohibición** (`forbidden`) sobre `kapataz.domain` y `kapataz.application`: no importan FastAPI, SQLAlchemy, `anthropic` ni las librerías de los adaptadores. Requiere analizar paquetes externos.
+3. **La API no usa los casos de uso de administración:** `kapataz.api` no importa `kapataz.application.use_cases.admin`. Esos casos de uso actúan sobre una cuenta elegida por quien administra; en la API la cuenta es siempre la de la sesión (ADR-024).
+4. **La API carga el espacio de demostración solo de la cuenta de la sesión** (S3-R-03): `kapataz.api` no importa directamente `kapataz.application.use_cases.demo_space_loader`, el núcleo que crea el espacio de la cuenta que recibe. La API llega a él solo a través de `LoadDemoSpace`, que toma la cuenta del `AuthenticatedUser`; por eso el contrato lleva `allow_indirect_imports = true` (ADR-024).
+5. **La app no importa el generador sintético:** `kapataz` no importa `synthetic`, `gen_synthetic`, `seed_demo` ni `tools`, que viven en `backend/tools/` y usan dependencias solo de desarrollo (ADR-020).
+
+import-linter no detecta las reexportaciones: `from modulo_permitido import nombre_prohibido` pasa aunque `allow_indirect_imports` sea `false`. Por eso hay dos reglas:
+
+- un caso de uso que envuelve un núcleo peligroso lo importa con un alias privado y declara `__all__`;
+- las garantías de aislamiento se sostienen también con pruebas AST (`tests/security/test_api_aislamiento_estructural.py`, S3-R-08).
 
 Si una importación rompe el contrato, CI falla. La solución nunca es relajar el contrato sin ADR.
 
@@ -325,7 +333,7 @@ erDiagram
     }
 ```
 
-- `tenants.kind` distingue la cuenta normal (`standard`) del espacio de demostración (`demo`), que guarda en `parent_tenant_id` la cuenta a la que pertenece (RF-CF-04, RN-13). Las facturas de un espacio `demo` llevan la marca de RN-F-09.
+- `tenants.kind` distingue la cuenta normal (`standard`) del espacio de demostración (`demo`), que guarda en `parent_tenant_id` la cuenta a la que pertenece (RF-CF-04, RN-13). Las facturas de un espacio `demo` llevan la marca de RN-F-09. Cada cuenta tiene como mucho un espacio (índice único `uq_tenants_parent_tenant_id`), y su id se deriva del de la cuenta con `uuid5` (`demo_tenant_id`), porque RLS no deja a la cuenta padre ver la fila del espacio (ADR-024, «Espacio de demostración bajo RLS»).
 - `platform_settings` guarda el modelo y el `effort` por ruta, los límites, el tope global, los plazos de gracia y de solo lectura y `registration_open`. Solo escribe el superadministrador.
 - `platform_admins` guarda los superadministradores: se crean fuera del registro, con TOTP obligatorio (RF-SA-01, ADR-031).
 - `platform_audit_events` guarda cada cambio hecho en la zona de superadministración, con fecha, autor y valores anterior y nuevo (RF-SA-06).
@@ -537,6 +545,8 @@ erDiagram
 - Los agregados que ve el superadministrador, como el coste por cuenta, salen de funciones `SECURITY DEFINER` que solo devuelven metadatos y agregados (RF-SA-05). Así el rol de la aplicación no necesita `BYPASSRLS`.
 - El trigger de inmutabilidad actúa en la BD: un `UPDATE` por SQL directo sobre una factura emitida falla, aunque no pase por el código.
 - El borrado de un espacio de demostración lo hace una función de mantenimiento que solo actúa sobre ese tipo de cuenta.
+- **Alta del espacio de demostración** (migración 0004, ADR-024): la cuenta padre fijada inserta su espacio por la política solo de `INSERT` `demo_space_from_parent`; el trigger `tenants_check_hierarchy` (`SECURITY INVOKER`) exige un padre visible y `standard` y deja inmutables `id`, `kind` y `parent_tenant_id`; el rol de la aplicación solo tiene `UPDATE (name)` en `tenants`. Antes de crear el índice único y el trigger, la migración bloquea `tenants` y falla con `KZF14` si alguna fila existente ya los incumple (S3-R-05).
+- **Códigos de error de los triggers** (SQLSTATE de clase `KZ`): `KZF00` es `TRUNCATE` y `KZFnn` sigue el número de la regla `RN-F-nn` (migración 0003). `KZF14` es el de `tenants_check_hierarchy` (migración 0004), el primero libre fuera del tramo de RN-F-01 a RN-F-13: una futura RN-F-14 tendrá que tomar otro código.
 
 ---
 

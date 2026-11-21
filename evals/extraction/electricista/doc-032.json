@@ -1,0 +1,144 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-032",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-032.pdf",
+  "document_type": "factura",
+  "layout": "programa_generico",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Comunidad de Propietarios Glorieta de José Antonio Solera 28",
+      "tax_id": "H39914916",
+      "address": "Glorieta de José Antonio Solera, 28, 39005 Santander (Cantabria)"
+    },
+    "number": "F-2025-0019",
+    "date": "2025-07-15",
+    "valid_until": null,
+    "due_date": "2025-07-30",
+    "lines": [
+      {
+        "concept": "Cuadro general de mando y protección",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "227.85",
+        "discount": null,
+        "amount": "227.85",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Interruptor diferencial 40 A 30 mA",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "66.30",
+        "discount": null,
+        "amount": "66.30",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Magnetotérmico 16 A",
+        "quantity": "4",
+        "unit": "ud",
+        "unit_price": "14.72",
+        "discount": null,
+        "amount": "58.88",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Toma de tierra con pica",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "87.00",
+        "discount": null,
+        "amount": "87.00",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "6",
+        "unit": "h",
+        "unit_price": "35.00",
+        "discount": null,
+        "amount": "210.00",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Certificado de instalación eléctrica (CIE)",
+        "quantity": "1",
+        "unit": "ud",
+        "unit_price": "140.00",
+        "discount": null,
+        "amount": "140.00",
+        "vat_rate": "21"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "21",
+        "base": "790.03",
+        "amount": "165.91"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "790.03",
+    "vat_rate": "21",
+    "vat_amount": "165.91",
+    "withholding": null,
+    "guarantee": null,
+    "total": "955.94",
+    "amount_due": "955.94"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Comunidad de Propietarios Glorieta de José Antonio Solera 28"
+    },
+    {
+      "kind": "nif",
+      "value": "H39914916"
+    },
+    {
+      "kind": "direccion",
+      "value": "Glorieta de José Antonio Solera, 28, 39005 Santander (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "nombre",
+      "value": "Electricidad Batlle"
+    },
+    {
+      "kind": "iban",
+      "value": "ES61 0000 2534 2671 0652 9292"
+    }
+  ]
+}

@@ -1,0 +1,217 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-036",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-036.pdf",
+  "document_type": "presupuesto",
+  "layout": "word_exportado",
+  "scanned": false,
+  "pages": 2,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Victoriano Garrido Sandoval",
+      "tax_id": "52381187K",
+      "address": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    "customer": {
+      "name": "Prudencia Franch Águila",
+      "tax_id": "61440367F",
+      "address": "Acceso de Plácido Valbuena, 51, 3.º D, 39750 Colindres (Cantabria)"
+    },
+    "number": "PA-2025-0014",
+    "date": "2025-09-03",
+    "valid_until": "2025-10-03",
+    "due_date": null,
+    "lines": [
+      {
+        "concept": "Demolición de tabique. Demolición de tabique de ladrillo con medios manuales, con carga de escombros sobre contenedor.",
+        "quantity": "33.5",
+        "unit": "m²",
+        "unit_price": "9.90",
+        "discount": null,
+        "amount": "331.65",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Contenedor y retirada de escombros. Contenedor de 5 m³, transporte y canon de vertedero autorizado.",
+        "quantity": "3",
+        "unit": "ud",
+        "unit_price": "179.00",
+        "discount": null,
+        "amount": "537.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Tabique de ladrillo hueco doble. Tabique de ladrillo hueco doble de 7 cm recibido con mortero de cemento M-5, aplomado y con sus mochetas.",
+        "quantity": "59",
+        "unit": "m²",
+        "unit_price": "23.00",
+        "discount": null,
+        "amount": "1357.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Trasdosado de placa de yeso laminado. Trasdosado autoportante con placa de yeso laminado de 15 mm, perfilería de 48 mm y aislamiento de lana mineral.",
+        "quantity": "28",
+        "unit": "m²",
+        "unit_price": "21.00",
+        "discount": null,
+        "amount": "588.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Enfoscado de mortero. Enfoscado maestreado y fratasado con mortero de cemento M-5 en paramentos verticales.",
+        "quantity": "59.5",
+        "unit": "m²",
+        "unit_price": "13.99",
+        "discount": null,
+        "amount": "832.41",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Recrecido de mortero autonivelante. Recrecido de mortero autonivelante de 4 cm de espesor medio, con banda perimetral.",
+        "quantity": "63",
+        "unit": "m²",
+        "unit_price": "12.92",
+        "discount": null,
+        "amount": "813.96",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Solado de gres porcelánico. Solado de gres porcelánico recibido con cemento cola, rejuntado y limpieza final; pieza aportada por el cliente.",
+        "quantity": "52.5",
+        "unit": "m²",
+        "unit_price": "28.00",
+        "discount": null,
+        "amount": "1470.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Alicatado de paredes. Alicatado con azulejo cerámico recibido con cemento cola, cortes y rejuntado; pieza aportada por el cliente.",
+        "quantity": "58",
+        "unit": "m²",
+        "unit_price": "23.50",
+        "discount": null,
+        "amount": "1363.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Ayudas de albañilería a instalaciones. Apertura y tapado de rozas, recibido de cajas y pasos de instalaciones de fontanería y electricidad.",
+        "quantity": "1",
+        "unit": "pa",
+        "unit_price": "458.50",
+        "discount": null,
+        "amount": "458.50",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Cemento cola flexible C2. Saco de 25 kg de cemento cola flexible C2 TE S1.",
+        "quantity": "30",
+        "unit": "saco",
+        "unit_price": "16.06",
+        "discount": null,
+        "amount": "481.80",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Cemento gris en saco de 25 kg. Saco de cemento gris CEM II de 25 kg.",
+        "quantity": "31",
+        "unit": "saco",
+        "unit_price": "6.00",
+        "discount": null,
+        "amount": "186.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Arena de río lavada. Arena de río lavada a granel.",
+        "quantity": "1.5",
+        "unit": "m³",
+        "unit_price": "34.14",
+        "discount": null,
+        "amount": "51.21",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Ladrillo hueco doble. Ladrillo cerámico hueco doble de 24 x 11,5 x 7 cm.",
+        "quantity": "670",
+        "unit": "ud",
+        "unit_price": "0.43",
+        "discount": null,
+        "amount": "288.10",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Oficial de primera albañil. Hora de oficial de primera albañil con herramienta propia.",
+        "quantity": "81",
+        "unit": "h",
+        "unit_price": "29.50",
+        "discount": null,
+        "amount": "2389.50",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Peón de albañil. Hora de peón para acarreo de material, limpieza y ayudas.",
+        "quantity": "91",
+        "unit": "h",
+        "unit_price": "21.50",
+        "discount": null,
+        "amount": "1956.50",
+        "vat_rate": "10"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "10",
+        "base": "13104.63",
+        "amount": "1310.46"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "13104.63",
+    "vat_rate": "10",
+    "vat_amount": "1310.46",
+    "withholding": null,
+    "guarantee": null,
+    "total": "14415.09",
+    "amount_due": "14415.09"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Prudencia Franch Águila"
+    },
+    {
+      "kind": "nif",
+      "value": "61440367F"
+    },
+    {
+      "kind": "direccion",
+      "value": "Acceso de Plácido Valbuena, 51, 3.º D, 39750 Colindres (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "465 14 65 95"
+    },
+    {
+      "kind": "email",
+      "value": "reformasyalbanileriagarrido@correo.example"
+    }
+  ]
+}

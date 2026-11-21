@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-038",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-038.pdf",
+  "document_type": "presupuesto",
+  "layout": "tabla_clasica",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Victoriano Garrido Sandoval",
+      "tax_id": "52381187K",
+      "address": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    "customer": {
+      "name": "Albina Carmona Macias",
+      "tax_id": "48580448D",
+      "address": "Plaza de Emma Montaña, 105, 4.º izda., 39600 Camargo (Cantabria)"
+    },
+    "number": "PA-2025-0016",
+    "date": "2025-09-05",
+    "valid_until": "2025-10-05",
+    "due_date": null,
+    "lines": [
+      {
+        "concept": "Enfoscado de mortero",
+        "quantity": "29.5",
+        "unit": "m²",
+        "unit_price": "13.57",
+        "discount": null,
+        "amount": "400.32",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Cemento gris en saco de 25 kg",
+        "quantity": "8",
+        "unit": "saco",
+        "unit_price": "6.44",
+        "discount": null,
+        "amount": "51.52",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Arena de río lavada",
+        "quantity": "0.5",
+        "unit": "m³",
+        "unit_price": "37.33",
+        "discount": null,
+        "amount": "18.67",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Oficial de primera albañil",
+        "quantity": "7",
+        "unit": "h",
+        "unit_price": "27.50",
+        "discount": null,
+        "amount": "192.50",
+        "vat_rate": "10"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "10",
+        "base": "663.01",
+        "amount": "66.30"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "663.01",
+    "vat_rate": "10",
+    "vat_amount": "66.30",
+    "withholding": null,
+    "guarantee": null,
+    "total": "729.31",
+    "amount_due": "729.31"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Albina Carmona Macias"
+    },
+    {
+      "kind": "nif",
+      "value": "48580448D"
+    },
+    {
+      "kind": "direccion",
+      "value": "Plaza de Emma Montaña, 105, 4.º izda., 39600 Camargo (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "465 14 65 95"
+    },
+    {
+      "kind": "email",
+      "value": "reformasyalbanileriagarrido@correo.example"
+    }
+  ]
+}

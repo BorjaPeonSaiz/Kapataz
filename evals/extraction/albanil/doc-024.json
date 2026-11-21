@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0.0",
+  "id": "albanil/doc-024",
+  "professional": "albanil",
+  "pdf": "samples/albanil/doc-024.pdf",
+  "document_type": "otro",
+  "layout": "tabla_clasica",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": null,
+  "other": {
+    "kind": "albaran_proveedor",
+    "description": "Albarán de un proveedor de material, sin precios."
+  },
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Materiales de Construcción Martorell S.L."
+    },
+    {
+      "kind": "nif",
+      "value": "B39631197"
+    },
+    {
+      "kind": "direccion",
+      "value": "Glorieta de Verónica Anguita, 94, 39740 Santoña (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Victoriano Garrido Sandoval"
+    },
+    {
+      "kind": "nif",
+      "value": "52381187K"
+    },
+    {
+      "kind": "direccion",
+      "value": "Callejón Nazaret Casals, 1, 2.º A, 39300 Torrelavega (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "499 12 53 84"
+    },
+    {
+      "kind": "email",
+      "value": "pedidosmartorell@correo.example"
+    }
+  ]
+}

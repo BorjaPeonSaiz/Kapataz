@@ -8,13 +8,14 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from kapataz.domain.accounts.email_address import EmailAddress
-from kapataz.domain.accounts.errors import EmailAlreadyRegisteredError
+from kapataz.domain.accounts.errors import EmailAlreadyRegisteredError, TenantAlreadyExistsError
 from kapataz.domain.accounts.model import (
     EmailVerification,
     Session,
     SessionId,
     Tenant,
     TenantId,
+    TenantKind,
     User,
     UserId,
 )
@@ -26,6 +27,8 @@ from kapataz.infrastructure.persistence.tables import (
 )
 
 _EMAIL_UNIQUE_CONSTRAINT = "uq_users_email"
+# La clave primaria o el espacio de demostración único por cuenta (migración 0004).
+_TENANT_UNIQUE_CONSTRAINTS = ("pk_tenants", "uq_tenants_parent_tenant_id")
 
 
 class SqlAccountRepository:
@@ -42,7 +45,28 @@ class SqlAccountRepository:
                 created_at=tenant.created_at,
             )
         )
-        await self._session.flush()
+        try:
+            await self._session.flush()
+        except IntegrityError as error:
+            if any(name in str(error.orig) for name in _TENANT_UNIQUE_CONSTRAINTS):
+                msg = "Ya hay una cuenta con ese id o un espacio de demostración de esa cuenta."
+                raise TenantAlreadyExistsError(msg) from None
+            raise
+
+    async def get_tenant(self, tenant_id: TenantId) -> Tenant | None:
+        # RLS ya filtra por la cuenta fijada; el WHERE elige la fila.
+        row = await self._session.scalar(select(TenantRow).where(TenantRow.id == tenant_id))
+        if row is None:
+            return None
+        return Tenant(
+            id=TenantId(row.id),
+            name=row.name,
+            kind=TenantKind(row.kind),
+            parent_tenant_id=(
+                None if row.parent_tenant_id is None else TenantId(row.parent_tenant_id)
+            ),
+            created_at=row.created_at,
+        )
 
     async def add_user(self, user: User) -> None:
         self._session.add(

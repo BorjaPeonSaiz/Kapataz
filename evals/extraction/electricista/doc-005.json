@@ -1,0 +1,122 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-005",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-005.pdf",
+  "document_type": "factura",
+  "layout": "texto_sin_tabla",
+  "scanned": false,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Gestoría Saez S.L.",
+      "tax_id": "B39384821",
+      "address": "Urbanización de Teodosio Díaz, 97, 39200 Reinosa (Cantabria)"
+    },
+    "number": "F-2025-0004",
+    "date": "2025-03-05",
+    "valid_until": null,
+    "due_date": "2025-05-04",
+    "lines": [
+      {
+        "concept": "Punto de luz sencillo",
+        "quantity": "4",
+        "unit": "ud",
+        "unit_price": "39.00",
+        "discount": null,
+        "amount": "156.00",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Base de enchufe 16 A",
+        "quantity": "2",
+        "unit": "ud",
+        "unit_price": "31.50",
+        "discount": null,
+        "amount": "63.00",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Cable H07V-K 2,5 mm²",
+        "quantity": "41",
+        "unit": "m",
+        "unit_price": "1.04",
+        "discount": null,
+        "amount": "42.64",
+        "vat_rate": "21"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "4",
+        "unit": "h",
+        "unit_price": "34.50",
+        "discount": null,
+        "amount": "138.00",
+        "vat_rate": "21"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "21",
+        "base": "399.64",
+        "amount": "83.92"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "399.64",
+    "vat_rate": "21",
+    "vat_amount": "83.92",
+    "withholding": null,
+    "guarantee": null,
+    "total": "483.56",
+    "amount_due": "483.56"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Gestoría Saez S.L."
+    },
+    {
+      "kind": "nif",
+      "value": "B39384821"
+    },
+    {
+      "kind": "direccion",
+      "value": "Urbanización de Teodosio Díaz, 97, 39200 Reinosa (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "iban",
+      "value": "ES61 0000 2534 2671 0652 9292"
+    }
+  ]
+}

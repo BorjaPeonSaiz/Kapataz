@@ -1,0 +1,131 @@
+{
+  "schema_version": "1.0.0",
+  "id": "electricista/doc-014",
+  "professional": "electricista",
+  "pdf": "samples/electricista/doc-014.pdf",
+  "document_type": "factura",
+  "layout": "word_exportado",
+  "scanned": true,
+  "pages": 1,
+  "is_trap": false,
+  "trap": null,
+  "seeded_errors": [],
+  "expected_review_reasons": [],
+  "extraction": {
+    "issuer": {
+      "name": "Sara Batlle Cardona",
+      "tax_id": "39579038V",
+      "address": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    "customer": {
+      "name": "Isaías Viñas Garzón",
+      "tax_id": "52723779M",
+      "address": "Cañada de Narcisa Estrada, 63, 3.º D, 39100 Santa Cruz de Bezana (Cantabria)"
+    },
+    "number": "F-2025-0008",
+    "date": "2025-05-05",
+    "valid_until": null,
+    "due_date": "2025-05-20",
+    "lines": [
+      {
+        "concept": "Punto de luz sencillo",
+        "quantity": "3",
+        "unit": "ud",
+        "unit_price": "41.50",
+        "discount": null,
+        "amount": "124.50",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Base de enchufe 16 A",
+        "quantity": "3",
+        "unit": "ud",
+        "unit_price": "35.00",
+        "discount": null,
+        "amount": "105.00",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Cable H07V-K 2,5 mm²",
+        "quantity": "16",
+        "unit": "m",
+        "unit_price": "0.97",
+        "discount": null,
+        "amount": "15.52",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Tubo corrugado de 20 mm",
+        "quantity": "34",
+        "unit": "m",
+        "unit_price": "0.69",
+        "discount": null,
+        "amount": "23.46",
+        "vat_rate": "10"
+      },
+      {
+        "concept": "Mano de obra de oficial electricista",
+        "quantity": "4",
+        "unit": "h",
+        "unit_price": "32.00",
+        "discount": null,
+        "amount": "128.00",
+        "vat_rate": "10"
+      }
+    ],
+    "vat_breakdown": [
+      {
+        "rate": "10",
+        "base": "396.48",
+        "amount": "39.65"
+      }
+    ],
+    "reverse_charge": false,
+    "base": "396.48",
+    "vat_rate": "10",
+    "vat_amount": "39.65",
+    "withholding": null,
+    "guarantee": null,
+    "total": "436.13",
+    "amount_due": "436.13"
+  },
+  "other": null,
+  "personal_data": [
+    {
+      "kind": "nombre",
+      "value": "Sara Batlle Cardona"
+    },
+    {
+      "kind": "nif",
+      "value": "39579038V"
+    },
+    {
+      "kind": "direccion",
+      "value": "Alameda de Abel Llopis, 16, 1.º B, 39001 Santander (Cantabria)"
+    },
+    {
+      "kind": "nombre",
+      "value": "Isaías Viñas Garzón"
+    },
+    {
+      "kind": "nif",
+      "value": "52723779M"
+    },
+    {
+      "kind": "direccion",
+      "value": "Cañada de Narcisa Estrada, 63, 3.º D, 39100 Santa Cruz de Bezana (Cantabria)"
+    },
+    {
+      "kind": "telefono",
+      "value": "461 76 20 57"
+    },
+    {
+      "kind": "email",
+      "value": "electricidadbatlle@correo.example"
+    },
+    {
+      "kind": "iban",
+      "value": "ES61 0000 2534 2671 0652 9292"
+    }
+  ]
+}
